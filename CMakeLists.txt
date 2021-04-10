@@ -23,7 +23,13 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 #            ${CMAKE_CURRENT_SOURCE_DIR}/path/to/libssl.so)
 #    endif()
 #endif()
-set(CMAKE_PREFIX_PATH "F:/Qt/6.0.3/msvc2019_64" "C:/Qt/6.0.1/msvc2019_64")
+if (CMAKE_CURRENT_SOURCE_DIR MATCHES ".*[\//]aless[\//].*")
+    message(STATUS "In aless PC")
+    set(CMAKE_PREFIX_PATH "F:/Qt/6.0.3/msvc2019_64")
+else()
+    message(STATUS "CI Build")
+    set(CMAKE_PREFIX_PATH "C:/Qt/6.0.1/msvc2019_64")
+endif()
 find_package(QT NAMES Qt6 Qt5 COMPONENTS Widgets LinguistTools REQUIRED)
 find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Widgets LinguistTools REQUIRED)
 
@@ -34,6 +40,8 @@ set(PROJECT_SOURCES
         cfgeditor.cpp
         cfgeditor.h
         cfgeditor.ui
+        jsonsprite.cpp
+        jsonsprite.h
         ${TS_FILES}
 )
 

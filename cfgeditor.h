@@ -4,6 +4,7 @@
 #include <QMainWindow>
 #include <QFileDialog>
 #include <QMessageBox>
+#include <jsonsprite.h>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class CFGEditor; }
@@ -19,8 +20,10 @@ public:
     void setUpMenuBar(QMenuBar*);
 private:
     Ui::CFGEditor *ui;
-    QFileDialog *dialog;
+    JsonSprite* sprite;
 };
+
+
 
 class DefaultMissingImpl {
 private:

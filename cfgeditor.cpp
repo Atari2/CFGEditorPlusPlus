@@ -3,17 +3,14 @@
 CFGEditor::CFGEditor(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::CFGEditor)
-    , dialog(new QFileDialog)
 {
+    sprite = nullptr;
     this->setFixedSize(802, 600);
     ui->setupUi(this);
     QMenuBar* mb = menuBar();
 
-    // placeholder af
-    QObject::connect(ui->plainTextEdit, &QPlainTextEdit::textChanged, this, [=]() {
-        DefaultMissingImpl impl{"Hello world"};
-        impl();
-    });
+    // placeholder test
+    QObject::connect(ui->plainTextEdit, &QPlainTextEdit::textChanged, this, DefaultMissingImpl("TextChanged"));
     setUpMenuBar(mb);
     mb->show();
     setMenuBar(mb);
@@ -38,6 +35,7 @@ void DefaultMissingImpl::operator()() {
         messageBox->exec();
 };
 
+
 void CFGEditor::setUpMenuBar(QMenuBar* mb) {
     QMenu* file = new QMenu("&File");
     QMenu* display = new QMenu("&Display");
@@ -46,15 +44,19 @@ void CFGEditor::setUpMenuBar(QMenuBar* mb) {
     file->addSeparator();
 
     file->addAction("&Open File", qApp, [&]() {
-        dialog->setAcceptMode(QFileDialog::AcceptOpen);
-        dialog->setVisible(true);
+        if (sprite != nullptr) {
+            delete sprite;
+            DefaultMissingImpl("Opening file while another is already open")();
+        }
+        auto file = QFileDialog::getOpenFileName();
+        sprite = new JsonSprite(file);
     }, Qt::CTRL | Qt::Key_O);
 
-    file->addAction("&Save", qApp, DefaultMissingImpl("Save"), Qt::CTRL | Qt::Key_S);
+    file->addAction("&Save", qApp, [&]() { sprite->to_file(); }, Qt::CTRL | Qt::Key_S);
 
     file->addAction("&Save As", qApp, [&]() {
-        dialog->setAcceptMode(QFileDialog::AcceptSave);
-        dialog->setVisible(true);
+        auto name = QFileDialog::getSaveFileName();
+        sprite->to_file(name);
     }, Qt::CTRL | Qt::ALT | Qt::Key_S);
 
     display->addAction("&Load Custom Map16", qApp, DefaultMissingImpl("Load Custom Map16"));
@@ -68,7 +70,6 @@ void CFGEditor::setUpMenuBar(QMenuBar* mb) {
 
 CFGEditor::~CFGEditor()
 {
-    delete dialog;
     delete ui;
 }
 
