@@ -14,12 +14,25 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="cfgeditor.ui" line="36"/>
+        <location filename="cfgeditor.ui" line="52"/>
+        <location filename="cfgeditor.ui" line="59"/>
+        <location filename="cfgeditor.ui" line="66"/>
+        <location filename="cfgeditor.ui" line="73"/>
+        <location filename="cfgeditor.ui" line="80"/>
+        <location filename="cfgeditor.ui" line="87"/>
+        <location filename="cfgeditor.ui" line="94"/>
+        <location filename="cfgeditor.ui" line="101"/>
+        <location filename="cfgeditor.ui" line="108"/>
+        <source>GroupBox</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="cfgeditor.ui" line="137"/>
         <source>Lunar Magic</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="cfgeditor.ui" line="41"/>
+        <location filename="cfgeditor.ui" line="142"/>
         <source>Custom List</source>
         <translation type="unfinished"></translation>
     </message>

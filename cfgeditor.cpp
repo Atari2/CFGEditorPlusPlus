@@ -5,16 +5,26 @@ CFGEditor::CFGEditor(QWidget *parent)
     , ui(new Ui::CFGEditor)
     , dialog(new QFileDialog)
 {
-    this->setFixedSize(701, 511);
-
+    this->setFixedSize(802, 600);
     ui->setupUi(this);
     QMenuBar* mb = menuBar();
+
+    // placeholder af
+    QObject::connect(ui->plainTextEdit, &QPlainTextEdit::textChanged, this, [=]() {
+        DefaultMissingImpl impl{"Hello world"};
+        impl();
+    });
     setUpMenuBar(mb);
     mb->show();
     setMenuBar(mb);
 }
 
 DefaultMissingImpl::DefaultMissingImpl(const QString& impl_name) : name(impl_name) {
+    // yes, we construct this here, and we do not call delete on it
+    // for some weird reason if I put delete messageBox in the destructor of DefaultMissingImpl
+    // the app will segfault with invalid memory access and clang tidy tells me that
+    // I'm trying to delete release memory ¯\_(ツ)_/¯, I'll just leave it be
+    // if it ever becomes a problem (e.g. memory leak), I'll fix it
     messageBox = new QMessageBox();
 #ifdef QT_DEBUG
     messageBox->setText("Implement " + name);

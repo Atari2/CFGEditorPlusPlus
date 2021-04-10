@@ -23,7 +23,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 #            ${CMAKE_CURRENT_SOURCE_DIR}/path/to/libssl.so)
 #    endif()
 #endif()
-set(CMAKE_PREFIX_PATH "F:/Qt/6.0.3/msvc2019_64")
+set(CMAKE_PREFIX_PATH "F:/Qt/6.0.3/msvc2019_64" "C:/Qt/6.0.1/msvc2019_64")
 find_package(QT NAMES Qt6 Qt5 COMPONENTS Widgets LinguistTools REQUIRED)
 find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Widgets LinguistTools REQUIRED)
 
