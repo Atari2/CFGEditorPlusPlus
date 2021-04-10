@@ -16,7 +16,7 @@ class CFGEditor : public QMainWindow
 public:
     CFGEditor(QWidget *parent = nullptr);
     ~CFGEditor();
-    void CFGEditor::setUpMenuBar(QMenuBar*);
+    void setUpMenuBar(QMenuBar*);
 private:
     Ui::CFGEditor *ui;
     QFileDialog *dialog;
