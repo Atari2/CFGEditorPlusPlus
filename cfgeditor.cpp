@@ -41,21 +41,21 @@ void DefaultMissingImpl::operator()() {
 void CFGEditor::setUpMenuBar(QMenuBar* mb) {
     QMenu* file = new QMenu("&File");
     QMenu* display = new QMenu("&Display");
-    file->addAction("&New", qApp, DefaultMissingImpl("New"), Qt::CTRL + Qt::Key_N);
+    file->addAction("&New", qApp, DefaultMissingImpl("New"), Qt::CTRL | Qt::Key_N);
 
     file->addSeparator();
 
     file->addAction("&Open File", qApp, [&]() {
         dialog->setAcceptMode(QFileDialog::AcceptOpen);
         dialog->setVisible(true);
-    }, Qt::CTRL + Qt::Key_O);
+    }, Qt::CTRL | Qt::Key_O);
 
-    file->addAction("&Save", qApp, DefaultMissingImpl("Save"), Qt::CTRL + Qt::Key_S);
+    file->addAction("&Save", qApp, DefaultMissingImpl("Save"), Qt::CTRL | Qt::Key_S);
 
     file->addAction("&Save As", qApp, [&]() {
         dialog->setAcceptMode(QFileDialog::AcceptSave);
         dialog->setVisible(true);
-    }, Qt::CTRL + Qt::ALT + Qt::Key_S);
+    }, Qt::CTRL | Qt::ALT | Qt::Key_S);
 
     display->addAction("&Load Custom Map16", qApp, DefaultMissingImpl("Load Custom Map16"));
     display->addAction("&Load Custom GFX33", qApp, DefaultMissingImpl("Load Custom GFX33"));
