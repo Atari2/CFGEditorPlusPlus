@@ -72,7 +72,9 @@ QJsonObject Collection::toJson() const {
     return obj;
 }
 
-JsonSprite::JsonSprite(const QString& name) : m_name(name) {
+void JsonSprite::from_file(const QString& name) {
+    qDebug() << "Reading from " << name;
+    m_name = name;
     QFile file{m_name};
     file.open(QFile::OpenModeFlag::ReadOnly);
     auto doc = QJsonDocument::fromJson(file.readAll());
@@ -80,7 +82,51 @@ JsonSprite::JsonSprite(const QString& name) : m_name(name) {
     deserialize();
 }
 
+JsonSprite::JsonSprite() {
+    t1656 = J1656();
+    t1662 = J1662();
+    t166e = J166E();
+    t167a = J167A();
+    t1686 = J1686();
+    t190f = J190F();
+    asmfile = QString();
+    actlike = 0;
+    type = 0;
+    extraProp1 = 0;
+    extraProp2 = 0;
+    addbcountclear = 0;
+    addbcountset = 0;
+    map16 = QString();
+    displays = QVector<Display>();
+    collections = QVector<Collection>();
+}
+
+void JsonSprite::reset() {
+    t1656.from_byte(0);
+    t1662.from_byte(0);
+    t166e.from_byte(0);
+    t167a.from_byte(0);
+    t1686.from_byte(0);
+    t190f.from_byte(0);
+    asmfile.clear();
+    actlike = 0;
+    type = 0;
+    extraProp1 = 0;
+    extraProp2 = 0;
+    addbcountclear = 0;
+    addbcountset = 0;
+    map16.clear();
+    displays.clear();
+    collections.clear();
+}
+
 void JsonSprite::deserialize() {
+    t1656.from_json(obj["$1656"].toObject());
+    t1662.from_json(obj["$1662"].toObject());
+    t166e.from_json(obj["$166E"].toObject());
+    t167a.from_json(obj["$167A"].toObject());
+    t1686.from_json(obj["$1686"].toObject());
+    t190f.from_json(obj["$190F"].toObject());
     asmfile = obj["AsmFile"].toString();
     actlike = obj["ActLike"].toInt();
     type = obj["Type"].toInt();
@@ -118,6 +164,12 @@ void JsonSprite::serialize() {
     });
     obj["Displays"] = dispArr;
     obj["Collection"] = collArr;
+    obj["$1656"] = t1656.to_json();
+    obj["$1662"] = t1662.to_json();
+    obj["$166E"] = t166e.to_json();
+    obj["$167A"] = t167a.to_json();
+    obj["$1686"] = t1686.to_json();
+    obj["$190F"] = t190f.to_json();
 }
 
 QString JsonSprite::to_text() {
@@ -131,8 +183,11 @@ QString& JsonSprite::name() {
 }
 
 void JsonSprite::to_file(const QString& name) {
-    // TODO: do something other than return when trying to print empty
-    if (obj.isEmpty()) return;
+    if (obj.isEmpty()) {
+        m_name = QFileDialog::getSaveFileName();
+        if (m_name.length() == 0)
+            return;
+    }
     if (name.length() == 0) {
         QFile outFile{m_name};
         outFile.open(QFile::OpenModeFlag::Truncate | QFile::OpenModeFlag::Text | QFile::OpenModeFlag::WriteOnly);

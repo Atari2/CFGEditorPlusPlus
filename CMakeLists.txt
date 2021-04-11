@@ -23,12 +23,13 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 #            ${CMAKE_CURRENT_SOURCE_DIR}/path/to/libssl.so)
 #    endif()
 #endif()
+
 if (CMAKE_CURRENT_SOURCE_DIR MATCHES ".*[\//]aless[\//].*")
     message(STATUS "In aless PC")
     set(CMAKE_PREFIX_PATH "F:/Qt/6.0.3/msvc2019_64")
 else()
     message(STATUS "CI Build")
-    set(CMAKE_PREFIX_PATH "C:/Qt/6.0.1/msvc2019_64")
+    set(CMAKE_PREFIX_PATH "C:/Qt/6.0.3/msvc2019_64")
 endif()
 find_package(QT NAMES Qt6 Qt5 COMPONENTS Widgets LinguistTools REQUIRED)
 find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Widgets LinguistTools REQUIRED)
@@ -42,12 +43,18 @@ set(PROJECT_SOURCES
         cfgeditor.ui
         jsonsprite.cpp
         jsonsprite.h
+        tweak_bytes.cpp
+        tweak_bytes.h
+        spritepalettecreator.cpp
+        spritepalettecreator.h
         ${TS_FILES}
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
+    qt_add_resources(srcs_for_exe palettes.qrc)
     qt_add_executable(CFGEditorPlusPlus
         ${PROJECT_SOURCES}
+        ${srcs_for_exe}
     )
 
     qt_create_translation(QM_FILES ${CMAKE_SOURCE_DIR} ${TS_FILES})

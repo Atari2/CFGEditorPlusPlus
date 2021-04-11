@@ -30,106 +30,500 @@
      <attribute name="title">
       <string>Default</string>
      </attribute>
-     <widget class="QWidget" name="gridLayoutWidget">
+     <widget class="QGroupBox" name="groupBox1686">
+      <property name="geometry">
+       <rect>
+        <x>532</x>
+        <y>1</y>
+        <width>258</width>
+        <height>169</height>
+       </rect>
+      </property>
+      <property name="title">
+       <string>1686</string>
+      </property>
+     </widget>
+     <widget class="QGroupBox" name="groupBox_9">
+      <property name="geometry">
+       <rect>
+        <x>532</x>
+        <y>399</y>
+        <width>258</width>
+        <height>121</height>
+       </rect>
+      </property>
+      <property name="title">
+       <string>GroupBox</string>
+      </property>
+     </widget>
+     <widget class="QGroupBox" name="groupBox166E">
+      <property name="geometry">
+       <rect>
+        <x>260</x>
+        <y>0</y>
+        <width>259</width>
+        <height>191</height>
+       </rect>
+      </property>
+      <property name="title">
+       <string>166E</string>
+      </property>
+      <widget class="QLineEdit" name="lineEdit166E">
+       <property name="geometry">
+        <rect>
+         <x>40</x>
+         <y>0</y>
+         <width>51</width>
+         <height>21</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>00</string>
+       </property>
+      </widget>
+      <widget class="QCheckBox" name="checkBox166esecondpage">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>80</y>
+         <width>161</width>
+         <height>19</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Use second graphics page</string>
+       </property>
+      </widget>
+      <widget class="QCheckBox" name="checkBox166efireball">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>100</y>
+         <width>131</width>
+         <height>19</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Disable fireball killing</string>
+       </property>
+      </widget>
+      <widget class="QCheckBox" name="checkBox166ecape">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>120</y>
+         <width>121</width>
+         <height>19</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Disable cape killing</string>
+       </property>
+      </widget>
+      <widget class="QCheckBox" name="checkBox166esplash">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>140</y>
+         <width>131</width>
+         <height>19</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Disable water splash</string>
+       </property>
+      </widget>
+      <widget class="QCheckBox" name="checkBox166elay2">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>160</y>
+         <width>161</width>
+         <height>19</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Don't interact with layer 2</string>
+       </property>
+      </widget>
+      <widget class="QLabel" name="objClipLabel_2">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>20</y>
+         <width>51</width>
+         <height>21</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Palette:&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       </property>
+      </widget>
+      <widget class="QComboBox" name="paletteComboBox">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>50</y>
+         <width>21</width>
+         <height>21</height>
+        </rect>
+       </property>
+       <property name="iconSize">
+        <size>
+         <width>16</width>
+         <height>16</height>
+        </size>
+       </property>
+       <property name="frame">
+        <bool>true</bool>
+       </property>
+       <item>
+        <property name="text">
+         <string>8</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>9</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>A</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>B</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>C</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>D</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>E</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>F</string>
+        </property>
+       </item>
+      </widget>
+      <widget class="QLabel" name="label">
+       <property name="geometry">
+        <rect>
+         <x>60</x>
+         <y>50</y>
+         <width>141</width>
+         <height>21</height>
+        </rect>
+       </property>
+       <property name="minimumSize">
+        <size>
+         <width>111</width>
+         <height>16</height>
+        </size>
+       </property>
+       <property name="frameShape">
+        <enum>QFrame::WinPanel</enum>
+       </property>
+       <property name="frameShadow">
+        <enum>QFrame::Raised</enum>
+       </property>
+       <property name="lineWidth">
+        <number>1</number>
+       </property>
+       <property name="midLineWidth">
+        <number>0</number>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignCenter</set>
+       </property>
+       <property name="indent">
+        <number>0</number>
+       </property>
+      </widget>
+     </widget>
+     <widget class="QGroupBox" name="groupBox190f">
+      <property name="geometry">
+       <rect>
+        <x>532</x>
+        <y>177</y>
+        <width>258</width>
+        <height>168</height>
+       </rect>
+      </property>
+      <property name="title">
+       <string>190F</string>
+      </property>
+     </widget>
+     <widget class="QGroupBox" name="groupBox_8">
+      <property name="geometry">
+       <rect>
+        <x>266</x>
+        <y>399</y>
+        <width>259</width>
+        <height>121</height>
+       </rect>
+      </property>
+      <property name="title">
+       <string>GroupBox</string>
+      </property>
+     </widget>
+     <widget class="QGroupBox" name="groupBox1656">
+      <property name="geometry">
+       <rect>
+        <x>1</x>
+        <y>1</y>
+        <width>258</width>
+        <height>171</height>
+       </rect>
+      </property>
+      <property name="minimumSize">
+       <size>
+        <width>0</width>
+        <height>169</height>
+       </size>
+      </property>
+      <property name="title">
+       <string>1656</string>
+      </property>
+      <widget class="QLabel" name="objClipLabel">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>30</y>
+         <width>101</width>
+         <height>20</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Object Clipping:&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       </property>
+      </widget>
+      <widget class="QComboBox" name="objClipCmbBox">
+       <property name="geometry">
+        <rect>
+         <x>190</x>
+         <y>30</y>
+         <width>61</width>
+         <height>25</height>
+        </rect>
+       </property>
+       <item>
+        <property name="text">
+         <string>00</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>01</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>02</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>03</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>04</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>05</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>06</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>07</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>08</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>09</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>0A</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>0B</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>0C</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>0D</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>0E</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>0F</string>
+        </property>
+       </item>
+      </widget>
+      <widget class="QCheckBox" name="checkBox1656JumpedOn">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>60</y>
+         <width>151</width>
+         <height>23</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Can be jumped on</string>
+       </property>
+      </widget>
+      <widget class="QCheckBox" name="checkBox1656DiesJumped">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>80</y>
+         <width>171</width>
+         <height>23</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Dies when jumped on</string>
+       </property>
+      </widget>
+      <widget class="QCheckBox" name="checkBox1656Hopin">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>100</y>
+         <width>131</width>
+         <height>23</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Hop in/kick shells</string>
+       </property>
+      </widget>
+      <widget class="QCheckBox" name="checkBox1656Smoke">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>120</y>
+         <width>211</width>
+         <height>23</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Disappear in a cloud of smoke</string>
+       </property>
+      </widget>
+      <widget class="QLineEdit" name="lineEdit1656">
+       <property name="geometry">
+        <rect>
+         <x>40</x>
+         <y>0</y>
+         <width>51</width>
+         <height>21</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>00</string>
+       </property>
+      </widget>
+     </widget>
+     <widget class="QGroupBox" name="groupBox_7">
+      <property name="geometry">
+       <rect>
+        <x>1</x>
+        <y>399</y>
+        <width>258</width>
+        <height>121</height>
+       </rect>
+      </property>
+      <property name="title">
+       <string>GroupBox</string>
+      </property>
+      <widget class="QComboBox" name="comboBox">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>40</y>
+         <width>241</width>
+         <height>31</height>
+        </rect>
+       </property>
+      </widget>
+      <widget class="QPlainTextEdit" name="plainTextEdit">
+       <property name="geometry">
+        <rect>
+         <x>20</x>
+         <y>80</y>
+         <width>211</width>
+         <height>31</height>
+        </rect>
+       </property>
+      </widget>
+     </widget>
+     <widget class="QGroupBox" name="groupBox167a">
+      <property name="geometry">
+       <rect>
+        <x>260</x>
+        <y>197</y>
+        <width>259</width>
+        <height>191</height>
+       </rect>
+      </property>
+      <property name="title">
+       <string>167A</string>
+      </property>
+     </widget>
+     <widget class="QGroupBox" name="groupBox1662">
       <property name="geometry">
        <rect>
         <x>0</x>
-        <y>0</y>
-        <width>791</width>
-        <height>521</height>
+        <y>180</y>
+        <width>258</width>
+        <height>211</height>
        </rect>
       </property>
-      <layout class="QGridLayout" name="gridLayout">
-       <item row="0" column="1">
-        <widget class="QGroupBox" name="groupBox_3">
-         <property name="minimumSize">
-          <size>
-           <width>0</width>
-           <height>169</height>
-          </size>
-         </property>
-         <property name="title">
-          <string>GroupBox</string>
-         </property>
-        </widget>
-       </item>
-       <item row="2" column="2">
-        <widget class="QGroupBox" name="groupBox_8">
-         <property name="title">
-          <string>GroupBox</string>
-         </property>
-        </widget>
-       </item>
-       <item row="0" column="2">
-        <widget class="QGroupBox" name="groupBox">
-         <property name="title">
-          <string>GroupBox</string>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="3">
-        <widget class="QGroupBox" name="groupBox_6">
-         <property name="title">
-          <string>GroupBox</string>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="2">
-        <widget class="QGroupBox" name="groupBox_5">
-         <property name="title">
-          <string>GroupBox</string>
-         </property>
-        </widget>
-       </item>
-       <item row="2" column="3">
-        <widget class="QGroupBox" name="groupBox_9">
-         <property name="title">
-          <string>GroupBox</string>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="1">
-        <widget class="QGroupBox" name="groupBox_4">
-         <property name="title">
-          <string>GroupBox</string>
-         </property>
-        </widget>
-       </item>
-       <item row="0" column="3">
-        <widget class="QGroupBox" name="groupBox_2">
-         <property name="title">
-          <string>GroupBox</string>
-         </property>
-        </widget>
-       </item>
-       <item row="2" column="1">
-        <widget class="QGroupBox" name="groupBox_7">
-         <property name="title">
-          <string>GroupBox</string>
-         </property>
-         <widget class="QComboBox" name="comboBox">
-          <property name="geometry">
-           <rect>
-            <x>10</x>
-            <y>30</y>
-            <width>241</width>
-            <height>31</height>
-           </rect>
-          </property>
-         </widget>
-         <widget class="QPlainTextEdit" name="plainTextEdit">
-          <property name="geometry">
-           <rect>
-            <x>20</x>
-            <y>90</y>
-            <width>211</width>
-            <height>70</height>
-           </rect>
-          </property>
-         </widget>
-        </widget>
-       </item>
-      </layout>
+      <property name="title">
+       <string>1662</string>
+      </property>
      </widget>
     </widget>
     <widget class="QWidget" name="LunarMagic">
@@ -150,7 +544,7 @@
      <x>0</x>
      <y>0</y>
      <width>802</width>
-     <height>20</height>
+     <height>25</height>
     </rect>
    </property>
    <property name="defaultUp">

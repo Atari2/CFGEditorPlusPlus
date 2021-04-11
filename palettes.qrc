@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/palettedata">
+        <file>Resources/sprites_palettes.pal</file>
+    </qresource>
+</RCC>
