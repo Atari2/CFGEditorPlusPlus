@@ -8,13 +8,34 @@ CFGEditor::CFGEditor(QWidget *parent)
     , hexValidator(new QRegularExpressionValidator{QRegularExpression(R"([A-Fa-f0-9]{0,2})")})
     , hexNumberList(new QStringList(0x100))
 {
+
+    this->setFixedSize(802, 600);
+    ui->setupUi(this);
     SpritePaletteCreator::ReadPaletteFile(0, 22);
     paletteImages.reserve(SpritePaletteCreator::npalettes());
     for (int i = 0; i < SpritePaletteCreator::npalettes(); i++) {
         paletteImages.append(SpritePaletteCreator::MakePalette(i));
     }
-    this->setFixedSize(802, 600);
-    ui->setupUi(this);
+    for (int i = 0; i <= 0x0F; i++) {
+        QFile img{QString::asprintf(":/Resources/ObjClipping/%02X.png", i)};
+        img.open(QFile::ReadOnly);
+        QPixmap clip{};
+        clip.loadFromData(img.readAll(), "png");
+        if (clip.size().height() > clip.size().width())
+            objClipImages.append(clip.scaledToHeight(100));
+        else
+            objClipImages.append(clip.scaledToWidth(100));
+    }
+    for (int i = 0; i <= 0x3F; i++) {
+        QFile img{QString::asprintf(":/Resources/SprClipping/%02X.png", i)};
+        img.open(QFile::ReadOnly);
+        QPixmap clip{};
+        clip.loadFromData(img.readAll(), "png");
+        if (clip.size().height() > clip.size().width())
+            sprClipImages.append(clip.scaledToHeight(100));
+        else
+            sprClipImages.append(clip.scaledToWidth(100));
+    }
     QMenuBar* mb = menuBar();
     initCompleter();
     setUpMenuBar(mb);
@@ -110,17 +131,90 @@ void CFGEditor::setUpMenuBar(QMenuBar* mb) {
 }
 
 void CFGEditor::resetTweaks() {
+    ui->lineEditExtraProp1->setText(QString::asprintf("%02X", sprite->extraProp1));
+    emit ui->lineEditExtraProp1->editingFinished();
+    ui->lineEditExtraProp2->setText(QString::asprintf("%02X", sprite->extraProp2));
+    emit ui->lineEditExtraProp2->editingFinished();
+    ui->comboBoxType->setCurrentIndex(sprite->type);
+    ui->lineEditAsmFile->setText(sprite->asmfile);
+    emit ui->lineEditAsmFile->editingFinished();
+    ui->spinBoxextraBitClear->setValue(sprite->addbcountclear);
+    ui->spinBoxextraBitSet->setValue(sprite->addbcountset);
+    ui->lineEditActLike->setText(QString::asprintf("%02X", sprite->actlike));
+    emit ui->lineEditActLike->editingFinished();
     ui->lineEdit1656->setText(QString::asprintf("%02X", sprite->t1656.to_byte()));
     emit ui->lineEdit1656->editingFinished();
+    ui->lineEdit1662->setText(QString::asprintf("%02X", sprite->t1662.to_byte()));
+    emit ui->lineEdit1662->editingFinished();
     ui->lineEdit166E->setText(QString::asprintf("%02X", sprite->t166e.to_byte()));
     emit ui->lineEdit166E->editingFinished();
+    ui->lineEdit167a->setText(QString::asprintf("%02X", sprite->t167a.to_byte()));
+    emit ui->lineEdit167a->editingFinished();
+    ui->lineEdit1686->setText(QString::asprintf("%02X", sprite->t1686.to_byte()));
+    emit ui->lineEdit1686->editingFinished();
+    ui->lineEdit190f->setText(QString::asprintf("%02X", sprite->t190f.to_byte()));
+    emit ui->lineEdit190f->editingFinished();
 }
 
 void CFGEditor::setUpTweak() {
+    // Map16, Displays, Collection -> todo
+    // FIXME: handle map16, displays and collection
+    // Extra Prop Bytes
+    ui->lineEditExtraProp1->setMaxLength(2);
+    ui->lineEditExtraProp1->setValidator(hexValidator);
+    ui->lineEditExtraProp1->setCompleter(hexCompleter);
+    ui->lineEditExtraProp2->setMaxLength(2);
+    ui->lineEditExtraProp2->setValidator(hexValidator);
+    ui->lineEditExtraProp2->setCompleter(hexCompleter);
+    QObject::connect(ui->lineEditExtraProp1, &QLineEdit::editingFinished, this, [&]() {
+        sprite->extraProp1 = (uint8_t)ui->lineEditExtraProp1->text().toUInt(nullptr, 16);
+    });
+    QObject::connect(ui->lineEditExtraProp2, &QLineEdit::editingFinished, this, [&]() {
+        sprite->extraProp2 = (uint8_t)ui->lineEditExtraProp2->text().toUInt(nullptr, 16);
+    });
+    // Type
+    QObject::connect(ui->comboBoxType, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [&](int index) {
+        sprite->type = index;
+    });
+    // ActLike
+    ui->lineEditActLike->setMaxLength(2);
+    ui->lineEditActLike->setValidator(hexValidator);
+    ui->lineEditActLike->setCompleter(hexCompleter);
+    QObject::connect(ui->lineEditActLike, &QLineEdit::editingFinished, this, [&]() {
+        sprite->actlike = ui->lineEditActLike->text().toUInt(nullptr, 16);
+    });
+    // AsmFile
+    QObject::connect(ui->lineEditAsmFile, &QLineEdit::editingFinished, this, [&]() {
+        sprite->asmfile = ui->lineEditAsmFile->text();
+    });
+    // Additional byte count
+    QObject::connect(ui->spinBoxextraBitClear, QOverload<int>::of(&QSpinBox::valueChanged), this, [&](int value) {
+        qDebug() << "Extra byte (clear) changed to " << value;
+        sprite->addbcountclear = value;
+    });
+    QObject::connect(ui->spinBoxextraBitSet, QOverload<int>::of(&QSpinBox::valueChanged), this, [&](int value) {
+        qDebug() << "Extra byte (set) changed to " << value;
+        sprite->addbcountset = value;
+    });
     // 1656
+    bindTweak1656();
+    // 1662
+    bindTweak1662();
+    // 166E
+    bindTweak166E();
+    // 167A
+    bindTweak167A();
+    // 1686
+    bindTweak1686();
+    // 190F
+    bindTweak190F();
+}
+
+void CFGEditor::bindTweak1656() {
     ui->lineEdit1656->setMaxLength(2);
     ui->lineEdit1656->setValidator(hexValidator);
     ui->lineEdit1656->setCompleter(hexCompleter);
+    ui->objClippingLabel->setPixmap(objClipImages[0]);
     QObject::connect(ui->lineEdit1656, &QLineEdit::editingFinished, this, [&]() {
         qDebug() << "Value changed";
         sprite->t1656.from_byte((uint8_t)ui->lineEdit1656->text().toUInt(nullptr, 16));
@@ -136,11 +230,36 @@ void CFGEditor::setUpTweak() {
     connectCheckBox(ui->lineEdit1656, ui->checkBox1656Smoke, &sprite->t1656, sprite->t1656.disapp);
     QObject::connect(ui->objClipCmbBox, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [&](int index) {
         qDebug() << "Index changed";
+        ui->objClippingLabel->setPixmap(objClipImages[index]);
+        ui->objClippingLabel->setFixedSize(objClipImages[index].width(), objClipImages[index].height());
         sprite->t1656.objclip = index;
         ui->lineEdit1656->setText(QString::asprintf("%02X", sprite->t1656.to_byte()));
     });
 
-    // 166E
+}
+void CFGEditor::bindTweak1662() {
+    ui->lineEdit1662->setMaxLength(2);
+    ui->lineEdit1662->setValidator(hexValidator);
+    ui->lineEdit1662->setCompleter(hexCompleter);
+    ui->sprClippingLabel->setPixmap(sprClipImages[0]);
+    QObject::connect(ui->lineEdit1662, &QLineEdit::editingFinished, this, [&]() {
+        qDebug() << "Value changed";
+        sprite->t1662.from_byte((uint8_t)ui->lineEdit1662->text().toUInt(nullptr, 16));
+        ui->checkBox1662deathframe->setChecked(sprite->t1662.deathframe);
+        ui->checkBox1662strdown->setChecked(sprite->t1662.strdown);
+        ui->sprClipCmbBox->setCurrentIndex(sprite->t1662.sprclip);
+    });
+    connectCheckBox(ui->lineEdit1662, ui->checkBox1662deathframe, &sprite->t1662, sprite->t1662.deathframe);
+    connectCheckBox(ui->lineEdit1662, ui->checkBox1662strdown, &sprite->t1662, sprite->t1662.strdown);
+    QObject::connect(ui->sprClipCmbBox, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [&](int index) {
+        qDebug() << "Index changed";
+        sprite->t1662.sprclip = index;
+        ui->sprClippingLabel->setPixmap(sprClipImages[index]);
+        ui->sprClippingLabel->setFixedSize(sprClipImages[index].width(), sprClipImages[index].height());
+        ui->lineEdit1662->setText(QString::asprintf("%02X", sprite->t1662.to_byte()));
+    });
+}
+void CFGEditor::bindTweak166E() {
     ui->lineEdit166E->setMaxLength(2);
     ui->lineEdit166E->setValidator(hexValidator);
     ui->lineEdit166E->setCompleter(hexCompleter);
@@ -168,6 +287,81 @@ void CFGEditor::setUpTweak() {
         sprite->t166e.palette = index;
         ui->lineEdit166E->setText(QString::asprintf("%02X", sprite->t166e.to_byte()));
     });
+}
+void CFGEditor::bindTweak167A() {
+    ui->lineEdit167a->setMaxLength(2);
+    ui->lineEdit167a->setValidator(hexValidator);
+    ui->lineEdit167a->setCompleter(hexCompleter);
+    QObject::connect(ui->lineEdit167a, &QLineEdit::editingFinished, this, [&]() {
+        qDebug() << "Value changed";
+        sprite->t167a.from_byte((uint8_t)ui->lineEdit167a->text().toUInt(nullptr, 16));
+        ui->checkBox167astar->setChecked(sprite->t167a.star);
+        ui->checkBox167ablk->setChecked(sprite->t167a.blk);
+        ui->checkBox167aoffscr->setChecked(sprite->t167a.offscr);
+        ui->checkBox167astunned->setChecked(sprite->t167a.stunn);
+        ui->checkBox167akick->setChecked(sprite->t167a.kick);
+        ui->checkBox167aeveryframe->setChecked(sprite->t167a.everyframe);
+        ui->checkBox167apowerup->setChecked(sprite->t167a.powerup);
+        ui->checkBox167adefaultint->setChecked(sprite->t167a.defaultint);
+    });
+    connectCheckBox(ui->lineEdit167a, ui->checkBox167astar, &sprite->t167a, sprite->t167a.star);
+    connectCheckBox(ui->lineEdit167a, ui->checkBox167ablk, &sprite->t167a, sprite->t167a.blk);
+    connectCheckBox(ui->lineEdit167a, ui->checkBox167aoffscr, &sprite->t167a, sprite->t167a.offscr);
+    connectCheckBox(ui->lineEdit167a, ui->checkBox167astunned, &sprite->t167a, sprite->t167a.stunn);
+    connectCheckBox(ui->lineEdit167a, ui->checkBox167akick, &sprite->t167a, sprite->t167a.kick);
+    connectCheckBox(ui->lineEdit167a, ui->checkBox167aeveryframe, &sprite->t167a, sprite->t167a.everyframe);
+    connectCheckBox(ui->lineEdit167a, ui->checkBox167apowerup, &sprite->t167a, sprite->t167a.powerup);
+    connectCheckBox(ui->lineEdit167a, ui->checkBox167adefaultint, &sprite->t167a, sprite->t167a.defaultint);
+}
+void CFGEditor::bindTweak1686() {
+    ui->lineEdit1686->setMaxLength(2);
+    ui->lineEdit1686->setValidator(hexValidator);
+    ui->lineEdit1686->setCompleter(hexCompleter);
+    QObject::connect(ui->lineEdit1686, &QLineEdit::editingFinished, this, [&]() {
+        qDebug() << "Value changed";
+        sprite->t1686.from_byte((uint8_t)ui->lineEdit1686->text().toUInt(nullptr, 16));
+        ui->checkBox1686Inedible->setChecked(sprite->t1686.inedible);
+        ui->checkBox1686mouth->setChecked(sprite->t1686.mouth);
+        ui->checkBox1686ground->setChecked(sprite->t1686.ground);
+        ui->checkBox1686sprint->setChecked(sprite->t1686.nosprint);
+        ui->checkBox1686dir->setChecked(sprite->t1686.direc);
+        ui->checkBox1686goalcoin->setChecked(sprite->t1686.goalpass);
+        ui->checkBox1686spawnSpr->setChecked(sprite->t1686.newspr);
+        ui->checkBox1686noObjInt->setChecked(sprite->t1686.noobjint);
+    });
+    connectCheckBox(ui->lineEdit1686, ui->checkBox1686Inedible, &sprite->t1686, sprite->t1686.inedible);
+    connectCheckBox(ui->lineEdit1686, ui->checkBox1686mouth, &sprite->t1686, sprite->t1686.mouth);
+    connectCheckBox(ui->lineEdit1686, ui->checkBox1686ground, &sprite->t1686, sprite->t1686.ground);
+    connectCheckBox(ui->lineEdit1686, ui->checkBox1686sprint, &sprite->t1686, sprite->t1686.nosprint);
+    connectCheckBox(ui->lineEdit1686, ui->checkBox1686dir, &sprite->t1686, sprite->t1686.direc);
+    connectCheckBox(ui->lineEdit1686, ui->checkBox1686goalcoin, &sprite->t1686, sprite->t1686.goalpass);
+    connectCheckBox(ui->lineEdit1686, ui->checkBox1686spawnSpr, &sprite->t1686, sprite->t1686.newspr);
+    connectCheckBox(ui->lineEdit1686, ui->checkBox1686noObjInt, &sprite->t1686, sprite->t1686.noobjint);
+}
+void CFGEditor::bindTweak190F() {
+    ui->lineEdit190f->setMaxLength(2);
+    ui->lineEdit190f->setValidator(hexValidator);
+    ui->lineEdit190f->setCompleter(hexCompleter);
+    QObject::connect(ui->lineEdit190f, &QLineEdit::editingFinished, this, [&]() {
+        qDebug() << "Value changed";
+        sprite->t190f.from_byte((uint8_t)ui->lineEdit190f->text().toUInt(nullptr, 16));
+        ui->checkBox190fbelow->setChecked(sprite->t190f.below);
+        ui->checkBox190fgoalpass->setChecked(sprite->t190f.goal);
+        ui->checkBox190fsliding->setChecked(sprite->t190f.slidekill);
+        ui->checkBox190ffivefire->setChecked(sprite->t190f.fivefire);
+        ui->checkBox190fupysp->setChecked(sprite->t190f.yupsp);
+        ui->checkBox190fdeathframe->setChecked(sprite->t190f.deathframe);
+        ui->checkBox190fnosilver->setChecked(sprite->t190f.nosilver);
+        ui->checkBox190fwallstuck->setChecked(sprite->t190f.nostuck);
+    });
+    connectCheckBox(ui->lineEdit190f, ui->checkBox190fbelow, &sprite->t190f, sprite->t190f.below);
+    connectCheckBox(ui->lineEdit190f, ui->checkBox190fgoalpass, &sprite->t190f, sprite->t190f.goal);
+    connectCheckBox(ui->lineEdit190f, ui->checkBox190fsliding, &sprite->t190f, sprite->t190f.slidekill);
+    connectCheckBox(ui->lineEdit190f, ui->checkBox190ffivefire, &sprite->t190f, sprite->t190f.fivefire);
+    connectCheckBox(ui->lineEdit190f, ui->checkBox190fupysp, &sprite->t190f, sprite->t190f.yupsp);
+    connectCheckBox(ui->lineEdit190f, ui->checkBox190fdeathframe, &sprite->t190f, sprite->t190f.deathframe);
+    connectCheckBox(ui->lineEdit190f, ui->checkBox190fnosilver, &sprite->t190f, sprite->t190f.nosilver);
+    connectCheckBox(ui->lineEdit190f, ui->checkBox190fwallstuck, &sprite->t190f, sprite->t190f.nostuck);
 }
 
 CFGEditor::~CFGEditor()

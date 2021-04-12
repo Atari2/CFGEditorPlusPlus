@@ -25,6 +25,12 @@ public:
     ~CFGEditor();
     void setUpMenuBar(QMenuBar*);
     void setUpTweak();
+    void bindTweak1656();
+    void bindTweak1662();
+    void bindTweak166E();
+    void bindTweak167A();
+    void bindTweak1686();
+    void bindTweak190F();
     void resetTweaks();
     void initCompleter();
     template <typename J>
@@ -42,6 +48,8 @@ private:
     QStringList* hexNumberList;
     QCompleter* hexCompleter;
     QVector<QPixmap> paletteImages;
+    QVector<QPixmap> objClipImages;
+    QVector<QPixmap> sprClipImages;
 };
 
 class DefaultMissingImpl {

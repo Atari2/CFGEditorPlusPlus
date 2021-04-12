@@ -151,6 +151,8 @@ void JsonSprite::serialize() {
     obj["AsmFile"] = asmfile;
     obj["ActLike"] = actlike;
     obj["Type"] = type;
+    obj["Additional Byte Count (extra bit clear)"] = addbcountclear;
+    obj["Additional Byte Count (extra bit set)"] = addbcountset;
     obj["Extra Property Byte 1"] = extraProp1;
     obj["Extra Property Byte 2"] = extraProp2;
     obj["Map16"] = map16;
