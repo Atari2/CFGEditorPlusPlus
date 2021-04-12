@@ -8,9 +8,8 @@ CFGEditor::CFGEditor(QWidget *parent)
     , hexValidator(new QRegularExpressionValidator{QRegularExpression(R"([A-Fa-f0-9]{0,2})")})
     , hexNumberList(new QStringList(0x100))
 {
-
-    this->setFixedSize(802, 600);
     ui->setupUi(this);
+    this->setFixedSize(this->size());
     SpritePaletteCreator::ReadPaletteFile(0, 22);
     paletteImages.reserve(SpritePaletteCreator::npalettes());
     for (int i = 0; i < SpritePaletteCreator::npalettes(); i++) {
@@ -263,9 +262,7 @@ void CFGEditor::bindTweak166E() {
     ui->lineEdit166E->setMaxLength(2);
     ui->lineEdit166E->setValidator(hexValidator);
     ui->lineEdit166E->setCompleter(hexCompleter);
-    ui->paletteComboBox->setFixedSize(36, 24);
-    ui->label->setFixedSize(24 * 8, 24);
-    ui->label->setPixmap(paletteImages[0]);
+    ui->label->setPixmap(paletteImages[0].scaled(ui->label->size(), Qt::AspectRatioMode::KeepAspectRatio));
     QObject::connect(ui->lineEdit166E, &QLineEdit::editingFinished, this, [&]() {
         qDebug() << "Value changed";
         sprite->t166e.from_byte((uint8_t)ui->lineEdit166E->text().toUInt(nullptr, 16));
@@ -283,7 +280,7 @@ void CFGEditor::bindTweak166E() {
     connectCheckBox(ui->lineEdit166E, ui->checkBox166elay2, &sprite->t166e, sprite->t166e.lay2);
     QObject::connect(ui->paletteComboBox, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [&](int index) {
         qDebug() << "Index changed";
-        ui->label->setPixmap(paletteImages[index]);
+        ui->label->setPixmap(paletteImages[index].scaled(ui->label->size(), Qt::AspectRatioMode::KeepAspectRatio));
         sprite->t166e.palette = index;
         ui->lineEdit166E->setText(QString::asprintf("%02X", sprite->t166e.to_byte()));
     });

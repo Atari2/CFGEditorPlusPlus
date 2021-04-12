@@ -16,11 +16,11 @@ void SpritePaletteCreator::ReadPaletteFile(int offset, int rows, int columns) {
     }
 }
 QPixmap SpritePaletteCreator::MakePalette(int index) {
-    QPixmap b(8*24, 24);
+    QPixmap b(8*16, 16);
     QPainter p{&b};
     p.setBrush(QBrush(Qt::BrushStyle::SolidPattern));
     for (int i = 0; i < 8; i++) {
-        p.fillRect(QRect(24 * i, 0, 24, 24), paletteData[index][i]);
+        p.fillRect(QRect(16 * i, 0, 16, 16), paletteData[index][i]);
     }
     p.end();
     return b;
