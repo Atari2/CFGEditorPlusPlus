@@ -4,6 +4,7 @@
 #include <QFile>
 #include <QJsonObject>
 #include <QJsonArray>
+#include <QTableView>
 #include <QFileDialog>
 #include "tweak_bytes.h"
 
@@ -43,6 +44,7 @@ public:
     void from_file(const QString& name);
     void deserialize();
     void serialize();
+    void addCollections(QTableView* view);
     QString to_text();
     void to_file(const QString& name = QString());
     QString& name();

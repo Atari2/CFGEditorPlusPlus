@@ -200,3 +200,16 @@ void JsonSprite::to_file(const QString& name) {
         outFile.write(to_text().toStdString().c_str());
     }
 }
+
+void JsonSprite::addCollections(QTableView* view) {
+    auto model = view->model();
+    for (int i = 0; i < model->rowCount(); i++) {
+        QJsonObject obj;
+        obj["Name"] = model->index(i, 0).data().toString();
+        obj["ExtraBit"] = model->index(i, 1).data().toBool();
+        for (int j = 0; j < 12; j++) {
+            obj[QString::asprintf("Extra Property Byte %d", j + 1)] = model->index(i, j + 2).data().toString().toInt(nullptr, 16);
+        }
+        collections.append(Collection{obj});
+    }
+}

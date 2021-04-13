@@ -20,7 +20,7 @@ public:
     void setByte(uint8_t data, int index);
     void setBytes(const uint8_t* data);
     void setExtraBit(bool bit);
-    QVector<QStandardItem*> getRow();
+    QVector<QStandardItem*> getRow(void* ui = nullptr);
     static CollectionDataModel fromRow(const QVector<QStandardItem*>& row);
     static CollectionDataModel fromIndex(int index, QTableView* view);
     static QVector<QStandardItem*> fromCollection(const Collection& coll);

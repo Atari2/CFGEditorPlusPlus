@@ -26,7 +26,7 @@ public:
     CFGEditor(QWidget *parent = nullptr);
     ~CFGEditor();
     void setUpMenuBar(QMenuBar*);
-    void setUpTweak();
+    void bindSpriteProp();
     void setUpImages();
     void bindTweak1656();
     void bindTweak1662();

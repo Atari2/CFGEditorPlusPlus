@@ -10,13 +10,13 @@ CFGEditor::CFGEditor(QWidget *parent)
 {
     ui->setupUi(this);
     this->setFixedSize(this->size());
-    setCollectionModel();
-    bindCollectionButtons();
     setUpImages();
     QMenuBar* mb = menuBar();
     initCompleter();
     setUpMenuBar(mb);
-    setUpTweak();
+    bindSpriteProp();
+    setCollectionModel();
+    bindCollectionButtons();
     ui->Default->setAutoFillBackground(true);
     mb->show();
     setMenuBar(mb);
@@ -92,6 +92,7 @@ void CFGEditor::setUpMenuBar(QMenuBar* mb) {
                                   "Do you want to save it before opening the other one?",
                                   QMessageBox::Yes | QMessageBox::No | QMessageBox::Abort );
             if (res == QMessageBox::Yes) {
+                sprite->addCollections(ui->tableView);
                 sprite->to_file(QFileDialog::getSaveFileName());
             } else if (res == QMessageBox::Abort) {
                 return;
@@ -105,11 +106,14 @@ void CFGEditor::setUpMenuBar(QMenuBar* mb) {
         });
     }, Qt::CTRL | Qt::Key_O);
 
-    file->addAction("&Save", qApp, [&]() { sprite->to_file(); }, Qt::CTRL | Qt::Key_S);
+    file->addAction("&Save", qApp, [&]() {
+        sprite->addCollections(ui->tableView);
+        sprite->to_file();
+    }, Qt::CTRL | Qt::Key_S);
 
     file->addAction("&Save As", qApp, [&]() {
-        auto name = QFileDialog::getSaveFileName();
-        sprite->to_file(name);
+        sprite->addCollections(ui->tableView);
+        sprite->to_file(QFileDialog::getSaveFileName());
     }, Qt::CTRL | Qt::ALT | Qt::Key_S);
 
     display->addAction("&Load Custom Map16", qApp, DefaultMissingImpl("Load Custom Map16"));
@@ -119,6 +123,34 @@ void CFGEditor::setUpMenuBar(QMenuBar* mb) {
 
     mb->addMenu(file);
     mb->addMenu(display);
+}
+
+QVector<QStandardItem*> CollectionDataModel::getRow(void* ui) {
+    QVector<QStandardItem*> data{};
+    if (ui == nullptr) {
+        data.append(new QStandardItem(m_name));
+        data.append(new QStandardItem(m_extrabit ? "True" : "False"));
+        for (int i = 0; i < 12; i++) {
+            data.append(new QStandardItem(QString::asprintf("%02X", m_bytes[i])));
+        }
+    } else {
+        auto ed = (Ui::CFGEditor*)ui;
+        data.append(new QStandardItem(ed->lineEditCollName->text()));
+        data.append(new QStandardItem(ed->checkBoxCollExtrabit->isChecked() ? "True" : "False"));
+        data.append(new QStandardItem(ed->lineEditCollExByte1->text()));
+        data.append(new QStandardItem(ed->lineEditCollExByte2->text()));
+        data.append(new QStandardItem(ed->lineEditCollExByte3->text()));
+        data.append(new QStandardItem(ed->lineEditCollExByte4->text()));
+        data.append(new QStandardItem(ed->lineEditCollExByte5->text()));
+        data.append(new QStandardItem(ed->lineEditCollExByte6->text()));
+        data.append(new QStandardItem(ed->lineEditCollExByte7->text()));
+        data.append(new QStandardItem(ed->lineEditCollExByte8->text()));
+        data.append(new QStandardItem(ed->lineEditCollExByte9->text()));
+        data.append(new QStandardItem(ed->lineEditCollExByte10->text()));
+        data.append(new QStandardItem(ed->lineEditCollExByte11->text()));
+        data.append(new QStandardItem(ed->lineEditCollExByte12->text()));
+    }
+    return data;
 }
 
 
@@ -138,12 +170,50 @@ void CFGEditor::setCollectionModel() {
     ui->tableView->horizontalHeader()->setSectionResizeMode(0, QHeaderView::ResizeToContents);
     ui->tableView->setHorizontalScrollBarPolicy(Qt::ScrollBarPolicy::ScrollBarAlwaysOff);
     ui->tableView->setVerticalScrollBarPolicy(Qt::ScrollBarPolicy::ScrollBarAsNeeded);
+
+    ui->lineEditCollExByte1->setMaxLength(2);
+    ui->lineEditCollExByte1->setValidator(hexValidator);
+    ui->lineEditCollExByte1->setCompleter(hexCompleter);
+    ui->lineEditCollExByte2->setMaxLength(2);
+    ui->lineEditCollExByte2->setValidator(hexValidator);
+    ui->lineEditCollExByte2->setCompleter(hexCompleter);
+    ui->lineEditCollExByte3->setMaxLength(2);
+    ui->lineEditCollExByte3->setValidator(hexValidator);
+    ui->lineEditCollExByte3->setCompleter(hexCompleter);
+    ui->lineEditCollExByte4->setMaxLength(2);
+    ui->lineEditCollExByte4->setValidator(hexValidator);
+    ui->lineEditCollExByte4->setCompleter(hexCompleter);
+    ui->lineEditCollExByte5->setMaxLength(2);
+    ui->lineEditCollExByte5->setValidator(hexValidator);
+    ui->lineEditCollExByte5->setCompleter(hexCompleter);
+    ui->lineEditCollExByte6->setMaxLength(2);
+    ui->lineEditCollExByte6->setValidator(hexValidator);
+    ui->lineEditCollExByte6->setCompleter(hexCompleter);
+    ui->lineEditCollExByte7->setMaxLength(2);
+    ui->lineEditCollExByte7->setValidator(hexValidator);
+    ui->lineEditCollExByte7->setCompleter(hexCompleter);
+    ui->lineEditCollExByte8->setMaxLength(2);
+    ui->lineEditCollExByte8->setValidator(hexValidator);
+    ui->lineEditCollExByte8->setCompleter(hexCompleter);
+    ui->lineEditCollExByte9->setMaxLength(2);
+    ui->lineEditCollExByte9->setValidator(hexValidator);
+    ui->lineEditCollExByte9->setCompleter(hexCompleter);
+    ui->lineEditCollExByte10->setMaxLength(2);
+    ui->lineEditCollExByte10->setValidator(hexValidator);
+    ui->lineEditCollExByte10->setCompleter(hexCompleter);
+    ui->lineEditCollExByte11->setMaxLength(2);
+    ui->lineEditCollExByte11->setValidator(hexValidator);
+    ui->lineEditCollExByte11->setCompleter(hexCompleter);
+    ui->lineEditCollExByte12->setMaxLength(2);
+    ui->lineEditCollExByte12->setValidator(hexValidator);
+    ui->lineEditCollExByte12->setCompleter(hexCompleter);
+
 }
 
 void CFGEditor::bindCollectionButtons() {
     QObject::connect(ui->newCollButton, &QPushButton::clicked, this, [&]() {
         qDebug() << "New collection button clicked";
-        ((QStandardItemModel*)ui->tableView->model())->appendRow(CollectionDataModel().getRow());
+        ((QStandardItemModel*)ui->tableView->model())->appendRow(CollectionDataModel().getRow(ui));
     });
     QObject::connect(ui->cloneCollButton, &QPushButton::clicked, this, [&]() {
         if (!ui->tableView->currentIndex().isValid()) {
@@ -218,7 +288,7 @@ void CFGEditor::resetTweaks() {
     emit ui->lineEdit190f->editingFinished();
 }
 
-void CFGEditor::setUpTweak() {
+void CFGEditor::bindSpriteProp() {
     // Map16, Displays, Collection -> todo
     // FIXME: handle map16, displays and collection
     // Extra Prop Bytes

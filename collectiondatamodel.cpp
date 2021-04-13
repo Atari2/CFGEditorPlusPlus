@@ -2,6 +2,8 @@
 
 CollectionDataModel::CollectionDataModel()
 {
+    m_extrabit = false;
+    m_name = "";
     memset(m_bytes, 0, 12);
 }
 const QString& CollectionDataModel::name() {
@@ -28,15 +30,6 @@ void CollectionDataModel::setExtraBit(bool bit) {
     m_extrabit = bit;
 }
 
-QVector<QStandardItem*> CollectionDataModel::getRow() {
-    QVector<QStandardItem*> data{};
-    data.append(new QStandardItem(m_name));
-    data.append(new QStandardItem(m_extrabit ? "true" : "false"));
-    for (int i = 0; i < 12; i++) {
-        data.append(new QStandardItem(QString::asprintf("%02X", m_bytes[i])));
-    }
-    return data;
-}
 CollectionDataModel CollectionDataModel::fromRow(const QVector<QStandardItem*>& row) {
     CollectionDataModel model{};
     model.setName(row[0]->data().toString());
