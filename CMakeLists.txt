@@ -47,6 +47,8 @@ set(PROJECT_SOURCES
         tweak_bytes.h
         spritepalettecreator.cpp
         spritepalettecreator.h
+        collectiondatamodel.cpp
+        collectiondatamodel.h
         ${TS_FILES}
 )
 
@@ -70,6 +72,11 @@ else()
     endif()
 
     qt5_create_translation(QM_FILES ${CMAKE_SOURCE_DIR} ${TS_FILES})
+endif()
+
+if (CMAKE_BUILD_TYPE STREQUAL "Release")
+    message("Building Release, removing qDebug()")
+    target_compile_definitions(CFGEditorPlusPlus PRIVATE QT_NO_DEBUG_OUTPUT)
 endif()
 
 target_link_libraries(CFGEditorPlusPlus PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)

@@ -9,8 +9,10 @@
 #include <QLineEdit>
 #include <QCheckBox>
 #include <QRegularExpressionValidator>
+#include <QStandardItemModel>
 #include "jsonsprite.h"
 #include "spritepalettecreator.h"
+#include "collectiondatamodel.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class CFGEditor; }
@@ -25,6 +27,7 @@ public:
     ~CFGEditor();
     void setUpMenuBar(QMenuBar*);
     void setUpTweak();
+    void setUpImages();
     void bindTweak1656();
     void bindTweak1662();
     void bindTweak166E();
@@ -32,6 +35,8 @@ public:
     void bindTweak1686();
     void bindTweak190F();
     void resetTweaks();
+    void setCollectionModel();
+    void bindCollectionButtons();
     void initCompleter();
     template <typename J>
     void connectCheckBox(QLineEdit* edit, QCheckBox* box, J* tweak, bool& tochange) {
@@ -58,6 +63,14 @@ private:
     QMessageBox* messageBox = nullptr;
 public:
     DefaultMissingImpl(const QString& impl_name);
+    void operator()();
+};
+
+class DefaultAlertImpl {
+private:
+    QMessageBox* messageBox = nullptr;
+public:
+    DefaultAlertImpl(const QString& message);
     void operator()();
 };
 

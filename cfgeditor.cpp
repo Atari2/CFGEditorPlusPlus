@@ -10,31 +10,9 @@ CFGEditor::CFGEditor(QWidget *parent)
 {
     ui->setupUi(this);
     this->setFixedSize(this->size());
-    SpritePaletteCreator::ReadPaletteFile(0, 22);
-    paletteImages.reserve(SpritePaletteCreator::npalettes());
-    for (int i = 0; i < SpritePaletteCreator::npalettes(); i++) {
-        paletteImages.append(SpritePaletteCreator::MakePalette(i));
-    }
-    for (int i = 0; i <= 0x0F; i++) {
-        QFile img{QString::asprintf(":/Resources/ObjClipping/%02X.png", i)};
-        img.open(QFile::ReadOnly);
-        QPixmap clip{};
-        clip.loadFromData(img.readAll(), "png");
-        if (clip.size().height() > clip.size().width())
-            objClipImages.append(clip.scaledToHeight(100));
-        else
-            objClipImages.append(clip.scaledToWidth(100));
-    }
-    for (int i = 0; i <= 0x3F; i++) {
-        QFile img{QString::asprintf(":/Resources/SprClipping/%02X.png", i)};
-        img.open(QFile::ReadOnly);
-        QPixmap clip{};
-        clip.loadFromData(img.readAll(), "png");
-        if (clip.size().height() > clip.size().width())
-            sprClipImages.append(clip.scaledToHeight(100));
-        else
-            sprClipImages.append(clip.scaledToWidth(100));
-    }
+    setCollectionModel();
+    bindCollectionButtons();
+    setUpImages();
     QMenuBar* mb = menuBar();
     initCompleter();
     setUpMenuBar(mb);
@@ -59,6 +37,16 @@ DefaultMissingImpl::DefaultMissingImpl(const QString& impl_name) : name(impl_nam
 }
 
 void DefaultMissingImpl::operator()() {
+    if (messageBox)
+        messageBox->exec();
+};
+
+DefaultAlertImpl::DefaultAlertImpl(const QString& impl_name) {
+    messageBox = new QMessageBox();
+    messageBox->setText(impl_name);
+}
+
+void DefaultAlertImpl::operator()() {
     if (messageBox)
         messageBox->exec();
 };
@@ -91,6 +79,7 @@ void CFGEditor::setUpMenuBar(QMenuBar* mb) {
                 sprite->reset();
             }
             resetTweaks();
+            ui->tableView->model()->removeRows(0, ui->tableView->model()->rowCount());
         }
     }, Qt::CTRL | Qt::Key_N);
 
@@ -111,6 +100,9 @@ void CFGEditor::setUpMenuBar(QMenuBar* mb) {
         auto file = QFileDialog::getOpenFileName();
         sprite->from_file(file);
         resetTweaks();
+        std::for_each(sprite->collections.cbegin(), sprite->collections.cend(), [&](auto& coll) {
+            ((QStandardItemModel*)ui->tableView->model())->appendRow(CollectionDataModel::fromCollection(coll));
+        });
     }, Qt::CTRL | Qt::Key_O);
 
     file->addAction("&Save", qApp, [&]() { sprite->to_file(); }, Qt::CTRL | Qt::Key_S);
@@ -127,6 +119,77 @@ void CFGEditor::setUpMenuBar(QMenuBar* mb) {
 
     mb->addMenu(file);
     mb->addMenu(display);
+}
+
+
+void CFGEditor::setCollectionModel() {
+    CollectionDataModel data{};
+    QStandardItemModel* model = new QStandardItemModel;
+    QStringList labelList{};
+    labelList.append("Name");
+    labelList.append("Extra bit");
+    for (int i = 1; i <= 12; i++) {
+        labelList.append(QString::asprintf("Ex%d", i));
+    }
+    model->setHorizontalHeaderLabels(labelList);
+    ui->tableView->setFixedSize(ui->tableView->size());
+    ui->tableView->setModel(model);
+    ui->tableView->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+    ui->tableView->horizontalHeader()->setSectionResizeMode(0, QHeaderView::ResizeToContents);
+    ui->tableView->setHorizontalScrollBarPolicy(Qt::ScrollBarPolicy::ScrollBarAlwaysOff);
+    ui->tableView->setVerticalScrollBarPolicy(Qt::ScrollBarPolicy::ScrollBarAsNeeded);
+}
+
+void CFGEditor::bindCollectionButtons() {
+    QObject::connect(ui->newCollButton, &QPushButton::clicked, this, [&]() {
+        qDebug() << "New collection button clicked";
+        ((QStandardItemModel*)ui->tableView->model())->appendRow(CollectionDataModel().getRow());
+    });
+    QObject::connect(ui->cloneCollButton, &QPushButton::clicked, this, [&]() {
+        if (!ui->tableView->currentIndex().isValid()) {
+            DefaultAlertImpl("Select a row before cloning")();
+            return;
+        }
+        qDebug() << "Clone collection button clicked";
+        CollectionDataModel model = CollectionDataModel::fromIndex(ui->tableView->currentIndex().row(), ui->tableView);
+        ((QStandardItemModel*)ui->tableView->model())->appendRow(model.getRow());
+    });
+    QObject::connect(ui->deleteCollButton, &QPushButton::clicked, this, [&]() {
+        if (!ui->tableView->currentIndex().isValid()) {
+            DefaultAlertImpl("Select a row before deleting")();
+            return;
+        }
+        qDebug() << "Delete collection button clicked";
+        ui->tableView->model()->removeRow(ui->tableView->currentIndex().row());
+    });
+}
+
+void CFGEditor::setUpImages() {
+    SpritePaletteCreator::ReadPaletteFile(0, 22);
+    paletteImages.reserve(SpritePaletteCreator::npalettes());
+    for (int i = 0; i < SpritePaletteCreator::npalettes(); i++) {
+        paletteImages.append(SpritePaletteCreator::MakePalette(i));
+    }
+    for (int i = 0; i <= 0x0F; i++) {
+        QFile img{QString::asprintf(":/Resources/ObjClipping/%02X.png", i)};
+        img.open(QFile::ReadOnly);
+        QPixmap clip{};
+        clip.loadFromData(img.readAll(), "png");
+        if (clip.size().height() > clip.size().width())
+            objClipImages.append(clip.scaledToHeight(100));
+        else
+            objClipImages.append(clip.scaledToWidth(100));
+    }
+    for (int i = 0; i <= 0x3F; i++) {
+        QFile img{QString::asprintf(":/Resources/SprClipping/%02X.png", i)};
+        img.open(QFile::ReadOnly);
+        QPixmap clip{};
+        clip.loadFromData(img.readAll(), "png");
+        if (clip.size().height() > clip.size().width())
+            sprClipImages.append(clip.scaledToHeight(100));
+        else
+            sprClipImages.append(clip.scaledToWidth(100));
+    }
 }
 
 void CFGEditor::resetTweaks() {

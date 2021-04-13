@@ -665,6 +665,26 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <location filename="cfgeditor.ui" line="1598"/>
+        <source>Entry</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="cfgeditor.ui" line="1621"/>
+        <source>New</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="cfgeditor.ui" line="1634"/>
+        <source>Clone</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="cfgeditor.ui" line="1647"/>
+        <source>Delete</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <location filename="cfgeditor.ui" line="656"/>
         <source>Clipping Visualized:</source>
         <translation type="unfinished"></translation>
