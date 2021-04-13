@@ -2,30 +2,39 @@
 
 Display::Display(const QJsonObject& d) {
     description = d["Description"].toString();
-    displayText = d["DisplayText"].toString();
     extrabit = d["ExtraBit"].toBool();
     x = d["X"].toInt();
     y = d["Y"].toInt();
     useText = d["UseText"].toBool();
     auto tilesArr = d["Tiles"].toArray();
-    tiles.reserve(tilesArr.size());
-    std::for_each(tilesArr.cbegin(), tilesArr.cend(), [&](auto& t) {
-        tiles.push_back(Tile(t.toObject()));
-    });
+    if (useText) {
+        tiles.reserve(1);
+        tiles.append(Tile(tilesArr[0].toObject()));
+        tiles[0].text = d["DisplayText"].toString();
+    } else {
+        tiles.reserve(tilesArr.size());
+        std::for_each(tilesArr.cbegin(), tilesArr.cend(), [&](auto& t) {
+            tiles.append(Tile(t.toObject()));
+        });
+    }
 }
 
 QJsonObject Display::toJson() const {
     QJsonObject obj{};
     obj["Description"] = description;
-    obj["DisplayText"] = displayText;
     obj["ExtraBit"] = extrabit;
     obj["X"] = x;
     obj["Y"] = y;
     obj["UseText"] = useText;
     QJsonArray tilesArr{};
-    std::for_each(tiles.cbegin(), tiles.cend(), [&](auto& t) {
-        tilesArr.append(t.toJson());
-    });
+    if (useText) {
+        obj["DisplayText"] = tiles[0].text;
+        tilesArr.append(tiles[0].toJson());
+    } else {
+        std::for_each(tiles.cbegin(), tiles.cend(), [&](auto& t) {
+            tilesArr.append(t.toJson());
+        });
+    }
     obj["Tiles"] = tilesArr;
     return obj;
 }
@@ -34,9 +43,6 @@ Tile::Tile(const QJsonObject& t) {
     xoff = t["X offset"].toInt();
     yoff = t["Y offset"].toInt();
     tilenumber = t["map16 tile"].toInt();
-    if (t.contains("Text")) {
-        text = t["Text"].toString();
-    }
 }
 
 QJsonObject Tile::toJson() const {
@@ -44,8 +50,6 @@ QJsonObject Tile::toJson() const {
     obj["X offset"] = xoff;
     obj["Y offset"] = yoff;
     obj["map16 tile"] = tilenumber;
-    if (text.length() != 0)
-        obj["Text"] = text;
     return obj;
 }
 
@@ -212,4 +216,9 @@ void JsonSprite::addCollections(QTableView* view) {
         }
         collections.append(Collection{obj});
     }
+}
+
+void JsonSprite::addDisplays(QTableView* view) {
+    qDebug() << "Implement add display";
+    Q_ASSERT(false);
 }

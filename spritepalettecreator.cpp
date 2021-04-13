@@ -1,5 +1,9 @@
 #include "spritepalettecreator.h"
 
+const QVector<QColor>& SpritePaletteCreator::getPalette(int index) {
+    return paletteData[index];
+}
+
 void SpritePaletteCreator::ReadPaletteFile(int offset, int rows, int columns) {
     QFile pal{":/palettedata/Resources/sprites_palettes.pal"};
     pal.open(QFile::OpenModeFlag::ReadOnly);

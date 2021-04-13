@@ -23,7 +23,6 @@ struct Display {
     bool extrabit;
     int x;
     int y;
-    QString displayText;
     bool useText;
     Display(const QJsonObject& t);
     QJsonObject toJson() const;
@@ -45,6 +44,7 @@ public:
     void deserialize();
     void serialize();
     void addCollections(QTableView* view);
+    void addDisplays(QTableView* view);
     QString to_text();
     void to_file(const QString& name = QString());
     QString& name();

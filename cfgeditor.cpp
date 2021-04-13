@@ -11,12 +11,16 @@ CFGEditor::CFGEditor(QWidget *parent)
     ui->setupUi(this);
     this->setFixedSize(this->size());
     setUpImages();
+    loadFullbitmap();
     QMenuBar* mb = menuBar();
     initCompleter();
     setUpMenuBar(mb);
     bindSpriteProp();
     setCollectionModel();
+    setDisplayModel();
     bindCollectionButtons();
+    bindDisplayButtons();
+    bindGFXSelector();
     ui->Default->setAutoFillBackground(true);
     mb->show();
     setMenuBar(mb);
@@ -59,6 +63,25 @@ void CFGEditor::initCompleter() {
     hexCompleter->setCaseSensitivity(Qt::CaseSensitivity::CaseInsensitive);
 }
 
+void CFGEditor::loadFullbitmap(int index) {
+    if (index == -1)
+        index = ui->comboBoxTilePalette->currentIndex();
+    QVector<QString> gfxFiles{ui->lineEditGFXSp0->text(), ui->lineEditGFXSp1->text(), ui->lineEditGFXSp2->text(), ui->lineEditGFXSp3->text()};
+    if (full8x8Bitmap)
+        delete full8x8Bitmap;
+    full8x8Bitmap = new QImage{128, 256, QImage::Format_RGB32};
+    QPainter p{full8x8Bitmap};
+    p.setCompositionMode(QPainter::CompositionMode::CompositionMode_SourceOver);
+    int i = 0;
+    for (auto& file : gfxFiles) {
+        QImage img = SnesGFXConverter::fromResource(":/Resources/Graphics/" + file + ".bin", SpritePaletteCreator::getPalette(index));
+        p.drawImage(QRect{0, i, 128, 64}, img, QRect{0, 0, img.width(), img.height()});
+        i += 64;
+    }
+    ui->testImage->setPixmap(QPixmap::fromImage(*full8x8Bitmap));
+    ui->testImage->setFixedSize(full8x8Bitmap->size());
+}
+
 void CFGEditor::setUpMenuBar(QMenuBar* mb) {
     QMenu* file = new QMenu("&File");
     QMenu* display = new QMenu("&Display");
@@ -92,6 +115,7 @@ void CFGEditor::setUpMenuBar(QMenuBar* mb) {
                                   "Do you want to save it before opening the other one?",
                                   QMessageBox::Yes | QMessageBox::No | QMessageBox::Abort );
             if (res == QMessageBox::Yes) {
+                sprite->addDisplays(ui->tableViewDisplays);
                 sprite->addCollections(ui->tableView);
                 sprite->to_file(QFileDialog::getSaveFileName());
             } else if (res == QMessageBox::Abort) {
@@ -104,14 +128,19 @@ void CFGEditor::setUpMenuBar(QMenuBar* mb) {
         std::for_each(sprite->collections.cbegin(), sprite->collections.cend(), [&](auto& coll) {
             ((QStandardItemModel*)ui->tableView->model())->appendRow(CollectionDataModel::fromCollection(coll));
         });
+        std::for_each(sprite->displays.cbegin(), sprite->displays.cend(), [&](auto& dis) {
+            ((QStandardItemModel*)ui->tableViewDisplays->model())->appendRow(DisplayDataModel::fromDisplay(dis));
+        });
     }, Qt::CTRL | Qt::Key_O);
 
     file->addAction("&Save", qApp, [&]() {
+        sprite->addDisplays(ui->tableViewDisplays);
         sprite->addCollections(ui->tableView);
         sprite->to_file();
     }, Qt::CTRL | Qt::Key_S);
 
     file->addAction("&Save As", qApp, [&]() {
+        sprite->addDisplays(ui->tableViewDisplays);
         sprite->addCollections(ui->tableView);
         sprite->to_file(QFileDialog::getSaveFileName());
     }, Qt::CTRL | Qt::ALT | Qt::Key_S);
@@ -134,6 +163,7 @@ QVector<QStandardItem*> CollectionDataModel::getRow(void* ui) {
             data.append(new QStandardItem(QString::asprintf("%02X", m_bytes[i])));
         }
     } else {
+        // this is horrific
         auto ed = (Ui::CFGEditor*)ui;
         data.append(new QStandardItem(ed->lineEditCollName->text()));
         data.append(new QStandardItem(ed->checkBoxCollExtrabit->isChecked() ? "True" : "False"));
@@ -153,9 +183,35 @@ QVector<QStandardItem*> CollectionDataModel::getRow(void* ui) {
     return data;
 }
 
+QVector<QStandardItem*> DisplayDataModel::getRow(void* ui) {
+    QVector<QStandardItem*> data{};
+    if (ui == nullptr) {
+        data.append(new QStandardItem(m_extrabit ? "True" : "False"));
+        data.append(new QStandardItem(QString::asprintf("%d", m_x)));
+        data.append(new QStandardItem(QString::asprintf("%d", m_y)));
+    } else {
+        // this is horrific
+        auto ed = (Ui::CFGEditor*)ui;
+        data.append(new QStandardItem(ed->checkBoxDisplayExtraBit->isChecked() ? "True" : "False"));
+        data.append(new QStandardItem(ed->spinBoxXPos->text()));
+        data.append(new QStandardItem(ed->spinBoxYPos->text()));
+    }
+    return data;
+}
+
+void CFGEditor::setDisplayModel() {
+    QStandardItemModel* model = new QStandardItemModel;
+    QStringList labelList{"ExtraBit", "X", "Y"};
+    model->setHorizontalHeaderLabels(labelList);
+    ui->tableViewDisplays->setFixedSize(ui->tableViewDisplays->size());
+    ui->tableViewDisplays->setModel(model);
+    ui->tableViewDisplays->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+    ui->tableViewDisplays->horizontalHeader()->setSectionResizeMode(0, QHeaderView::ResizeToContents);
+    ui->tableViewDisplays->setHorizontalScrollBarPolicy(Qt::ScrollBarPolicy::ScrollBarAlwaysOff);
+    ui->tableViewDisplays->setVerticalScrollBarPolicy(Qt::ScrollBarPolicy::ScrollBarAsNeeded);
+}
 
 void CFGEditor::setCollectionModel() {
-    CollectionDataModel data{};
     QStandardItemModel* model = new QStandardItemModel;
     QStringList labelList{};
     labelList.append("Name");
@@ -208,6 +264,88 @@ void CFGEditor::setCollectionModel() {
     ui->lineEditCollExByte12->setValidator(hexValidator);
     ui->lineEditCollExByte12->setCompleter(hexCompleter);
 
+}
+
+void CFGEditor::bindGFXSelector() {
+    auto splitSetGFx = [&]() {
+        QString gfxStr[4];
+        auto strNums = ui->comboBoxGFXSet->currentText().split(" ");
+        std::transform(strNums.cbegin(), strNums.cbegin() + 4, std::begin(gfxStr), [&](const QString& str) -> QString {
+            return "GFX" + str;
+        });
+        ui->lineEditGFXSp0->setText(gfxStr[0]);
+        ui->lineEditGFXSp1->setText(gfxStr[1]);
+        ui->lineEditGFXSp2->setText(gfxStr[2]);
+        ui->lineEditGFXSp3->setText(gfxStr[3]);
+    };
+    splitSetGFx();
+    QObject::connect(ui->comboBoxGFXSet, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [&, splitSetGFx](int _) {
+        qDebug() << "Index of GFX set changed";
+        splitSetGFx();
+        loadFullbitmap();
+    });
+    QObject::connect(ui->comboBoxTilePalette, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [&](int index) {
+        loadFullbitmap(index);
+    });
+}
+
+void CFGEditor::bindDisplayButtons() {
+    QObject::connect(ui->pushButtonNewDisplay, &QPushButton::clicked, this, [&]() {
+        qDebug() << "New display button clicked";
+        ((QStandardItemModel*)ui->tableViewDisplays->model())->appendRow(DisplayDataModel().getRow());
+        ui->checkBoxDisplayExtraBit->setChecked(false);
+        ui->spinBoxXPos->setValue(0);
+        ui->spinBoxYPos->setValue(0);
+    });
+    QObject::connect(ui->pushButtonCloneDisplay, &QPushButton::clicked, this, [&]() {
+        if (!ui->tableViewDisplays->currentIndex().isValid()) {
+            DefaultAlertImpl("Select a row before cloning")();
+            return;
+        }
+        qDebug() << "Clone display button clicked";
+        DisplayDataModel model = DisplayDataModel::fromIndex(ui->tableViewDisplays->currentIndex().row(), ui->tableViewDisplays);
+        ((QStandardItemModel*)ui->tableViewDisplays->model())->appendRow(model.getRow());
+    });
+    QObject::connect(ui->pushButtonDeleteDisplay, &QPushButton::clicked, this, [&]() {
+        if (!ui->tableViewDisplays->currentIndex().isValid()) {
+            DefaultAlertImpl("Select a row before deleting")();
+            return;
+        }
+        qDebug() << "Delete display button clicked";
+        ui->tableViewDisplays->model()->removeRow(ui->tableViewDisplays->currentIndex().row());
+    });
+    QObject::connect(ui->tableViewDisplays->selectionModel(),
+                     QOverload<const QModelIndex&, const QModelIndex&>::of(&QItemSelectionModel::currentRowChanged), this, [&](const QModelIndex& now, const QModelIndex& pre) {
+        qDebug() << "current row changed called";
+        auto extrabit = ui->tableViewDisplays->model()->data(ui->tableViewDisplays->model()->index(now.row(), 0));
+        auto x = ui->tableViewDisplays->model()->data(ui->tableViewDisplays->model()->index(now.row(), 1));
+        auto y = ui->tableViewDisplays->model()->data(ui->tableViewDisplays->model()->index(now.row(), 2));
+        qDebug() << extrabit.toString();
+        ui->checkBoxDisplayExtraBit->setChecked(extrabit.toBool());
+        ui->spinBoxXPos->setValue(x.toInt());
+        ui->spinBoxYPos->setValue(y.toInt());
+    });
+    QObject::connect(ui->checkBoxDisplayExtraBit, &QCheckBox::stateChanged, this, [&]() {
+        if (!ui->tableViewDisplays->currentIndex().isValid()) {
+            return;
+        }
+        auto realIndex = ui->tableViewDisplays->model()->index(ui->tableViewDisplays->currentIndex().row(), 0);
+        ui->tableViewDisplays->model()->setData(realIndex, ui->checkBoxDisplayExtraBit->checkState() ? "True" : "False");
+    });
+    QObject::connect(ui->spinBoxXPos, QOverload<const QString&>::of(&QSpinBox::textChanged), this, [&](const QString& text) {
+        if (!ui->tableViewDisplays->currentIndex().isValid()) {
+            return;
+        }
+        auto realIndex = ui->tableViewDisplays->model()->index(ui->tableViewDisplays->currentIndex().row(), 1);
+        ui->tableViewDisplays->model()->setData(realIndex, text);
+    });
+    QObject::connect(ui->spinBoxYPos, QOverload<const QString&>::of(&QSpinBox::textChanged), this, [&](const QString& text) {
+        if (!ui->tableViewDisplays->currentIndex().isValid()) {
+            return;
+        }
+        auto realIndex = ui->tableViewDisplays->model()->index(ui->tableViewDisplays->currentIndex().row(), 2);
+        ui->tableViewDisplays->model()->setData(realIndex, text);
+    });
 }
 
 void CFGEditor::bindCollectionButtons() {
@@ -290,7 +428,7 @@ void CFGEditor::resetTweaks() {
 
 void CFGEditor::bindSpriteProp() {
     // Map16, Displays, Collection -> todo
-    // FIXME: handle map16, displays and collection
+    // FIXME: handle map16, displays
     // Extra Prop Bytes
     ui->lineEditExtraProp1->setMaxLength(2);
     ui->lineEditExtraProp1->setValidator(hexValidator);

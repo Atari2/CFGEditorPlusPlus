@@ -12,7 +12,8 @@
 #include <QStandardItemModel>
 #include "jsonsprite.h"
 #include "spritepalettecreator.h"
-#include "collectiondatamodel.h"
+#include "spritedatamodel.h"
+#include "snesgfxconverter.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class CFGEditor; }
@@ -36,8 +37,12 @@ public:
     void bindTweak190F();
     void resetTweaks();
     void setCollectionModel();
+    void setDisplayModel();
     void bindCollectionButtons();
+    void bindDisplayButtons();
+    void bindGFXSelector();
     void initCompleter();
+    void loadFullbitmap(int index = -1);
     template <typename J>
     void connectCheckBox(QLineEdit* edit, QCheckBox* box, J* tweak, bool& tochange) {
         QObject::connect(box, &QCheckBox::stateChanged, this, [=, &tochange]() mutable {
@@ -55,6 +60,7 @@ private:
     QVector<QPixmap> paletteImages;
     QVector<QPixmap> objClipImages;
     QVector<QPixmap> sprClipImages;
+    QImage* full8x8Bitmap = nullptr;
 };
 
 class DefaultMissingImpl {

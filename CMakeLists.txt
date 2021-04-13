@@ -47,8 +47,10 @@ set(PROJECT_SOURCES
         tweak_bytes.h
         spritepalettecreator.cpp
         spritepalettecreator.h
-        collectiondatamodel.cpp
-        collectiondatamodel.h
+        spritedatamodel.cpp
+        spritedatamodel.h
+        snesgfxconverter.cpp
+        snesgfxconverter.h
         ${TS_FILES}
 )
 

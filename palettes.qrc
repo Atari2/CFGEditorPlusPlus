@@ -83,5 +83,22 @@
         <file>Resources/SprClipping/3D.png</file>
         <file>Resources/SprClipping/3E.png</file>
         <file>Resources/SprClipping/3F.png</file>
+        <file>Resources/Graphics/GFX00.bin</file>
+        <file>Resources/Graphics/GFX01.bin</file>
+        <file>Resources/Graphics/GFX02.bin</file>
+        <file>Resources/Graphics/GFX03.bin</file>
+        <file>Resources/Graphics/GFX04.bin</file>
+        <file>Resources/Graphics/GFX05.bin</file>
+        <file>Resources/Graphics/GFX09.bin</file>
+        <file>Resources/Graphics/GFX0F.bin</file>
+        <file>Resources/Graphics/GFX10.bin</file>
+        <file>Resources/Graphics/GFX11.bin</file>
+        <file>Resources/Graphics/GFX12.bin</file>
+        <file>Resources/Graphics/GFX13.bin</file>
+        <file>Resources/Graphics/GFX1C.bin</file>
+        <file>Resources/Graphics/GFX1D.bin</file>
+        <file>Resources/Graphics/GFX20.bin</file>
+        <file>Resources/Graphics/GFX33.bin</file>
+        <file>Resources/Graphics/GFX06.bin</file>
     </qresource>
 </RCC>
