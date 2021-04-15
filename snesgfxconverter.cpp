@@ -5,8 +5,8 @@ SnesGFXConverter::SnesGFXConverter(const QString& name) {
     file.open(QFile::OpenModeFlag::ReadOnly);
     imageData = file.readAll();
 }
-QImage SnesGFXConverter::get8x8Tile(int row, int column, const QVector<QColor>& colors) {
-    int offset = (row * 16 * 32) + (32 * column);
+QImage SnesGFXConverter::get8x8Tile(int orig_row, int orig_column, const QVector<QColor>& colors) {
+    int offset = (orig_row * 16 * 32) + (32 * orig_column);
     QImage image(8, 8, QImage::Format_Indexed8);
     image.setColorCount(16);
     QVector<QRgb> rgbColors;
@@ -24,7 +24,7 @@ QImage SnesGFXConverter::get8x8Tile(int row, int column, const QVector<QColor>& 
         for (int bit = 7; bit >= 0; bit--) {
             uint8_t pixel = 0;
             for (int i = 0; i < 4; i++)
-                pixel |= ((bytes[i] & (1 << bit)) >> bit) << (3 - i);
+                pixel |= ((bytes[i] & (1 << bit)) >> bit) << i;
             image.setPixel(7 - bit, row, pixel);
         }
     }
@@ -45,12 +45,6 @@ QImage SnesGFXConverter::fromResource(const QString& name, const QVector<QColor>
             p.drawImage(QRect{0, 8, 8, 8}, converter.get8x8Tile(row * 2 + 1, col * 2, colors), QRect{0, 0, 8, 8});
             p.drawImage(QRect{8, 8, 8, 8}, converter.get8x8Tile(row * 2 + 1, col * 2 + 1, colors), QRect{0, 0, 8, 8});
             p.end();
-            qDebug() << "Drawing 16x16 rectangle at " << row * 16 << " " << col * 16;
-            // QGraphicsScene* scene = new QGraphicsScene;
-            // QGraphicsView* view = new QGraphicsView(scene);
-            // QGraphicsPixmapItem* item = new QGraphicsPixmapItem(QPixmap::fromImage(fullTile));
-            // scene->addItem(item);
-            // view->show();
             f.drawImage(QRect{col * 16, row * 16, 16, 16}, fullTile, QRect{0, 0, 16, 16});
         }
     }

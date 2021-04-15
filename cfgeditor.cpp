@@ -7,10 +7,13 @@ CFGEditor::CFGEditor(QWidget *parent)
     , sprite(new JsonSprite)
     , hexValidator(new QRegularExpressionValidator{QRegularExpression(R"([A-Fa-f0-9]{0,2})")})
     , hexNumberList(new QStringList(0x100))
+    , displays()
 {
     ui->setupUi(this);
     this->setFixedSize(this->size());
     setUpImages();
+    view8x8 = new EightByEightView(new QGraphicsScene);
+    viewPalette = new PaletteView(new QGraphicsScene);
     loadFullbitmap();
     QMenuBar* mb = menuBar();
     initCompleter();
@@ -24,6 +27,12 @@ CFGEditor::CFGEditor(QWidget *parent)
     ui->Default->setAutoFillBackground(true);
     mb->show();
     setMenuBar(mb);
+}
+
+void CFGEditor::closeEvent(QCloseEvent *event) {
+    view8x8->close();
+    viewPalette->close();
+    QMainWindow::closeEvent(event);
 }
 
 DefaultMissingImpl::DefaultMissingImpl(const QString& impl_name) : name(impl_name) {
@@ -74,12 +83,15 @@ void CFGEditor::loadFullbitmap(int index) {
     p.setCompositionMode(QPainter::CompositionMode::CompositionMode_SourceOver);
     int i = 0;
     for (auto& file : gfxFiles) {
-        QImage img = SnesGFXConverter::fromResource(":/Resources/Graphics/" + file + ".bin", SpritePaletteCreator::getPalette(index));
+        QImage img;
+        if (!QDir(file).isAbsolute())
+            img = SnesGFXConverter::fromResource(":/Resources/Graphics/" + file + ".bin", SpritePaletteCreator::getPalette(index + 8));
+        else
+            img = SnesGFXConverter::fromResource(file, SpritePaletteCreator::getPalette(index + 8));
         p.drawImage(QRect{0, i, 128, 64}, img, QRect{0, 0, img.width(), img.height()});
         i += 64;
     }
-    ui->testImage->setPixmap(QPixmap::fromImage(*full8x8Bitmap));
-    ui->testImage->setFixedSize(full8x8Bitmap->size());
+    view8x8->updateForChange(full8x8Bitmap);
 }
 
 void CFGEditor::setUpMenuBar(QMenuBar* mb) {
@@ -147,8 +159,16 @@ void CFGEditor::setUpMenuBar(QMenuBar* mb) {
 
     display->addAction("&Load Custom Map16", qApp, DefaultMissingImpl("Load Custom Map16"));
     display->addAction("&Load Custom GFX33", qApp, DefaultMissingImpl("Load Custom GFX33"));
-    display->addAction("&Palette", qApp, DefaultMissingImpl("Palette"));
-    display->addAction("&8x8 Tile Selector", qApp, DefaultMissingImpl("8x8 Tile Selector"));
+    display->addAction("&Palette", qApp, [&]() {
+        qDebug() << "Opening palette viewer";
+        viewPalette->updateForChange(SpritePaletteCreator::MakeFullPalette());
+        viewPalette->open();
+    });
+    display->addAction("&8x8 Tile Selector", qApp, [&]() {
+        qDebug() << "Opening 8x8 tile selector";
+        view8x8->updateForChange(full8x8Bitmap);
+        view8x8->open();
+    });
 
     mb->addMenu(file);
     mb->addMenu(display);
@@ -200,6 +220,7 @@ QVector<QStandardItem*> DisplayDataModel::getRow(void* ui) {
 }
 
 void CFGEditor::setDisplayModel() {
+    ui->textEditDisplayText->setReadOnly(true);
     QStandardItemModel* model = new QStandardItemModel;
     QStringList labelList{"ExtraBit", "X", "Y"};
     model->setHorizontalHeaderLabels(labelList);
@@ -266,7 +287,36 @@ void CFGEditor::setCollectionModel() {
 
 }
 
+void CFGEditor::addLunarMagicIcons() {
+    QFile first{":/Resources/ButtonIcons/8x8t.png"};
+    first.open(QFile::OpenModeFlag::ReadOnly);
+    QFile second{":/Resources/ButtonIcons/8x8.png"};
+    second.open(QFile::OpenModeFlag::ReadOnly);
+    QFile third{":/Resources/ButtonIcons/grid.png"};
+    third.open(QFile::OpenModeFlag::ReadOnly);
+    QFile fourth{":/Resources/ButtonIcons/page.png"};
+    fourth.open(QFile::OpenModeFlag::ReadOnly);
+    QFile fifth{":/Resources/ButtonIcons/palette.png"};
+    fifth.open(QFile::OpenModeFlag::ReadOnly);
+    ui->toolButton8x8Edit->setIcon(QIcon(QPixmap::fromImage(QImage::fromData(first.readAll()))));
+    ui->toolButton8x8Edit->setIconSize(QSize(32, 32));
+    ui->toolButton8x8Mode->setIcon(QIcon(QPixmap::fromImage(QImage::fromData(second.readAll()))));
+    ui->toolButton8x8Mode->setIconSize(QSize(32, 32));
+    ui->toolButtonGrid->setIcon(QIcon(QPixmap::fromImage(QImage::fromData(third.readAll()))));
+    ui->toolButtonGrid->setIconSize(QSize(32, 32));
+    ui->toolButtonBorders->setIcon(QIcon(QPixmap::fromImage(QImage::fromData(fourth.readAll()))));
+    ui->toolButtonBorders->setIconSize(QSize(32, 32));
+    ui->toolButtonPalette->setIcon(QIcon(QPixmap::fromImage(QImage::fromData(fifth.readAll()))));
+    ui->toolButtonPalette->setIconSize(QSize(32, 32));
+    ui->toolButton8x8Edit->setToolTip("Switch to 8x8 mode");
+    ui->toolButton8x8Mode->setToolTip("Open 8x8 Selector");
+    ui->toolButtonGrid->setToolTip("Show grid");
+    ui->toolButtonBorders->setToolTip("Show page borders");
+    ui->toolButtonPalette->setToolTip("Open Palette Viewer");
+}
+
 void CFGEditor::bindGFXSelector() {
+    addLunarMagicIcons();
     auto splitSetGFx = [&]() {
         QString gfxStr[4];
         auto strNums = ui->comboBoxGFXSet->currentText().split(" ");
@@ -278,6 +328,16 @@ void CFGEditor::bindGFXSelector() {
         ui->lineEditGFXSp2->setText(gfxStr[2]);
         ui->lineEditGFXSp3->setText(gfxStr[3]);
     };
+    QObject::connect(ui->toolButton8x8Mode, &QToolButton::clicked, this, [&]() {
+        qDebug() << "Map8x8 button clicked";
+        view8x8->updateForChange(full8x8Bitmap);
+        view8x8->open();
+    });
+    QObject::connect(ui->toolButtonPalette, &QToolButton::clicked, this, [&]() {
+        qDebug() << "Palette button clicked";
+        viewPalette->updateForChange(SpritePaletteCreator::MakeFullPalette());
+        viewPalette->open();
+    });
     splitSetGFx();
     QObject::connect(ui->comboBoxGFXSet, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [&, splitSetGFx](int _) {
         qDebug() << "Index of GFX set changed";
@@ -287,11 +347,52 @@ void CFGEditor::bindGFXSelector() {
     QObject::connect(ui->comboBoxTilePalette, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [&](int index) {
         loadFullbitmap(index);
     });
+    QObject::connect(viewPalette, &PaletteView::paletteChanged, this, [&](){
+        qDebug() << "Custom signal change palette received";
+        loadFullbitmap();
+        for (int i = 0; i < SpritePaletteCreator::nSpritePalettes(); i++) {
+            paletteImages[i] = SpritePaletteCreator::MakePalette(i);
+        }
+        ui->label->setPixmap(paletteImages[ui->paletteComboBox->currentIndex()]);
+    });
+
+    QObject::connect(ui->toolButtonGFXSp0, &QToolButton::clicked, this, [&]() {
+        QString filename = QFileDialog::getOpenFileName();
+        if (filename.length() == 0)
+            return;
+        ui->lineEditGFXSp0->setText(filename);
+        loadFullbitmap();
+    });
+
+    QObject::connect(ui->toolButtonGFXSp1, &QToolButton::clicked, this, [&]() {
+        QString filename = QFileDialog::getOpenFileName();
+        if (filename.length() == 0)
+            return;
+        ui->lineEditGFXSp1->setText(filename);
+        loadFullbitmap();
+    });
+
+    QObject::connect(ui->toolButtonGFXSp2, &QToolButton::clicked, this, [&]() {
+        QString filename = QFileDialog::getOpenFileName();
+        if (filename.length() == 0)
+            return;
+        ui->lineEditGFXSp2->setText(filename);
+        loadFullbitmap();
+    });
+
+    QObject::connect(ui->toolButtonGFXSp3, &QToolButton::clicked, this, [&]() {
+        QString filename = QFileDialog::getOpenFileName();
+        if (filename.length() == 0)
+            return;
+        ui->lineEditGFXSp3->setText(filename);
+        loadFullbitmap();
+    });
 }
 
 void CFGEditor::bindDisplayButtons() {
     QObject::connect(ui->pushButtonNewDisplay, &QPushButton::clicked, this, [&]() {
         qDebug() << "New display button clicked";
+        displays.insert(ui->tableViewDisplays->currentIndex().row() + 1, DisplayDataModel());
         ((QStandardItemModel*)ui->tableViewDisplays->model())->appendRow(DisplayDataModel().getRow());
         ui->checkBoxDisplayExtraBit->setChecked(false);
         ui->spinBoxXPos->setValue(0);
@@ -304,6 +405,7 @@ void CFGEditor::bindDisplayButtons() {
         }
         qDebug() << "Clone display button clicked";
         DisplayDataModel model = DisplayDataModel::fromIndex(ui->tableViewDisplays->currentIndex().row(), ui->tableViewDisplays);
+        displays.insert(ui->tableViewDisplays->currentIndex().row() + 1, model);
         ((QStandardItemModel*)ui->tableViewDisplays->model())->appendRow(model.getRow());
     });
     QObject::connect(ui->pushButtonDeleteDisplay, &QPushButton::clicked, this, [&]() {
@@ -312,6 +414,7 @@ void CFGEditor::bindDisplayButtons() {
             return;
         }
         qDebug() << "Delete display button clicked";
+        displays.remove(ui->tableViewDisplays->currentIndex().row());
         ui->tableViewDisplays->model()->removeRow(ui->tableViewDisplays->currentIndex().row());
     });
     QObject::connect(ui->tableViewDisplays->selectionModel(),
@@ -320,10 +423,31 @@ void CFGEditor::bindDisplayButtons() {
         auto extrabit = ui->tableViewDisplays->model()->data(ui->tableViewDisplays->model()->index(now.row(), 0));
         auto x = ui->tableViewDisplays->model()->data(ui->tableViewDisplays->model()->index(now.row(), 1));
         auto y = ui->tableViewDisplays->model()->data(ui->tableViewDisplays->model()->index(now.row(), 2));
-        qDebug() << extrabit.toString();
         ui->checkBoxDisplayExtraBit->setChecked(extrabit.toBool());
         ui->spinBoxXPos->setValue(x.toInt());
         ui->spinBoxYPos->setValue(y.toInt());
+    });
+    QPalette readOnlyPalette = palette();
+    readOnlyPalette.setColor(QPalette::Base, readOnlyPalette.color(QPalette::Window));
+    ui->textEditDisplayText->setPalette(readOnlyPalette);
+    QObject::connect(ui->checkBoxUseText, &QCheckBox::stateChanged, this, [&]() {
+        ui->textEditDisplayText->setReadOnly(!ui->checkBoxUseText->isChecked());
+        QPalette readOnlyPalette = palette();
+        if (ui->textEditDisplayText->isReadOnly()) {
+            readOnlyPalette.setColor(QPalette::Base, readOnlyPalette.color(QPalette::Window));
+        } else {
+            readOnlyPalette.setColor(QPalette::Base, readOnlyPalette.color(QPalette::BrightText));
+        }
+        ui->textEditDisplayText->setPalette(readOnlyPalette);
+        // this is bad, I have to find a better way to pass the data to the data model that's not garbage
+        // it's also not super easy to figure out a way that doesn't suck
+        // currently we'd have to update everything every time we make a change, I'd like to not have to do that.
+        // maybe accessing directly the single tile could be nice but I don't know if that possible
+        // with how I've structured things, it may need a full rewrite
+        QVector<QMap<QString, QVariant>> tiles;
+        QMap<QString, QVariant> tile;
+        tile["UseText"] = false;
+        displays[ui->tableViewDisplays->currentIndex().row()].setTiles(tiles);
     });
     QObject::connect(ui->checkBoxDisplayExtraBit, &QCheckBox::stateChanged, this, [&]() {
         if (!ui->tableViewDisplays->currentIndex().isValid()) {
@@ -373,9 +497,9 @@ void CFGEditor::bindCollectionButtons() {
 }
 
 void CFGEditor::setUpImages() {
-    SpritePaletteCreator::ReadPaletteFile(0, 22);
-    paletteImages.reserve(SpritePaletteCreator::npalettes());
-    for (int i = 0; i < SpritePaletteCreator::npalettes(); i++) {
+    SpritePaletteCreator::ReadPaletteFile(0, 16);
+    paletteImages.reserve(SpritePaletteCreator::nSpritePalettes());
+    for (int i = 0; i < SpritePaletteCreator::nSpritePalettes(); i++) {
         paletteImages.append(SpritePaletteCreator::MakePalette(i));
     }
     for (int i = 0; i <= 0x0F; i++) {
@@ -634,6 +758,9 @@ void CFGEditor::bindTweak190F() {
 
 CFGEditor::~CFGEditor()
 {
+    delete full8x8Bitmap;
+    delete view8x8;
+    delete viewPalette;
     delete hexValidator;
     delete hexCompleter;
     delete hexNumberList;

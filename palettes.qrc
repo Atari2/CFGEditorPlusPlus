@@ -100,5 +100,10 @@
         <file>Resources/Graphics/GFX20.bin</file>
         <file>Resources/Graphics/GFX33.bin</file>
         <file>Resources/Graphics/GFX06.bin</file>
+        <file>Resources/ButtonIcons/8x8.png</file>
+        <file>Resources/ButtonIcons/8x8t.png</file>
+        <file>Resources/ButtonIcons/grid.png</file>
+        <file>Resources/ButtonIcons/page.png</file>
+        <file>Resources/ButtonIcons/palette.png</file>
     </qresource>
 </RCC>

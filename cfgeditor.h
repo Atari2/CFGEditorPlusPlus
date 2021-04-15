@@ -10,10 +10,12 @@
 #include <QCheckBox>
 #include <QRegularExpressionValidator>
 #include <QStandardItemModel>
+#include <QDir>
 #include "jsonsprite.h"
-#include "spritepalettecreator.h"
 #include "spritedatamodel.h"
 #include "snesgfxconverter.h"
+#include "eightbyeightview.h"
+#include "paletteview.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class CFGEditor; }
@@ -43,6 +45,8 @@ public:
     void bindGFXSelector();
     void initCompleter();
     void loadFullbitmap(int index = -1);
+    void addLunarMagicIcons();
+    void closeEvent(QCloseEvent *event);
     template <typename J>
     void connectCheckBox(QLineEdit* edit, QCheckBox* box, J* tweak, bool& tochange) {
         QObject::connect(box, &QCheckBox::stateChanged, this, [=, &tochange]() mutable {
@@ -61,6 +65,9 @@ private:
     QVector<QPixmap> objClipImages;
     QVector<QPixmap> sprClipImages;
     QImage* full8x8Bitmap = nullptr;
+    EightByEightView* view8x8 = nullptr;
+    PaletteView* viewPalette = nullptr;
+    QMap<int, DisplayDataModel> displays;
 };
 
 class DefaultMissingImpl {

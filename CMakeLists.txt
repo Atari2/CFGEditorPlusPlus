@@ -51,6 +51,10 @@ set(PROJECT_SOURCES
         spritedatamodel.h
         snesgfxconverter.cpp
         snesgfxconverter.h
+        eightbyeightview.cpp
+        eightbyeightview.h
+        paletteview.cpp
+        paletteview.h
         ${TS_FILES}
 )
 

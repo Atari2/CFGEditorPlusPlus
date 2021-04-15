@@ -73,8 +73,13 @@ int TileDataModel::tileNumber() {
     return m_tile_number;
 }
 
+void TileDataModel::setUseText(bool enabled) {
+    m_use_text = enabled;
+}
+
 void TileDataModel::setText(const QString& text) {
-    m_text = text;
+    if (m_use_text)
+        m_text = text;
 }
 void TileDataModel::setXOffset(int xoff) {
     m_xoffset = xoff;
@@ -92,8 +97,8 @@ void TileDataModel::setTileNumber(int tilenum) {
 
 
 DisplayDataModel::DisplayDataModel() {
-
 }
+
 const QString& DisplayDataModel::description() {
     return m_description;
 }
@@ -113,8 +118,22 @@ int DisplayDataModel::Y() {
 void DisplayDataModel::setDescription(const QString& description) {
     m_description = description;
 }
-void DisplayDataModel::setTiles(const QVector<QStandardItem*>& data) {
-    // TODO: implement
+void DisplayDataModel::setTiles(const QVector<QMap<QString, QVariant>>& data) {
+    m_tiles.clear();
+    for (auto& tile : data) {
+        TileDataModel t;
+        if (tile.contains("UseText")) {
+           t.setUseText(true);
+           t.setOffset(0, 0);
+           t.setTileNumber(0);
+        } else {
+           t.setUseText(false);
+           t.setXOffset(tile["X"].toInt());
+           t.setYOffset(tile["Y"].toInt());
+           t.setTileNumber(tile["TileNumber"].toInt());
+        }
+        m_tiles.append(t);
+    }
 }
 void DisplayDataModel::setExtraBit(bool extrabit) {
     m_extrabit = extrabit;
@@ -128,8 +147,8 @@ void DisplayDataModel::setY(int y) {
 void DisplayDataModel::setPos(int x, int y) {
     m_x = x;
     m_y = y;
-}
 
+}
 DisplayDataModel DisplayDataModel::fromIndex(int index, QTableView* view) {
     DisplayDataModel data{};
     data.setExtraBit(view->model()->data(view->model()->index(index, 0)).toBool());

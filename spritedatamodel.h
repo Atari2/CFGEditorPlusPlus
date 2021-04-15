@@ -29,6 +29,7 @@ public:
 class TileDataModel
 {
 private:
+    bool m_use_text = false;
     int m_xoffset = 0;
     int m_yoffset = 0;
     int m_tile_number = 0;
@@ -40,6 +41,7 @@ public:
     int yOffset();
     int tileNumber();
 
+    void setUseText(bool enabled);
     void setText(const QString& text);
     void setXOffset(int xoff);
     void setYOffset(int yoff);
@@ -63,8 +65,9 @@ public:
     int X();
     int Y();
 
+    bool operator==(const DisplayDataModel& other);
     void setDescription(const QString& description);
-    void setTiles(const QVector<QStandardItem*>& data);
+    void setTiles(const QVector<QMap<QString, QVariant>>& data);
     void setExtraBit(bool extrabit);
     void setX(int x);
     void setY(int y);

@@ -1832,7 +1832,7 @@
        <property name="geometry">
         <rect>
          <x>30</x>
-         <y>270</y>
+         <y>310</y>
          <width>72</width>
          <height>19</height>
         </rect>
@@ -1845,7 +1845,7 @@
        <property name="geometry">
         <rect>
          <x>160</x>
-         <y>270</y>
+         <y>310</y>
          <width>72</width>
          <height>22</height>
         </rect>
@@ -1880,7 +1880,7 @@
        <property name="geometry">
         <rect>
          <x>10</x>
-         <y>330</y>
+         <y>350</y>
          <width>31</width>
          <height>21</height>
         </rect>
@@ -1893,7 +1893,7 @@
        <property name="geometry">
         <rect>
          <x>90</x>
-         <y>330</y>
+         <y>350</y>
          <width>31</width>
          <height>21</height>
         </rect>
@@ -1906,7 +1906,7 @@
        <property name="geometry">
         <rect>
          <x>30</x>
-         <y>330</y>
+         <y>350</y>
          <width>42</width>
          <height>22</height>
         </rect>
@@ -1919,7 +1919,7 @@
        <property name="geometry">
         <rect>
          <x>110</x>
-         <y>330</y>
+         <y>350</y>
          <width>42</width>
          <height>22</height>
         </rect>
@@ -1932,7 +1932,7 @@
        <property name="geometry">
         <rect>
          <x>170</x>
-         <y>330</y>
+         <y>350</y>
          <width>72</width>
          <height>19</height>
         </rect>
@@ -1980,6 +1980,16 @@
         <enum>QFrame::Raised</enum>
        </property>
       </widget>
+      <widget class="QTextEdit" name="textEditDisplayText">
+       <property name="geometry">
+        <rect>
+         <x>20</x>
+         <y>260</y>
+         <width>221</width>
+         <height>41</height>
+        </rect>
+       </property>
+      </widget>
      </widget>
      <widget class="QGroupBox" name="groupBox_4">
       <property name="geometry">
@@ -2008,22 +2018,6 @@
        <property name="frameShadow">
         <enum>QFrame::Raised</enum>
        </property>
-       <widget class="QLabel" name="testImage">
-        <property name="geometry">
-         <rect>
-          <x>80</x>
-          <y>80</y>
-          <width>151</width>
-          <height>131</height>
-         </rect>
-        </property>
-        <property name="frameShape">
-         <enum>QFrame::Box</enum>
-        </property>
-        <property name="text">
-         <string/>
-        </property>
-       </widget>
       </widget>
       <widget class="QWidget" name="verticalLayoutWidget_12">
        <property name="geometry">
@@ -2045,14 +2039,32 @@
               <height>32</height>
              </size>
             </property>
+            <property name="maximumSize">
+             <size>
+              <width>32</width>
+              <height>32</height>
+             </size>
+            </property>
             <property name="text">
              <string/>
+            </property>
+            <property name="iconSize">
+             <size>
+              <width>32</width>
+              <height>32</height>
+             </size>
             </property>
            </widget>
           </item>
           <item>
            <widget class="QToolButton" name="toolButton8x8Mode">
             <property name="minimumSize">
+             <size>
+              <width>32</width>
+              <height>32</height>
+             </size>
+            </property>
+            <property name="maximumSize">
              <size>
               <width>32</width>
               <height>32</height>
@@ -2077,6 +2089,12 @@
               <height>32</height>
              </size>
             </property>
+            <property name="maximumSize">
+             <size>
+              <width>32</width>
+              <height>32</height>
+             </size>
+            </property>
             <property name="text">
              <string/>
             </property>
@@ -2090,6 +2108,12 @@
               <height>32</height>
              </size>
             </property>
+            <property name="maximumSize">
+             <size>
+              <width>32</width>
+              <height>32</height>
+             </size>
+            </property>
             <property name="text">
              <string/>
             </property>
@@ -2098,6 +2122,12 @@
           <item>
            <widget class="QToolButton" name="toolButtonPalette">
             <property name="minimumSize">
+             <size>
+              <width>32</width>
+              <height>32</height>
+             </size>
+            </property>
+            <property name="maximumSize">
              <size>
               <width>32</width>
               <height>32</height>
