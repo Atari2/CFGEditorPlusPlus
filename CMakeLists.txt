@@ -55,6 +55,10 @@ set(PROJECT_SOURCES
         eightbyeightview.h
         paletteview.cpp
         paletteview.h
+        map16provider.cpp
+        map16provider.h
+        map16graphicsview.cpp
+        map16graphicsview.h
         ${TS_FILES}
 )
 

@@ -57,110 +57,159 @@ CollectionDataModel CollectionDataModel::fromIndex(int index, QTableView* view) 
     return data;
 }
 
-TileDataModel::TileDataModel() {
-
+void TileData::setXOffset(int x) {
+    m_x_offset = x;
 }
-const QString& TileDataModel::text() {
-    return m_text;
+void TileData::setYOffset(int y) {
+    m_y_offset = y;
 }
-int TileDataModel::xOffset() {
-    return m_xoffset;
+void TileData::setOffset(int x, int y) {
+    m_x_offset = x;
+    m_y_offset = y;
 }
-int TileDataModel::yOffset() {
-    return m_yoffset;
+void TileData::setOffset(QPoint point) {
+    m_x_offset = point.x();
+    m_y_offset = point.y();
 }
-int TileDataModel::tileNumber() {
+void TileData::setTileNumber(int number) {
+    m_tile_number = number;
+}
+int TileData::XOffset() {
+    return m_x_offset;
+}
+int TileData::YOffset() {
+    return m_y_offset;
+}
+QPoint TileData::Offset() {
+    return QPoint(m_x_offset, m_y_offset);
+}
+int TileData::TileNumber() {
     return m_tile_number;
 }
 
-void TileDataModel::setUseText(bool enabled) {
+TileData& TileData::operator=(const TileData& other) {
+    m_tile_number = other.m_tile_number;
+    m_x_offset = other.m_x_offset;
+    m_y_offset = other.m_y_offset;
+    return *this;
+}
+
+TileData::TileData(const TileData& other) {
+    this->operator=(other);
+}
+
+void DisplayData::setUseText(bool enabled) {
     m_use_text = enabled;
 }
-
-void TileDataModel::setText(const QString& text) {
-    if (m_use_text)
-        m_text = text;
+void DisplayData::setExtraBit(bool enabled) {
+    m_extra_bit = enabled;
 }
-void TileDataModel::setXOffset(int xoff) {
-    m_xoffset = xoff;
-}
-void TileDataModel::setYOffset(int yoff) {
-    m_yoffset = yoff;
-}
-void TileDataModel::setOffset(int xoff, int yoff) {
-    m_xoffset = xoff;
-    m_yoffset = yoff;
-}
-void TileDataModel::setTileNumber(int tilenum) {
-    m_tile_number = tilenum;
-}
-
-
-DisplayDataModel::DisplayDataModel() {
-}
-
-const QString& DisplayDataModel::description() {
-    return m_description;
-}
-const QVector<TileDataModel>& DisplayDataModel::tiles() {
-    return m_tiles;
-}
-bool DisplayDataModel::extraBit() {
-    return m_extrabit;
-}
-int DisplayDataModel::X() {
-    return m_x;
-}
-int DisplayDataModel::Y() {
-    return m_y;
-}
-
-void DisplayDataModel::setDescription(const QString& description) {
+void DisplayData::setDescription(const QString& description) {
     m_description = description;
 }
-void DisplayDataModel::setTiles(const QVector<QMap<QString, QVariant>>& data) {
-    m_tiles.clear();
-    for (auto& tile : data) {
-        TileDataModel t;
-        if (tile.contains("UseText")) {
-           t.setUseText(true);
-           t.setOffset(0, 0);
-           t.setTileNumber(0);
-        } else {
-           t.setUseText(false);
-           t.setXOffset(tile["X"].toInt());
-           t.setYOffset(tile["Y"].toInt());
-           t.setTileNumber(tile["TileNumber"].toInt());
-        }
-        m_tiles.append(t);
-    }
-}
-void DisplayDataModel::setExtraBit(bool extrabit) {
-    m_extrabit = extrabit;
-}
-void DisplayDataModel::setX(int x) {
+void DisplayData::setX(int x) {
     m_x = x;
 }
-void DisplayDataModel::setY(int y) {
+void DisplayData::setY(int y) {
     m_y = y;
 }
-void DisplayDataModel::setPos(int x, int y) {
+void DisplayData::setPos(QPoint point) {
+    m_x = point.x();
+    m_y = point.y();
+}
+void DisplayData::setPos(int x, int y) {
     m_x = x;
     m_y = y;
+}
+void DisplayData::setDisplayText(const QString& displayText) {
+    qDebug() << "Trying setting text " << (m_use_text ? "True" : "False") << " " << displayText;
+    if (m_use_text)
+        m_display_text = displayText;
+}
+void DisplayData::addTile(const TileData& data) {
+    m_tiles.append(data);
+}
+void DisplayData::removeTile(int index) {
+    m_tiles.removeAt(index);
+}
+void DisplayData::addTiles(const QVector<TileData>& tiles) {
+    m_tiles.append(tiles);
+}
+
+bool DisplayData::UseText() const {
+    return m_use_text;
+}
+bool DisplayData::ExtraBit() const {
+    return m_extra_bit;
+}
+const QVector<TileData>& DisplayData::Tiles() const {
+    return m_tiles;
+}
+const QString& DisplayData::Description() const {
+    return m_description;
+}
+const QString& DisplayData::DisplayText() const {
+    return m_display_text;
+}
+int DisplayData::X() const {
+    return m_x;
+}
+int DisplayData::Y() const {
+    return m_y;
+}
+QPoint DisplayData::Pos() const {
+    return QPoint(m_x, m_y);
+}
+
+
+DisplayData::DisplayData(const DisplayData& other) {
+    this->operator=(other);
+}
+
+DisplayData& DisplayData::operator=(const DisplayData& other) {
+    m_extra_bit = other.m_extra_bit;
+    m_x = other.m_x;
+    m_y = other.m_y;
+    m_tiles.reserve(other.m_tiles.size());
+    std::for_each(other.m_tiles.cbegin(), other.m_tiles.cend(), [&](const TileData& tile) {
+        m_tiles.append(tile);
+    });
+    m_description = other.m_description;
+    m_use_text = other.m_use_text;
+    m_display_text = other.m_display_text;
+    return *this;
+}
+
+DisplayData::DisplayData() {
 
 }
-DisplayDataModel DisplayDataModel::fromIndex(int index, QTableView* view) {
-    DisplayDataModel data{};
-    data.setExtraBit(view->model()->data(view->model()->index(index, 0)).toBool());
-    data.setX(view->model()->data(view->model()->index(index, 1)).toInt());
-    data.setY(view->model()->data(view->model()->index(index, 2)).toInt());
+
+DisplayData DisplayData::blankData() {
+    DisplayData data;
+    data.m_extra_bit = false;
+    data.m_x = 0;
+    data.m_y = 0;
+    data.m_tiles = QVector<TileData>();
+    data.m_use_text = false;
+    data.m_display_text = "";
+    data.m_description = "";
+    return data;
+}
+DisplayData DisplayData::cloneData(QStandardItemModel* model, const QString& description, int row, const QString& display_text) {
+    DisplayData data;
+    data.m_extra_bit = model->item(row, 0)->data().toString() == "True";
+    data.m_x = model->item(row, 1)->data().toInt();
+    data.m_y = model->item(row, 2)->data().toInt();
+    data.m_description = description;
+    data.m_use_text = display_text.length() != 0;
+    data.m_display_text = display_text;
     return data;
 }
 
-QVector<QStandardItem*> DisplayDataModel::fromDisplay(const Display& dis) {
-    DisplayDataModel data{};
-    data.setExtraBit(dis.extrabit);
-    data.setDescription(dis.description);
-    data.setPos(dis.x, dis.y);
-    return data.getRow();
+QVector<QStandardItem*> DisplayData::itemsFromDisplay() {
+    QVector<QStandardItem*> vec;
+    vec.append(new QStandardItem(m_extra_bit ? "True" : "False"));
+    vec.append(new QStandardItem(QString::asprintf("%d", m_x)));
+    vec.append(new QStandardItem(QString::asprintf("%d", m_y)));
+    return vec;
 }

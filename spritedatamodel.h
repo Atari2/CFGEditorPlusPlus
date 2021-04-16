@@ -26,55 +26,69 @@ public:
     static QVector<QStandardItem*> fromCollection(const Collection& coll);
 };
 
-class TileDataModel
-{
+class TileData : QObject {
+    Q_OBJECT
 private:
-    bool m_use_text = false;
-    int m_xoffset = 0;
-    int m_yoffset = 0;
-    int m_tile_number = 0;
-    QString m_text{};
+    int m_x_offset;
+    int m_y_offset;
+    int m_tile_number;
 public:
-    TileDataModel();
-    const QString& text();
-    int xOffset();
-    int yOffset();
-    int tileNumber();
-
-    void setUseText(bool enabled);
-    void setText(const QString& text);
-    void setXOffset(int xoff);
-    void setYOffset(int yoff);
-    void setOffset(int xoff, int yoff);
-    void setTileNumber(int tilenum);
+    TileData(const TileData& other);
+    void setXOffset(int x);
+    void setYOffset(int y);
+    void setOffset(int x, int y);
+    void setOffset(QPoint point);
+    void setTileNumber(int number);
+    int XOffset();
+    int YOffset();
+    QPoint Offset();
+    int TileNumber();
+    TileData& operator=(const TileData& other);
+signals:
 };
 
-class DisplayDataModel
-{
-private:
-    QString m_description{};
-    QVector<TileDataModel> m_tiles{};
-    bool m_extrabit = false;
-    int m_x = 0;
-    int m_y = 0;
-public:
-    DisplayDataModel();
-    const QString& description();
-    const QVector<TileDataModel>& tiles();
-    bool extraBit();
-    int X();
-    int Y();
+class DisplayData : QObject {
+    Q_OBJECT
 
-    bool operator==(const DisplayDataModel& other);
+private:
+    bool m_use_text;
+    bool m_extra_bit;
+    QVector<TileData> m_tiles;
+    QString m_description;
+    QString m_display_text;
+    int m_x;
+    int m_y;
+    DisplayData();
+public:
+    DisplayData& operator=(const DisplayData& other);
+    DisplayData(const DisplayData& other);
+    void setUseText(bool enabled);
+    void setExtraBit(bool enabled);
     void setDescription(const QString& description);
-    void setTiles(const QVector<QMap<QString, QVariant>>& data);
-    void setExtraBit(bool extrabit);
     void setX(int x);
     void setY(int y);
+    void setPos(QPoint point);
     void setPos(int x, int y);
-    QVector<QStandardItem*> getRow(void* ui = nullptr);
-    static DisplayDataModel fromIndex(int index, QTableView* view);
-    static QVector<QStandardItem*> fromDisplay(const Display& dis);
+    void setDisplayText(const QString& displayText);
+    void addTile(const TileData& data);
+    void removeTile(int index);
+    void addTiles(const QVector<TileData>& tiles);
+
+    bool UseText() const;
+    bool ExtraBit() const;
+    const QVector<TileData>& Tiles() const;
+    const QString& Description() const;
+    const QString& DisplayText() const;
+    int X() const;
+    int Y() const;
+    QPoint Pos() const;
+
+    static DisplayData blankData();
+    static DisplayData cloneData(QStandardItemModel* model, const QString& description, int row, const QString& display_text);
+    QVector<QStandardItem*> itemsFromDisplay();
+signals:
+
+
 };
 
 #endif // COLLECTIONDATAMODEL_H

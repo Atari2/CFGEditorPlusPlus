@@ -7,7 +7,7 @@ CFGEditor::CFGEditor(QWidget *parent)
     , sprite(new JsonSprite)
     , hexValidator(new QRegularExpressionValidator{QRegularExpression(R"([A-Fa-f0-9]{0,2})")})
     , hexNumberList(new QStringList(0x100))
-    , displays()
+    , displays(new QVector<DisplayData>())
 {
     ui->setupUi(this);
     this->setFixedSize(this->size());
@@ -82,6 +82,7 @@ void CFGEditor::loadFullbitmap(int index) {
     QPainter p{full8x8Bitmap};
     p.setCompositionMode(QPainter::CompositionMode::CompositionMode_SourceOver);
     int i = 0;
+    SnesGFXConverter::populateFullMap16Data(gfxFiles);
     for (auto& file : gfxFiles) {
         QImage img;
         if (!QDir(file).isAbsolute())
@@ -91,6 +92,7 @@ void CFGEditor::loadFullbitmap(int index) {
         p.drawImage(QRect{0, i, 128, 64}, img, QRect{0, 0, img.width(), img.height()});
         i += 64;
     }
+    ui->map16GraphicsView->readInternalMap16File();
     view8x8->updateForChange(full8x8Bitmap);
 }
 
@@ -140,9 +142,8 @@ void CFGEditor::setUpMenuBar(QMenuBar* mb) {
         std::for_each(sprite->collections.cbegin(), sprite->collections.cend(), [&](auto& coll) {
             ((QStandardItemModel*)ui->tableView->model())->appendRow(CollectionDataModel::fromCollection(coll));
         });
-        std::for_each(sprite->displays.cbegin(), sprite->displays.cend(), [&](auto& dis) {
-            ((QStandardItemModel*)ui->tableViewDisplays->model())->appendRow(DisplayDataModel::fromDisplay(dis));
-        });
+
+        // TODO: handle save displays here
     }, Qt::CTRL | Qt::Key_O);
 
     file->addAction("&Save", qApp, [&]() {
@@ -158,7 +159,13 @@ void CFGEditor::setUpMenuBar(QMenuBar* mb) {
     }, Qt::CTRL | Qt::ALT | Qt::Key_S);
 
     display->addAction("&Load Custom Map16", qApp, DefaultMissingImpl("Load Custom Map16"));
-    display->addAction("&Load Custom GFX33", qApp, DefaultMissingImpl("Load Custom GFX33"));
+    display->addAction("&Load Custom GFX33", qApp, [&]() {
+        QString name = QFileDialog::getOpenFileName();
+        if (name.length() == 0)
+            return;
+        SnesGFXConverter::setCustomExanimation(name);
+        ui->map16GraphicsView->readInternalMap16File();
+    });
     display->addAction("&Palette", qApp, [&]() {
         qDebug() << "Opening palette viewer";
         viewPalette->updateForChange(SpritePaletteCreator::MakeFullPalette());
@@ -199,22 +206,6 @@ QVector<QStandardItem*> CollectionDataModel::getRow(void* ui) {
         data.append(new QStandardItem(ed->lineEditCollExByte10->text()));
         data.append(new QStandardItem(ed->lineEditCollExByte11->text()));
         data.append(new QStandardItem(ed->lineEditCollExByte12->text()));
-    }
-    return data;
-}
-
-QVector<QStandardItem*> DisplayDataModel::getRow(void* ui) {
-    QVector<QStandardItem*> data{};
-    if (ui == nullptr) {
-        data.append(new QStandardItem(m_extrabit ? "True" : "False"));
-        data.append(new QStandardItem(QString::asprintf("%d", m_x)));
-        data.append(new QStandardItem(QString::asprintf("%d", m_y)));
-    } else {
-        // this is horrific
-        auto ed = (Ui::CFGEditor*)ui;
-        data.append(new QStandardItem(ed->checkBoxDisplayExtraBit->isChecked() ? "True" : "False"));
-        data.append(new QStandardItem(ed->spinBoxXPos->text()));
-        data.append(new QStandardItem(ed->spinBoxYPos->text()));
     }
     return data;
 }
@@ -344,8 +335,15 @@ void CFGEditor::bindGFXSelector() {
         splitSetGFx();
         loadFullbitmap();
     });
+    ui->comboBoxTilePalette->setDisabled(true);
+    ui->pushButtonFlipX->setDisabled(true);
+    ui->pushButtonFlipY->setDisabled(true);
+    ui->lineEditTileBL->setDisabled(true);
+    ui->lineEditTileBR->setDisabled(true);
+    ui->lineEditTileTR->setDisabled(true);
+    ui->lineEditTileTL->setDisabled(true);
     QObject::connect(ui->comboBoxTilePalette, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [&](int index) {
-        loadFullbitmap(index);
+        //
     });
     QObject::connect(viewPalette, &PaletteView::paletteChanged, this, [&](){
         qDebug() << "Custom signal change palette received";
@@ -389,14 +387,60 @@ void CFGEditor::bindGFXSelector() {
     });
 }
 
+void CFGEditor::addCloneRow() {
+    DisplayData display((*displays)[currentDisplayIndex]);
+    ((QStandardItemModel*)ui->tableViewDisplays->model())->appendRow(display.itemsFromDisplay());
+    advanceDisplayIndex();
+    (*displays).insert(currentDisplayIndex, display);
+    ui->checkBoxDisplayExtraBit->setChecked(display.ExtraBit());
+    ui->checkBoxUseText->setChecked(display.UseText());
+    ui->spinBoxXPos->setValue(display.X());
+    ui->spinBoxYPos->setValue(display.Y());
+    ui->textEditLMDescription->setText(display.Description());
+    if (display.UseText())
+       ui->textEditDisplayText->setText(display.DisplayText());
+}
+
+void CFGEditor::addBlankRow() {
+    DisplayData display = DisplayData::blankData();
+    (*displays).insert(currentDisplayIndex + 1, display);
+    advanceDisplayIndex();
+    ((QStandardItemModel*)ui->tableViewDisplays->model())->appendRow(display.itemsFromDisplay());
+    qDebug() << (*displays).length();
+    ui->checkBoxDisplayExtraBit->setChecked(false);
+    ui->checkBoxUseText->setChecked(false);
+    ui->spinBoxXPos->setValue(0);
+    ui->spinBoxYPos->setValue(0);
+    ui->textEditLMDescription->setText("");
+    ui->textEditDisplayText->setText("");
+}
+
+void CFGEditor::removeExistingRow() {
+    (*displays).removeAt(currentDisplayIndex);
+    currentDisplayIndex--;
+    qDebug() << currentDisplayIndex;
+    ui->tableViewDisplays->model()->removeRow(ui->tableViewDisplays->currentIndex().row());
+}
+
+void CFGEditor::advanceDisplayIndex() {
+    currentDisplayIndex++;
+    qDebug() << "Row count " << ui->tableViewDisplays->model()->rowCount();
+    qDebug() << "Row got added at " << currentDisplayIndex << " and at " << ui->tableViewDisplays->currentIndex().row();
+}
+
 void CFGEditor::bindDisplayButtons() {
+
+    QObject::connect(ui->tableViewDisplays->model(), &QAbstractItemModel::rowsInserted, this, [&]() {
+        qDebug() << "Rows have been inserted " << currentDisplayIndex;
+        if (ui->tableViewDisplays->currentIndex().isValid())
+            ui->tableViewDisplays->setCurrentIndex(ui->tableViewDisplays->model()->index(ui->tableViewDisplays->currentIndex().row() + 1, ui->tableViewDisplays->currentIndex().column()));
+        else
+            ui->tableViewDisplays->setCurrentIndex(ui->tableViewDisplays->model()->index(currentDisplayIndex, 0));
+    });
+    // new, delete, clone
     QObject::connect(ui->pushButtonNewDisplay, &QPushButton::clicked, this, [&]() {
-        qDebug() << "New display button clicked";
-        displays.insert(ui->tableViewDisplays->currentIndex().row() + 1, DisplayDataModel());
-        ((QStandardItemModel*)ui->tableViewDisplays->model())->appendRow(DisplayDataModel().getRow());
-        ui->checkBoxDisplayExtraBit->setChecked(false);
-        ui->spinBoxXPos->setValue(0);
-        ui->spinBoxYPos->setValue(0);
+        qDebug() << "New row button pushed";
+        addBlankRow();
     });
     QObject::connect(ui->pushButtonCloneDisplay, &QPushButton::clicked, this, [&]() {
         if (!ui->tableViewDisplays->currentIndex().isValid()) {
@@ -404,9 +448,7 @@ void CFGEditor::bindDisplayButtons() {
             return;
         }
         qDebug() << "Clone display button clicked";
-        DisplayDataModel model = DisplayDataModel::fromIndex(ui->tableViewDisplays->currentIndex().row(), ui->tableViewDisplays);
-        displays.insert(ui->tableViewDisplays->currentIndex().row() + 1, model);
-        ((QStandardItemModel*)ui->tableViewDisplays->model())->appendRow(model.getRow());
+        addCloneRow();
     });
     QObject::connect(ui->pushButtonDeleteDisplay, &QPushButton::clicked, this, [&]() {
         if (!ui->tableViewDisplays->currentIndex().isValid()) {
@@ -414,19 +456,41 @@ void CFGEditor::bindDisplayButtons() {
             return;
         }
         qDebug() << "Delete display button clicked";
-        displays.remove(ui->tableViewDisplays->currentIndex().row());
-        ui->tableViewDisplays->model()->removeRow(ui->tableViewDisplays->currentIndex().row());
+        removeExistingRow();
     });
+
+    // index gets changed
     QObject::connect(ui->tableViewDisplays->selectionModel(),
                      QOverload<const QModelIndex&, const QModelIndex&>::of(&QItemSelectionModel::currentRowChanged), this, [&](const QModelIndex& now, const QModelIndex& pre) {
         qDebug() << "current row changed called";
-        auto extrabit = ui->tableViewDisplays->model()->data(ui->tableViewDisplays->model()->index(now.row(), 0));
-        auto x = ui->tableViewDisplays->model()->data(ui->tableViewDisplays->model()->index(now.row(), 1));
-        auto y = ui->tableViewDisplays->model()->data(ui->tableViewDisplays->model()->index(now.row(), 2));
-        ui->checkBoxDisplayExtraBit->setChecked(extrabit.toBool());
-        ui->spinBoxXPos->setValue(x.toInt());
-        ui->spinBoxYPos->setValue(y.toInt());
+        int len = (*displays).length();
+        if (ui->tableViewDisplays->model()->rowCount() == 0)
+            return;
+        if (currentDisplayIndex == -1 && len == 0)
+            return;
+        if (now.row() == -1)
+            currentDisplayIndex = pre.row();
+        else
+            currentDisplayIndex = now.row();
+        if (currentDisplayIndex > len - 1)
+            currentDisplayIndex = 0;
+        qDebug() << currentDisplayIndex << " " << ui->tableViewDisplays->model()->rowCount();
+        const DisplayData& d = len == 0 ? DisplayData::blankData() : (*displays)[currentDisplayIndex];
+        ui->checkBoxDisplayExtraBit->setChecked(d.ExtraBit());
+        ui->spinBoxXPos->setValue(d.X());
+        ui->spinBoxYPos->setValue(d.Y());
+        ui->checkBoxUseText->setChecked(d.UseText());
+        qDebug() << "Use text? " << (d.UseText() ? "True" : "False");
+        if (d.UseText()) {
+            ui->textEditDisplayText->setText(d.DisplayText());
+        } else {
+            ui->textEditDisplayText->setText("");
+        }
+        ui->textEditLMDescription->setText(d.Description());
+        // TODO: also update tiles
     });
+
+    // useText
     QPalette readOnlyPalette = palette();
     readOnlyPalette.setColor(QPalette::Base, readOnlyPalette.color(QPalette::Window));
     ui->textEditDisplayText->setPalette(readOnlyPalette);
@@ -434,27 +498,27 @@ void CFGEditor::bindDisplayButtons() {
         ui->textEditDisplayText->setReadOnly(!ui->checkBoxUseText->isChecked());
         QPalette readOnlyPalette = palette();
         if (ui->textEditDisplayText->isReadOnly()) {
+            ui->textEditDisplayText->setText("");
             readOnlyPalette.setColor(QPalette::Base, readOnlyPalette.color(QPalette::Window));
         } else {
             readOnlyPalette.setColor(QPalette::Base, readOnlyPalette.color(QPalette::BrightText));
         }
         ui->textEditDisplayText->setPalette(readOnlyPalette);
-        // this is bad, I have to find a better way to pass the data to the data model that's not garbage
-        // it's also not super easy to figure out a way that doesn't suck
-        // currently we'd have to update everything every time we make a change, I'd like to not have to do that.
-        // maybe accessing directly the single tile could be nice but I don't know if that possible
-        // with how I've structured things, it may need a full rewrite
-        QVector<QMap<QString, QVariant>> tiles;
-        QMap<QString, QVariant> tile;
-        tile["UseText"] = false;
-        displays[ui->tableViewDisplays->currentIndex().row()].setTiles(tiles);
+        if (currentDisplayIndex == -1)
+            return;
+        (*displays)[currentDisplayIndex].setUseText(ui->checkBoxUseText->isChecked());
+        if (!ui->checkBoxUseText->isChecked())
+            (*displays)[currentDisplayIndex].setDisplayText("");
     });
+
+    // checkbox or spinner get updated
     QObject::connect(ui->checkBoxDisplayExtraBit, &QCheckBox::stateChanged, this, [&]() {
         if (!ui->tableViewDisplays->currentIndex().isValid()) {
             return;
         }
         auto realIndex = ui->tableViewDisplays->model()->index(ui->tableViewDisplays->currentIndex().row(), 0);
-        ui->tableViewDisplays->model()->setData(realIndex, ui->checkBoxDisplayExtraBit->checkState() ? "True" : "False");
+        ui->tableViewDisplays->model()->setData(realIndex, ui->checkBoxDisplayExtraBit->isChecked() ? "True" : "False");
+        (*displays)[currentDisplayIndex].setExtraBit(ui->checkBoxDisplayExtraBit->isChecked());
     });
     QObject::connect(ui->spinBoxXPos, QOverload<const QString&>::of(&QSpinBox::textChanged), this, [&](const QString& text) {
         if (!ui->tableViewDisplays->currentIndex().isValid()) {
@@ -462,6 +526,7 @@ void CFGEditor::bindDisplayButtons() {
         }
         auto realIndex = ui->tableViewDisplays->model()->index(ui->tableViewDisplays->currentIndex().row(), 1);
         ui->tableViewDisplays->model()->setData(realIndex, text);
+        (*displays)[currentDisplayIndex].setX(text.toInt());
     });
     QObject::connect(ui->spinBoxYPos, QOverload<const QString&>::of(&QSpinBox::textChanged), this, [&](const QString& text) {
         if (!ui->tableViewDisplays->currentIndex().isValid()) {
@@ -469,7 +534,24 @@ void CFGEditor::bindDisplayButtons() {
         }
         auto realIndex = ui->tableViewDisplays->model()->index(ui->tableViewDisplays->currentIndex().row(), 2);
         ui->tableViewDisplays->model()->setData(realIndex, text);
+        (*displays)[currentDisplayIndex].setY(text.toInt());
     });
+
+    // description or displaytext get updated
+    QObject::connect(ui->textEditLMDescription, &QTextEdit::textChanged, this, [&]() {
+        if (currentDisplayIndex == -1)
+            return;
+        (*displays)[currentDisplayIndex].setDescription(ui->textEditLMDescription->toPlainText());
+    });
+    QObject::connect(ui->textEditDisplayText, &QTextEdit::textChanged, this, [&]() {
+        if (currentDisplayIndex == -1)
+            return;
+        qDebug() << currentDisplayIndex << " " << (*displays).length();
+        (*displays)[currentDisplayIndex].setDisplayText(ui->textEditDisplayText->toPlainText());
+    });
+
+    // tiles get updated
+    // TODO
 }
 
 void CFGEditor::bindCollectionButtons() {

@@ -16,6 +16,7 @@
 #include "snesgfxconverter.h"
 #include "eightbyeightview.h"
 #include "paletteview.h"
+#include "map16provider.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class CFGEditor; }
@@ -47,6 +48,10 @@ public:
     void loadFullbitmap(int index = -1);
     void addLunarMagicIcons();
     void closeEvent(QCloseEvent *event);
+    void advanceDisplayIndex();
+    void addBlankRow();
+    void addCloneRow();
+    void removeExistingRow();
     template <typename J>
     void connectCheckBox(QLineEdit* edit, QCheckBox* box, J* tweak, bool& tochange) {
         QObject::connect(box, &QCheckBox::stateChanged, this, [=, &tochange]() mutable {
@@ -67,7 +72,8 @@ private:
     QImage* full8x8Bitmap = nullptr;
     EightByEightView* view8x8 = nullptr;
     PaletteView* viewPalette = nullptr;
-    QMap<int, DisplayDataModel> displays;
+    QAtomicPointer<QVector<DisplayData>> displays;
+    QAtomicInteger<int> currentDisplayIndex = -1;
 };
 
 class DefaultMissingImpl {

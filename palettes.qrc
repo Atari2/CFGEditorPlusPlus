@@ -105,5 +105,6 @@
         <file>Resources/ButtonIcons/grid.png</file>
         <file>Resources/ButtonIcons/page.png</file>
         <file>Resources/ButtonIcons/palette.png</file>
+        <file>Resources/spriteMapData.map16</file>
     </qresource>
 </RCC>
