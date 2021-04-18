@@ -4,7 +4,6 @@ Map16Provider::Map16Provider(QWidget* parent) : QLabel(parent)  {
     setPixmap(createRedGrid());
     setMargin(0);
     setFixedSize(208, 208);
-    setPixmap(Map16Provider::createRedGrid());
     setMouseTracking(true);
 }
 

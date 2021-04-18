@@ -9,6 +9,8 @@
 #include <QMouseEvent>
 #include <QDataStream>
 #include <QFile>
+#include <QLabel>
+#include <QScrollBar>
 #include "snesgfxconverter.h"
 #include "spritepalettecreator.h"
 
@@ -31,17 +33,46 @@ struct FullTile {
     QImage getFullTile();
 };
 
+
+enum class SelectorType {
+    Eight = 8,
+    Sixteen = 16
+};
+
 class Map16GraphicsView : public QGraphicsView
 {
     Q_OBJECT
+private:
+    QGraphicsScene* currScene = nullptr;
+    QGraphicsPixmapItem* currentMap16 = nullptr;
+    QLabel* tileNumLabel;
+    QImage TileMap;
+    QImage Grid;
+    QImage PageSep;
 public:
-
+    int imageWidth = 0;
+    int imageHeight = 0;
+    bool useGrid = false;
+    bool usePageSep = false;
+    SelectorType currType = SelectorType::Sixteen;
     QVector<QVector<FullTile>> tiles;
     Map16GraphicsView(QWidget* parent = nullptr);
+    void setControllingLabel(QLabel *tileNoLabel);
     void mouseMoveEvent(QMouseEvent *event);
-    void readInternalMap16File();
+    void readInternalMap16File(const QString& name = ":/Resources/spriteMapData.map16");
+    void readExternalMap16File(const QString& name);
+    void drawInternalMap16File();
     int mouseCoordinatesToTile(QPoint position);
-signals:
+    ~Map16GraphicsView();
+    void useGridChanged();
+    void usePageSepChanged();
+
+    void addGrid();
+    void removeGrid();
+    void addPageSep();
+    void removePageSep();
+
+    void switchCurrSelectionType();
 };
 
 #endif // MAP16GRAPHICSVIEW_H

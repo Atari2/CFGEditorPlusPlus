@@ -95,5 +95,11 @@ QImage SnesGFXConverter::fromResource(const QString& name, const QVector<QColor>
         }
     }
     f.end();
+    converter.imageData.clear();
     return fullMap;
+}
+
+SnesGFXConverter::~SnesGFXConverter() {
+    imageData.clear();
+    imageData.~QByteArray();
 }

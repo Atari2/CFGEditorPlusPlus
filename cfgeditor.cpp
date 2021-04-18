@@ -7,6 +7,7 @@ CFGEditor::CFGEditor(QWidget *parent)
     , sprite(new JsonSprite)
     , hexValidator(new QRegularExpressionValidator{QRegularExpression(R"([A-Fa-f0-9]{0,2})")})
     , hexNumberList(new QStringList(0x100))
+    , models()
     , displays(new QVector<DisplayData>())
 {
     ui->setupUi(this);
@@ -15,6 +16,7 @@ CFGEditor::CFGEditor(QWidget *parent)
     view8x8 = new EightByEightView(new QGraphicsScene);
     viewPalette = new PaletteView(new QGraphicsScene);
     loadFullbitmap();
+    ui->map16GraphicsView->setControllingLabel(ui->labelTileNo);
     QMenuBar* mb = menuBar();
     initCompleter();
     setUpMenuBar(mb);
@@ -76,8 +78,10 @@ void CFGEditor::loadFullbitmap(int index) {
     if (index == -1)
         index = ui->comboBoxTilePalette->currentIndex();
     QVector<QString> gfxFiles{ui->lineEditGFXSp0->text(), ui->lineEditGFXSp1->text(), ui->lineEditGFXSp2->text(), ui->lineEditGFXSp3->text()};
-    if (full8x8Bitmap)
+    if (full8x8Bitmap) {
+        full8x8Bitmap->~QImage();
         delete full8x8Bitmap;
+    }
     full8x8Bitmap = new QImage{128, 256, QImage::Format_RGB32};
     QPainter p{full8x8Bitmap};
     p.setCompositionMode(QPainter::CompositionMode::CompositionMode_SourceOver);
@@ -158,13 +162,18 @@ void CFGEditor::setUpMenuBar(QMenuBar* mb) {
         sprite->to_file(QFileDialog::getSaveFileName());
     }, Qt::CTRL | Qt::ALT | Qt::Key_S);
 
-    display->addAction("&Load Custom Map16", qApp, DefaultMissingImpl("Load Custom Map16"));
+    display->addAction("&Load Custom Map16", qApp, [&]() {
+        QString name = QFileDialog::getOpenFileName(this);
+        if (name.length() == 0)
+            return;
+        ui->map16GraphicsView->readExternalMap16File(name);
+    });
     display->addAction("&Load Custom GFX33", qApp, [&]() {
-        QString name = QFileDialog::getOpenFileName();
+        QString name = QFileDialog::getOpenFileName(this);
         if (name.length() == 0)
             return;
         SnesGFXConverter::setCustomExanimation(name);
-        ui->map16GraphicsView->readInternalMap16File();
+        ui->map16GraphicsView->drawInternalMap16File();
     });
     display->addAction("&Palette", qApp, [&]() {
         qDebug() << "Opening palette viewer";
@@ -213,6 +222,7 @@ QVector<QStandardItem*> CollectionDataModel::getRow(void* ui) {
 void CFGEditor::setDisplayModel() {
     ui->textEditDisplayText->setReadOnly(true);
     QStandardItemModel* model = new QStandardItemModel;
+    models.append(model);
     QStringList labelList{"ExtraBit", "X", "Y"};
     model->setHorizontalHeaderLabels(labelList);
     ui->tableViewDisplays->setFixedSize(ui->tableViewDisplays->size());
@@ -225,6 +235,7 @@ void CFGEditor::setDisplayModel() {
 
 void CFGEditor::setCollectionModel() {
     QStandardItemModel* model = new QStandardItemModel;
+    models.append(model);
     QStringList labelList{};
     labelList.append("Name");
     labelList.append("Extra bit");
@@ -319,6 +330,10 @@ void CFGEditor::bindGFXSelector() {
         ui->lineEditGFXSp2->setText(gfxStr[2]);
         ui->lineEditGFXSp3->setText(gfxStr[3]);
     };
+    QObject::connect(ui->toolButton8x8Edit, &QToolButton::clicked, this, [&]() {
+        qDebug() << "Map8x8 edit button clicked";
+        ui->map16GraphicsView->switchCurrSelectionType();
+    });
     QObject::connect(ui->toolButton8x8Mode, &QToolButton::clicked, this, [&]() {
         qDebug() << "Map8x8 button clicked";
         view8x8->updateForChange(full8x8Bitmap);
@@ -429,7 +444,12 @@ void CFGEditor::advanceDisplayIndex() {
 }
 
 void CFGEditor::bindDisplayButtons() {
-
+    QObject::connect(ui->toolButtonGrid, &QToolButton::clicked, this, [&]() {
+        ui->map16GraphicsView->useGridChanged();
+    });
+    QObject::connect(ui->toolButtonBorders, &QToolButton::clicked, this, [&]() {
+        ui->map16GraphicsView->usePageSepChanged();
+    });
     QObject::connect(ui->tableViewDisplays->model(), &QAbstractItemModel::rowsInserted, this, [&]() {
         qDebug() << "Rows have been inserted " << currentDisplayIndex;
         if (ui->tableViewDisplays->currentIndex().isValid())
@@ -840,6 +860,9 @@ void CFGEditor::bindTweak190F() {
 
 CFGEditor::~CFGEditor()
 {
+    (*displays).clear();
+    for (auto p : models)
+        delete p;
     delete full8x8Bitmap;
     delete view8x8;
     delete viewPalette;

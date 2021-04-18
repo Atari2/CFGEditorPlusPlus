@@ -69,6 +69,7 @@ private:
     QVector<QPixmap> paletteImages;
     QVector<QPixmap> objClipImages;
     QVector<QPixmap> sprClipImages;
+    QVector<QStandardItemModel*> models;
     QImage* full8x8Bitmap = nullptr;
     EightByEightView* view8x8 = nullptr;
     PaletteView* viewPalette = nullptr;

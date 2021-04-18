@@ -37,12 +37,17 @@ QImage FullTile::getFullTile() {
 
 Map16GraphicsView::Map16GraphicsView(QWidget* parent) : QGraphicsView(parent)
 {
+    currScene = new QGraphicsScene(this);
     setMouseTracking(true);
     setFixedSize(352, 352);
-    setScene(new QGraphicsScene);
+    setScene(currScene);
 }
 
-void Map16GraphicsView::readInternalMap16File() {
+void Map16GraphicsView::setControllingLabel(QLabel *tileNoLabel) {
+    tileNumLabel = tileNoLabel;
+}
+
+void Map16GraphicsView::readInternalMap16File(const QString& name) {
     struct {
         quint32 offset;
         quint32 size;
@@ -53,7 +58,7 @@ void Map16GraphicsView::readInternalMap16File() {
         quint32 sizeX;
         quint32 sizeY;
     } tableInformation;
-    QFile file{":/Resources/spriteMapData.map16"};
+    QFile file{name};
     file.open(QFile::OpenModeFlag::ReadOnly);
     QDataStream byteStream{file.readAll()};
     byteStream.setByteOrder(QDataStream::LittleEndian);
@@ -88,25 +93,130 @@ void Map16GraphicsView::readInternalMap16File() {
         }
         tiles.append(subVector);
     }
+    imageWidth = (int)tableInformation.sizeX * 16;
+    imageHeight = (int)tableInformation.sizeY * 16;
     // we don't really care about the rest of the file, now we can draw
-    QImage map16{(int)tableInformation.sizeX * 16, (int)tableInformation.sizeY * 16, QImage::Format::Format_RGB32};
-    QPainter p{&map16};
+    drawInternalMap16File();
+}
 
+void Map16GraphicsView::readExternalMap16File(const QString &name) {
+    readInternalMap16File(name);
+}
+
+void Map16GraphicsView::drawInternalMap16File() {
+    TileMap = QImage{imageWidth, imageHeight, QImage::Format::Format_RGB32};
+    QPainter p{&TileMap};
     for (int i = 0; i < tiles.length(); i++) {
         for (int j = 0; j < tiles[i].length(); j++) {
             p.drawImage(QRect{j * 16, i * 16, 16, 16}, tiles[i][j].getFullTile());
         }
     }
     p.end();
-    scene()->addPixmap(QPixmap::fromImage(map16).scaled(map16.size()));
+
+    // and now we draw the one with the grid
+    Grid = QImage{imageWidth, imageHeight, QImage::Format::Format_ARGB32};
+    Grid.fill(qRgba(0, 0, 0, 0));
+    QPainter gridPainter{&Grid};
+    QPen pen(Qt::white, 1, Qt::SolidLine, Qt::SquareCap, Qt::RoundJoin);
+    gridPainter.setPen(pen);
+    for (int i = 0; i < tiles.length(); i++) {
+        gridPainter.drawLine(0, i * 16, imageWidth, i * 16);
+        gridPainter.drawLine(i * 16, 0, i * 16, imageHeight);
+    }
+    gridPainter.end();
+
+    PageSep = QImage{imageWidth, imageHeight, QImage::Format::Format_ARGB32};
+    PageSep.fill(qRgba(0, 0, 0, 0));
+    QPainter pageSepPainter{&PageSep};
+    QPen penSep(Qt::blue, 2, Qt::SolidLine, Qt::SquareCap, Qt::RoundJoin);
+    pageSepPainter.setPen(penSep);
+    pageSepPainter.drawRect(QRect{0, 0, imageWidth, imageHeight / 2});
+    pageSepPainter.drawRect(QRect{0, imageHeight / 2, imageWidth, imageHeight / 2});
+    pageSepPainter.drawRect(QRect{0, 0, 16, 16});
+    pageSepPainter.drawText(QPoint(2, 2 + 10), "00");
+    pageSepPainter.drawRect(QRect{0, imageHeight / 2, 16, 16});
+    pageSepPainter.drawText(QPoint(2, imageHeight / 2 + 2 + 10), "01");
+
+    currentMap16 = scene()->addPixmap(QPixmap::fromImage(TileMap) /* .scaled(size(), Qt::KeepAspectRatioByExpanding, Qt::FastTransformation) */);
+    setFixedWidth(imageWidth + 20);
 }
 
+void Map16GraphicsView::addGrid() {
+    if (useGrid)
+        return;
+    useGrid = true;
+    QPixmap pixmap = currentMap16->pixmap();
+    QPainter paintGrid{&pixmap};
+    paintGrid.drawImage(QRect{0, 0, imageWidth, imageHeight}, Grid);
+    paintGrid.end();
+    currentMap16->setPixmap(pixmap);
+}
+
+void Map16GraphicsView::removeGrid() {
+    if (!useGrid)
+        return;
+    useGrid = false;
+    QPixmap pixmap = QPixmap::fromImage(TileMap);
+    QPainter paint{&pixmap};
+    if (usePageSep) {
+        // if the page separator is being used, we have to draw it
+        paint.drawImage(QRect{0, 0, imageWidth, imageHeight}, PageSep);
+    }
+    currentMap16->setPixmap(pixmap);
+}
+
+void Map16GraphicsView::addPageSep() {
+    if (usePageSep)
+        return;
+    usePageSep = true;
+    QPixmap pixmap = currentMap16->pixmap();
+    QPainter paintPageSep{&pixmap};
+    paintPageSep.drawImage(QRect{0, 0, imageWidth, imageHeight}, PageSep);
+    paintPageSep.end();
+    currentMap16->setPixmap(pixmap);
+}
+
+void Map16GraphicsView::removePageSep() {
+    if (!usePageSep)
+        return;
+    usePageSep = false;
+    QPixmap pixmap = QPixmap::fromImage(TileMap);
+    QPainter paint{&pixmap};
+    if (useGrid) {
+        // if the grid is being used, we have to draw it
+        paint.drawImage(QRect{0, 0, imageWidth, imageHeight}, Grid);
+    }
+    currentMap16->setPixmap(pixmap);
+}
 int Map16GraphicsView::mouseCoordinatesToTile(QPoint position) {
-    return ((position.y() / 16) * 16) + (position.x() / 16);
+    int scrollbary = verticalScrollBar()->sliderPosition();
+    int diff = static_cast<int>(currType);
+    return (((position.y() /  diff * diff) + ((scrollbary / diff) * diff)) + (position.x() / diff));
 }
 
 void Map16GraphicsView::mouseMoveEvent(QMouseEvent *event) {
-    qDebug() << "Tile " << mouseCoordinatesToTile(event->position().toPoint());
+    QString tileText = QString::asprintf("Tile: 0x%03X", mouseCoordinatesToTile(event->position().toPoint()));
+    tileNumLabel->setText(tileText);
     event->accept();
 }
 
+void Map16GraphicsView::useGridChanged() {
+    useGrid ? removeGrid() : addGrid();
+}
+void Map16GraphicsView::usePageSepChanged() {
+    usePageSep ? removePageSep() : addPageSep();
+}
+
+void Map16GraphicsView::switchCurrSelectionType() {
+    if (currType == SelectorType::Eight) {
+        currType = SelectorType::Sixteen;
+    } else {
+        currType = SelectorType::Eight;
+    }
+}
+
+Map16GraphicsView::~Map16GraphicsView() {
+    qDebug() << "Map16 GraphicsView Destructor called";
+    if (currScene)
+        delete currScene;
+}

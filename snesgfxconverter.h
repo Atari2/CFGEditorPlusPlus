@@ -18,6 +18,7 @@ class SnesGFXConverter
     QByteArray imageData;
 private:
     SnesGFXConverter(const QString& name);
+    ~SnesGFXConverter();
     QImage get8x8Tile(int row, int column, const QVector<QColor>& colors);
 public:
     static void populateFullMap16Data(const QVector<QString>& names);

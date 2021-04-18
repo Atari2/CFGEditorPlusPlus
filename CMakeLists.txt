@@ -68,7 +68,18 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         ${PROJECT_SOURCES}
         ${srcs_for_exe}
     )
+    get_target_property(_qmake_executable Qt6::qmake IMPORTED_LOCATION)
+    get_filename_component(_qt_bin_dir "${_qmake_executable}" DIRECTORY)
+    find_program(WINDEPLOYQT_EXE windeployqt HINTS "${_qt_bin_dir}")
 
+    add_custom_command(TARGET CFGEditorPlusPlus POST_BUILD
+        COMMAND "${CMAKE_COMMAND}" -E
+            env PATH="${_qt_bin_dir}" "${WINDEPLOYQT_EXE}"
+                --release
+                --compiler-runtime
+                "$<TARGET_FILE:CFGEditorPlusPlus>"
+        COMMENT "Running windeployqt..."
+    )
     qt_create_translation(QM_FILES ${CMAKE_SOURCE_DIR} ${TS_FILES})
 else()
     if(ANDROID)
@@ -87,6 +98,7 @@ endif()
 if (CMAKE_BUILD_TYPE STREQUAL "Release")
     message("Building Release, removing qDebug()")
     target_compile_definitions(CFGEditorPlusPlus PRIVATE QT_NO_DEBUG_OUTPUT)
+    target_link_options(CFGEditorPlusPlus PRIVATE /SUBSYSTEM:windows /ENTRY:mainCRTStartup)
 endif()
 
 target_link_libraries(CFGEditorPlusPlus PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)

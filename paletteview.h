@@ -23,7 +23,6 @@ public:
     void mousePressEvent(QMouseEvent *event);
     ~PaletteView();
     void open();
-
 signals:
     void paletteChanged();
 private:
