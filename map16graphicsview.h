@@ -11,6 +11,7 @@
 #include <QFile>
 #include <QLabel>
 #include <QScrollBar>
+#include <functional>
 #include "snesgfxconverter.h"
 #include "spritepalettecreator.h"
 
@@ -49,12 +50,17 @@ private:
     QImage TileMap;
     QImage Grid;
     QImage PageSep;
+    QPixmap currentWithNoHighlight;
 public:
     int imageWidth = 0;
     int imageHeight = 0;
     bool useGrid = false;
     bool usePageSep = false;
+    bool hasAlreadyDrawnOnce = false;
+    int currentTile = -1;
+    int previousTile = -1;
     SelectorType currType = SelectorType::Sixteen;
+    std::function<void(FullTile, int, int)> clickCallback;
     QVector<QVector<FullTile>> tiles;
     Map16GraphicsView(QWidget* parent = nullptr);
     void setControllingLabel(QLabel *tileNoLabel);
@@ -63,10 +69,12 @@ public:
     void readExternalMap16File(const QString& name);
     void drawInternalMap16File();
     int mouseCoordinatesToTile(QPoint position);
+    QPoint translateToRect(QPoint position);
+    void mousePressEvent(QMouseEvent* event);
+    void registerMouseClickCallback(const std::function<void(FullTile, int, int)>& callback);
     ~Map16GraphicsView();
     void useGridChanged();
     void usePageSepChanged();
-
     void addGrid();
     void removeGrid();
     void addPageSep();

@@ -41,6 +41,11 @@ Map16GraphicsView::Map16GraphicsView(QWidget* parent) : QGraphicsView(parent)
     setMouseTracking(true);
     setFixedSize(352, 352);
     setScene(currScene);
+    QObject::connect(verticalScrollBar(), QOverload<int>::of(&QScrollBar::valueChanged), [&](int value) {
+        int offset = value % static_cast<int>(currType);
+        if (offset != 0)
+            verticalScrollBar()->setValue(value);
+    });
 }
 
 void Map16GraphicsView::setControllingLabel(QLabel *tileNoLabel) {
@@ -93,8 +98,15 @@ void Map16GraphicsView::readInternalMap16File(const QString& name) {
         }
         tiles.append(subVector);
     }
+    for (quint32 i = 0; i < tableInformation.sizeX; i++) {
+        QVector<FullTile> subVector{};
+        subVector.reserve(16);
+        for (quint32 j = 0; j < 16; j++)
+            subVector.append({0x00, 0x00, 0x00, 0x00});
+        tiles.append(subVector);
+    }
     imageWidth = (int)tableInformation.sizeX * 16;
-    imageHeight = (int)tableInformation.sizeY * 16;
+    imageHeight = ((int)tableInformation.sizeY + 16) * 16;
     // we don't really care about the rest of the file, now we can draw
     drawInternalMap16File();
 }
@@ -104,7 +116,7 @@ void Map16GraphicsView::readExternalMap16File(const QString &name) {
 }
 
 void Map16GraphicsView::drawInternalMap16File() {
-    TileMap = QImage{imageWidth, imageHeight, QImage::Format::Format_RGB32};
+    TileMap = QImage{imageWidth, imageHeight, QImage::Format::Format_ARGB32};
     QPainter p{&TileMap};
     for (int i = 0; i < tiles.length(); i++) {
         for (int j = 0; j < tiles[i].length(); j++) {
@@ -130,25 +142,27 @@ void Map16GraphicsView::drawInternalMap16File() {
     QPainter pageSepPainter{&PageSep};
     QPen penSep(Qt::blue, 2, Qt::SolidLine, Qt::SquareCap, Qt::RoundJoin);
     pageSepPainter.setPen(penSep);
-    pageSepPainter.drawRect(QRect{0, 0, imageWidth, imageHeight / 2});
-    pageSepPainter.drawRect(QRect{0, imageHeight / 2, imageWidth, imageHeight / 2});
-    pageSepPainter.drawRect(QRect{0, 0, 16, 16});
-    pageSepPainter.drawText(QPoint(2, 2 + 10), "00");
-    pageSepPainter.drawRect(QRect{0, imageHeight / 2, 16, 16});
-    pageSepPainter.drawText(QPoint(2, imageHeight / 2 + 2 + 10), "01");
+
+    for (int i = 0; i <= imageHeight; i += 0x100) {
+        qDebug() << imageHeight << " " << i;
+        pageSepPainter.drawRect(QRect{0, i, imageWidth, 0x100});
+    }
 
     currentMap16 = scene()->addPixmap(QPixmap::fromImage(TileMap) /* .scaled(size(), Qt::KeepAspectRatioByExpanding, Qt::FastTransformation) */);
     setFixedWidth(imageWidth + 20);
+    hasAlreadyDrawnOnce = false;
 }
 
 void Map16GraphicsView::addGrid() {
     if (useGrid)
         return;
     useGrid = true;
+    hasAlreadyDrawnOnce = true;
     QPixmap pixmap = currentMap16->pixmap();
     QPainter paintGrid{&pixmap};
     paintGrid.drawImage(QRect{0, 0, imageWidth, imageHeight}, Grid);
     paintGrid.end();
+    currentWithNoHighlight = pixmap;
     currentMap16->setPixmap(pixmap);
 }
 
@@ -163,16 +177,19 @@ void Map16GraphicsView::removeGrid() {
         paint.drawImage(QRect{0, 0, imageWidth, imageHeight}, PageSep);
     }
     currentMap16->setPixmap(pixmap);
+    currentWithNoHighlight = pixmap;
 }
 
 void Map16GraphicsView::addPageSep() {
     if (usePageSep)
         return;
     usePageSep = true;
-    QPixmap pixmap = currentMap16->pixmap();
+    hasAlreadyDrawnOnce = true;
+    QPixmap pixmap = currentWithNoHighlight;
     QPainter paintPageSep{&pixmap};
     paintPageSep.drawImage(QRect{0, 0, imageWidth, imageHeight}, PageSep);
     paintPageSep.end();
+    currentWithNoHighlight = pixmap;
     currentMap16->setPixmap(pixmap);
 }
 
@@ -187,17 +204,56 @@ void Map16GraphicsView::removePageSep() {
         paint.drawImage(QRect{0, 0, imageWidth, imageHeight}, Grid);
     }
     currentMap16->setPixmap(pixmap);
+    currentWithNoHighlight = pixmap;
 }
 int Map16GraphicsView::mouseCoordinatesToTile(QPoint position) {
-    int scrollbary = verticalScrollBar()->sliderPosition();
     int diff = static_cast<int>(currType);
-    return (((position.y() /  diff * diff) + ((scrollbary / diff) * diff)) + (position.x() / diff));
+    int tilePerRow = diff == 16 ? 16 : 32;
+    int scrollbary = verticalScrollBar()->sliderPosition() / diff;
+    return (((position.y() / diff) + scrollbary) * tilePerRow) + (position.x() / diff);
+}
+
+QPoint Map16GraphicsView::translateToRect(QPoint position) {
+    int scrollbarDiff = verticalScrollBar()->sliderPosition() - (verticalScrollBar()->sliderPosition() % static_cast<int>(currType));
+    return QPoint(
+                position.x() - (position.x() % static_cast<int>(currType)),
+                position.y() - (position.y() % static_cast<int>(currType)) + scrollbarDiff
+                );
 }
 
 void Map16GraphicsView::mouseMoveEvent(QMouseEvent *event) {
-    QString tileText = QString::asprintf("Tile: 0x%03X", mouseCoordinatesToTile(event->position().toPoint()));
+    currentTile = mouseCoordinatesToTile(event->position().toPoint());
+    auto origin = translateToRect(event->position().toPoint());
+    if (currentTile == previousTile)
+        return;
+    previousTile = currentTile;
+    QString tileText = QString::asprintf("Tile: 0x%03X", currentTile);
     tileNumLabel->setText(tileText);
+    // highlight the tile in some way
+    if (!hasAlreadyDrawnOnce) {
+        currentWithNoHighlight = currentMap16->pixmap();
+        hasAlreadyDrawnOnce = true;
+    }
+    auto map = currentWithNoHighlight;
+    QPainter paint{&map};
+    paint.setCompositionMode(QPainter::CompositionMode_DestinationIn);
+    paint.fillRect(QRect{origin.x(), origin.y(), static_cast<int>(currType), static_cast<int>(currType)}, QBrush(QColor(0,0,0,128)));
+    paint.end();
+    currentMap16->setPixmap(map);
     event->accept();
+}
+
+void Map16GraphicsView::mousePressEvent(QMouseEvent *event) {
+    qDebug() << "Mouse" << (event->button() == Qt::LeftButton ? "left click" : "right click") << "was pressed";
+    if (currentTile == -1)
+        return;
+    int intCurrType = static_cast<int>(currType);
+    clickCallback(tiles[currentTile / intCurrType][currentTile % intCurrType], currentTile, intCurrType);
+    event->accept();
+}
+
+void Map16GraphicsView::registerMouseClickCallback(const std::function<void(FullTile, int, int)>& callback) {
+    clickCallback = callback;
 }
 
 void Map16GraphicsView::useGridChanged() {

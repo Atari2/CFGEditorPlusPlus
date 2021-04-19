@@ -17,6 +17,7 @@
 #include "eightbyeightview.h"
 #include "paletteview.h"
 #include "map16provider.h"
+#include "map16graphicsview.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class CFGEditor; }
@@ -52,6 +53,8 @@ public:
     void addBlankRow();
     void addCloneRow();
     void removeExistingRow();
+    void changeTilePropGroupState(bool);
+    void setTilePropGroupState(FullTile tileInfo);
     template <typename J>
     void connectCheckBox(QLineEdit* edit, QCheckBox* box, J* tweak, bool& tochange) {
         QObject::connect(box, &QCheckBox::stateChanged, this, [=, &tochange]() mutable {

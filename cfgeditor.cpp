@@ -350,13 +350,7 @@ void CFGEditor::bindGFXSelector() {
         splitSetGFx();
         loadFullbitmap();
     });
-    ui->comboBoxTilePalette->setDisabled(true);
-    ui->pushButtonFlipX->setDisabled(true);
-    ui->pushButtonFlipY->setDisabled(true);
-    ui->lineEditTileBL->setDisabled(true);
-    ui->lineEditTileBR->setDisabled(true);
-    ui->lineEditTileTR->setDisabled(true);
-    ui->lineEditTileTL->setDisabled(true);
+    changeTilePropGroupState(true);
     QObject::connect(ui->comboBoxTilePalette, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [&](int index) {
         //
     });
@@ -570,8 +564,43 @@ void CFGEditor::bindDisplayButtons() {
         (*displays)[currentDisplayIndex].setDisplayText(ui->textEditDisplayText->toPlainText());
     });
 
+    ui->map16GraphicsView->registerMouseClickCallback([&](FullTile tileInfo, int tileNo, int selectorSize) {
+        qDebug() << QString::asprintf("Tile number selected is: 0x%03X with size %dx%d", tileNo, selectorSize, selectorSize);
+        if ((selectorSize == 16 && tileNo >= 0x300) || (selectorSize == 8 && tileNo >= 0x600)) {
+            changeTilePropGroupState(false);
+        } else {
+            changeTilePropGroupState(true);
+        }
+        setTilePropGroupState(tileInfo);
+    });
+
     // tiles get updated
     // TODO
+}
+
+void CFGEditor::changeTilePropGroupState(bool enabled) {
+    ui->comboBoxTilePalette->setDisabled(enabled);
+    ui->pushButtonFlipX->setDisabled(enabled);
+    ui->pushButtonFlipY->setDisabled(enabled);
+    ui->lineEditTileBL->setDisabled(enabled);
+    ui->lineEditTileBR->setDisabled(enabled);
+    ui->lineEditTileTR->setDisabled(enabled);
+    ui->lineEditTileTL->setDisabled(enabled);
+}
+
+void CFGEditor::setTilePropGroupState(FullTile tileInfo) {
+    if ((tileInfo.bottomleft.pal == tileInfo.bottomright.pal)
+            && (tileInfo.bottomleft.pal == tileInfo.topleft.pal)
+            && (tileInfo.bottomleft.pal == tileInfo.topright.pal)) {
+        ui->comboBoxTilePalette->setCurrentIndex(tileInfo.bottomleft.pal);
+    } else {
+        ui->comboBoxTilePalette->setCurrentIndex(8);
+    }
+    qDebug() << QString::asprintf("%d %d %d %d", tileInfo.bottomleft.pal, tileInfo.bottomright.pal, tileInfo.topleft.pal, tileInfo.topright.pal);
+    ui->lineEditTileBL->setText(QString::asprintf("%03X", tileInfo.bottomleft.tilenum));
+    ui->lineEditTileBR->setText(QString::asprintf("%03X", tileInfo.bottomright.tilenum));
+    ui->lineEditTileTR->setText(QString::asprintf("%03X", tileInfo.topright.tilenum));
+    ui->lineEditTileTL->setText(QString::asprintf("%03X", tileInfo.topleft.tilenum));
 }
 
 void CFGEditor::bindCollectionButtons() {
