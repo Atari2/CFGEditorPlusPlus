@@ -574,6 +574,39 @@ void CFGEditor::bindDisplayButtons() {
         setTilePropGroupState(tileInfo);
     });
 
+    connect(ui->lineEditTileBL, &QLineEdit::editingFinished, this, [&]() {
+        qDebug() << "bottom left tile updated";
+        ui->map16GraphicsView->tileChanged(TileChangeAction::Number, TileChangeType::BottomLeft, ui->lineEditTileBL->text().toInt(nullptr, 16));
+    });
+    connect(ui->lineEditTileBR, &QLineEdit::editingFinished, this, [&]() {
+        qDebug() << "bottom right tile updated";
+        ui->map16GraphicsView->tileChanged(TileChangeAction::Number, TileChangeType::BottomRight, ui->lineEditTileBR->text().toInt(nullptr, 16));
+    });
+    connect(ui->lineEditTileTL, &QLineEdit::editingFinished, this, [&]() {
+        qDebug() << "top left tile updated";
+        ui->map16GraphicsView->tileChanged(TileChangeAction::Number, TileChangeType::TopLeft, ui->lineEditTileTL->text().toInt(nullptr, 16));
+    });
+    connect(ui->lineEditTileTR, &QLineEdit::editingFinished, this, [&]() {
+        qDebug() << "top right tile updated";
+        ui->map16GraphicsView->tileChanged(TileChangeAction::Number, TileChangeType::TopRight, ui->lineEditTileTR->text().toInt(nullptr, 16));
+    });
+
+    connect(ui->comboBoxTilePalette, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [&](int index){
+        qDebug() << "palette for tile changed";
+        ui->map16GraphicsView->tileChanged(TileChangeAction::Palette, TileChangeType::All, index);
+    });
+
+    connect(ui->pushButtonFlipX, &QPushButton::clicked, this, [&](){
+       qDebug() << "flip x for tile clicked";
+       ui->map16GraphicsView->tileChanged(TileChangeAction::FlipX);
+    });
+
+
+    connect(ui->pushButtonFlipY, &QPushButton::clicked, this, [&](){
+       qDebug() << "flip x for tile clicked";
+       ui->map16GraphicsView->tileChanged(TileChangeAction::FlipY);
+    });
+
     // tiles get updated
     // TODO
 }

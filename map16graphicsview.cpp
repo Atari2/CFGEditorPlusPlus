@@ -17,6 +17,21 @@ FullTile::FullTile(quint16 tl, quint16 bl, quint16 tr, quint16 br) :
 
 }
 
+void FullTile::SetPalette(int pal) {
+    topleft.pal = pal;
+    topright.pal = pal;
+    bottomleft.pal = pal;
+    bottomright.pal = pal;
+}
+
+void FullTile::FlipX() {
+    // TODO
+}
+
+void FullTile::FlipY() {
+    // TODO
+}
+
 QImage TileInfo::get8x8Tile() {
     auto ig = SnesGFXConverter::get8x8TileFromVect(tilenum, SpritePaletteCreator::getPalette(pal + 8));
     ig.mirror(hflip, vflip);
@@ -150,7 +165,21 @@ void Map16GraphicsView::drawInternalMap16File() {
 
     currentMap16 = scene()->addPixmap(QPixmap::fromImage(TileMap) /* .scaled(size(), Qt::KeepAspectRatioByExpanding, Qt::FastTransformation) */);
     setFixedWidth(imageWidth + 20);
-    hasAlreadyDrawnOnce = false;
+    currentWithNoHighlight = currentMap16->pixmap();
+    currentWithNoSelection = currentMap16->pixmap();
+    hasAlreadyDrawnOnce = true;
+}
+
+void Map16GraphicsView::drawCurrentSelectedTile(QPixmap& map) {
+    if (currentClickedTile == -1)
+        return;
+    QPainter p{&map};
+    QPen pen{Qt::white, 1, Qt::DotLine, Qt::SquareCap, Qt::RoundJoin};
+    p.setPen(pen);
+    auto point = translateToRect(currentClickedPoint);
+    int diff = static_cast<int>(currType);
+    p.drawRect(QRect{point.x(), point.y(), diff, diff});
+    p.end();
 }
 
 void Map16GraphicsView::addGrid() {
@@ -162,6 +191,7 @@ void Map16GraphicsView::addGrid() {
     QPainter paintGrid{&pixmap};
     paintGrid.drawImage(QRect{0, 0, imageWidth, imageHeight}, Grid);
     paintGrid.end();
+    drawCurrentSelectedTile(pixmap);
     currentWithNoHighlight = pixmap;
     currentMap16->setPixmap(pixmap);
 }
@@ -171,11 +201,12 @@ void Map16GraphicsView::removeGrid() {
         return;
     useGrid = false;
     QPixmap pixmap = QPixmap::fromImage(TileMap);
-    QPainter paint{&pixmap};
     if (usePageSep) {
+        QPainter paint{&pixmap};
         // if the page separator is being used, we have to draw it
         paint.drawImage(QRect{0, 0, imageWidth, imageHeight}, PageSep);
     }
+    drawCurrentSelectedTile(pixmap);
     currentMap16->setPixmap(pixmap);
     currentWithNoHighlight = pixmap;
 }
@@ -189,6 +220,7 @@ void Map16GraphicsView::addPageSep() {
     QPainter paintPageSep{&pixmap};
     paintPageSep.drawImage(QRect{0, 0, imageWidth, imageHeight}, PageSep);
     paintPageSep.end();
+    drawCurrentSelectedTile(pixmap);
     currentWithNoHighlight = pixmap;
     currentMap16->setPixmap(pixmap);
 }
@@ -198,11 +230,12 @@ void Map16GraphicsView::removePageSep() {
         return;
     usePageSep = false;
     QPixmap pixmap = QPixmap::fromImage(TileMap);
-    QPainter paint{&pixmap};
     if (useGrid) {
+        QPainter paint{&pixmap};
         // if the grid is being used, we have to draw it
         paint.drawImage(QRect{0, 0, imageWidth, imageHeight}, Grid);
     }
+    drawCurrentSelectedTile(pixmap);
     currentMap16->setPixmap(pixmap);
     currentWithNoHighlight = pixmap;
 }
@@ -219,6 +252,12 @@ QPoint Map16GraphicsView::translateToRect(QPoint position) {
                 position.x() - (position.x() % static_cast<int>(currType)),
                 position.y() - (position.y() % static_cast<int>(currType)) + scrollbarDiff
                 );
+}
+
+FullTile& Map16GraphicsView::tileNumToTile() {
+    int row = currentClickedTile / (imageWidth / 16);
+    int col = currentClickedTile % (imageWidth / 16);
+    return tiles[row][col];
 }
 
 void Map16GraphicsView::mouseMoveEvent(QMouseEvent *event) {
@@ -247,8 +286,20 @@ void Map16GraphicsView::mousePressEvent(QMouseEvent *event) {
     qDebug() << "Mouse" << (event->button() == Qt::LeftButton ? "left click" : "right click") << "was pressed";
     if (currentTile == -1)
         return;
+    // TODO: fix it, make the selected tile permanent until we click a new one
+    // idea: the "highlighter" needs to use always the newest tilemap
+    // everything else uses the base tilemap to draw on, the one with the selection
+    // while the selection itself grabs the "newest" but without the selection
+    // the only way to fix this is to keep a double copy of the newest tilemap
+    // one with the selection, one without it
+    currentClickedTile = currentTile;
+    currentClickedPoint = event->position().toPoint();
     int intCurrType = static_cast<int>(currType);
     clickCallback(tiles[currentTile / intCurrType][currentTile % intCurrType], currentTile, intCurrType);
+    QPixmap selected = currentWithNoSelection;
+    drawCurrentSelectedTile(selected);
+    currentMap16->setPixmap(selected);
+    currentWithNoHighlight = selected;
     event->accept();
 }
 
@@ -261,6 +312,75 @@ void Map16GraphicsView::useGridChanged() {
 }
 void Map16GraphicsView::usePageSepChanged() {
     usePageSep ? removePageSep() : addPageSep();
+}
+
+void Map16GraphicsView::tileChanged(TileChangeAction action, TileChangeType type, int value) {
+    if (
+            currentClickedTile == -1 ||
+            ((currType == SelectorType::Sixteen && currentClickedTile < 0x300) ||
+             (currType == SelectorType::Eight && currentClickedTile < 0x600))
+        )
+        return;
+    if (currType == SelectorType::Eight) {
+       qDebug() << "selection type 8 not implemented yet";
+       return;
+    }
+    FullTile& tile = tileNumToTile();
+    TileInfo* partial = nullptr;
+    switch (type) {
+    case TileChangeType::BottomLeft:
+       partial = &tile.bottomleft;
+       break;
+    case TileChangeType::BottomRight:
+       partial = &tile.bottomright;
+       break;
+    case TileChangeType::TopLeft:
+       partial = &tile.topleft;
+       break;
+    case TileChangeType::TopRight:
+       partial = &tile.topright;
+       break;
+    default:
+       break;
+    }
+
+    if (partial != nullptr) {
+        switch (action) {
+        case TileChangeAction::Number:
+            partial->tilenum = (value & (currType == SelectorType::Sixteen ? 0x3FF : 0x7FF));
+            break;
+        case TileChangeAction::Palette:
+            partial->pal = value;
+            break;
+        case TileChangeAction::FlipX:
+            partial->vflip = !partial->vflip;
+            break;
+        case TileChangeAction::FlipY:
+            partial->hflip = !partial->hflip;
+            break;
+        }
+    } else {
+        switch (action) {
+        case TileChangeAction::Palette:
+            tile.SetPalette(value);
+            break;
+        case TileChangeAction::FlipX:
+            break;
+        case TileChangeAction::FlipY:
+            break;
+        default:
+            Q_ASSERT(false);
+        }
+    }
+
+    // TODO: redraw here
+    QPainter p{&currentWithNoHighlight};
+    if (currType == SelectorType::Sixteen)
+        p.drawImage(QRect{(currentClickedTile % 16) * 16, (currentClickedTile / 16) * 16, 16, 16}, tile.getFullTile());
+    else
+        p.drawImage(QRect{(currentClickedTile % 8) * 8, (currentClickedTile / 32) * 8, 8, 8}, partial->get8x8Tile());
+    p.end();
+    currentMap16->setPixmap(currentWithNoHighlight);
 }
 
 void Map16GraphicsView::switchCurrSelectionType() {

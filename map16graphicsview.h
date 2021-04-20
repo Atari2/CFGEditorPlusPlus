@@ -32,12 +32,30 @@ struct FullTile {
     TileInfo topright;
     TileInfo bottomright;
     QImage getFullTile();
+    void SetPalette(int pal);
+    void FlipX();
+    void FlipY();
 };
 
 
 enum class SelectorType {
     Eight = 8,
     Sixteen = 16
+};
+
+enum class TileChangeType {
+    All,
+    BottomLeft,
+    BottomRight,
+    TopLeft,
+    TopRight
+};
+
+enum class TileChangeAction {
+    Number,
+    FlipX,
+    FlipY,
+    Palette
 };
 
 class Map16GraphicsView : public QGraphicsView
@@ -51,6 +69,7 @@ private:
     QImage Grid;
     QImage PageSep;
     QPixmap currentWithNoHighlight;
+    QPixmap currentWithNoSelection;
 public:
     int imageWidth = 0;
     int imageHeight = 0;
@@ -58,6 +77,8 @@ public:
     bool usePageSep = false;
     bool hasAlreadyDrawnOnce = false;
     int currentTile = -1;
+    int currentClickedTile = -1;
+    QPoint currentClickedPoint;
     int previousTile = -1;
     SelectorType currType = SelectorType::Sixteen;
     std::function<void(FullTile, int, int)> clickCallback;
@@ -70,6 +91,9 @@ public:
     void drawInternalMap16File();
     int mouseCoordinatesToTile(QPoint position);
     QPoint translateToRect(QPoint position);
+    FullTile& tileNumToTile();
+    void drawCurrentSelectedTile(QPixmap& map);
+    void tileChanged(TileChangeAction action, TileChangeType type = TileChangeType::All, int value = -1);
     void mousePressEvent(QMouseEvent* event);
     void registerMouseClickCallback(const std::function<void(FullTile, int, int)>& callback);
     ~Map16GraphicsView();
