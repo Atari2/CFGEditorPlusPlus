@@ -53,7 +53,7 @@ public:
     void addBlankRow();
     void addCloneRow();
     void removeExistingRow();
-    void changeTilePropGroupState(bool);
+    void changeTilePropGroupState(bool, TileChangeType type = TileChangeType::All);
     void setTilePropGroupState(FullTile tileInfo);
     template <typename J>
     void connectCheckBox(QLineEdit* edit, QCheckBox* box, J* tweak, bool& tochange) {

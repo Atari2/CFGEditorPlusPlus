@@ -2006,9 +2006,9 @@
       <widget class="QWidget" name="verticalLayoutWidget_12">
        <property name="geometry">
         <rect>
-         <x>380</x>
+         <x>391</x>
          <y>30</y>
-         <width>232</width>
+         <width>211</width>
          <height>151</height>
         </rect>
        </property>
@@ -2134,13 +2134,13 @@
                <widget class="QPushButton" name="pushButtonFlipX">
                 <property name="minimumSize">
                  <size>
-                  <width>61</width>
+                  <width>50</width>
                   <height>0</height>
                  </size>
                 </property>
                 <property name="maximumSize">
                  <size>
-                  <width>61</width>
+                  <width>50</width>
                   <height>16777215</height>
                  </size>
                 </property>
@@ -2153,13 +2153,13 @@
                <widget class="QPushButton" name="pushButtonFlipY">
                 <property name="minimumSize">
                  <size>
-                  <width>61</width>
+                  <width>50</width>
                   <height>0</height>
                  </size>
                 </property>
                 <property name="maximumSize">
                  <size>
-                  <width>61</width>
+                  <width>50</width>
                   <height>16777215</height>
                  </size>
                 </property>
@@ -2174,13 +2174,13 @@
              <widget class="QComboBox" name="comboBoxTilePalette">
               <property name="minimumSize">
                <size>
-                <width>131</width>
+                <width>110</width>
                 <height>0</height>
                </size>
               </property>
               <property name="maximumSize">
                <size>
-                <width>131</width>
+                <width>125</width>
                 <height>16777215</height>
                </size>
               </property>
@@ -2304,13 +2304,13 @@
          <widget class="QComboBox" name="comboBoxGFXSet">
           <property name="minimumSize">
            <size>
-            <width>225</width>
+            <width>205</width>
             <height>0</height>
            </size>
           </property>
           <property name="maximumSize">
            <size>
-            <width>225</width>
+            <width>205</width>
             <height>16777215</height>
            </size>
           </property>
@@ -2366,9 +2366,9 @@
       <widget class="QGroupBox" name="groupBox_5">
        <property name="geometry">
         <rect>
-         <x>380</x>
+         <x>390</x>
          <y>190</y>
-         <width>221</width>
+         <width>211</width>
          <height>171</height>
         </rect>
        </property>
@@ -2463,7 +2463,7 @@
       <widget class="QLabel" name="labelTileNo">
        <property name="geometry">
         <rect>
-         <x>380</x>
+         <x>390</x>
          <y>360</y>
          <width>61</width>
          <height>21</height>
@@ -3049,7 +3049,7 @@
      <x>0</x>
      <y>0</y>
      <width>913</width>
-     <height>25</height>
+     <height>20</height>
     </rect>
    </property>
    <property name="defaultUp">

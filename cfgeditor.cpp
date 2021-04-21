@@ -564,10 +564,10 @@ void CFGEditor::bindDisplayButtons() {
         (*displays)[currentDisplayIndex].setDisplayText(ui->textEditDisplayText->toPlainText());
     });
 
-    ui->map16GraphicsView->registerMouseClickCallback([&](FullTile tileInfo, int tileNo, int selectorSize) {
-        qDebug() << QString::asprintf("Tile number selected is: 0x%03X with size %dx%d", tileNo, selectorSize, selectorSize);
-        if ((selectorSize == 16 && tileNo >= 0x300) || (selectorSize == 8 && tileNo >= 0x600)) {
-            changeTilePropGroupState(false);
+    ui->map16GraphicsView->registerMouseClickCallback([&](FullTile tileInfo, int tileNo, SelectorType type) {
+        qDebug() << QString::asprintf("Tile number selected is: 0x%03X", tileNo);
+        if ((type == SelectorType::Sixteen && tileNo >= 0x300) || (type == SelectorType::Eight && tileNo >= 0xC00)) {
+            changeTilePropGroupState(false, ui->map16GraphicsView->getChangeType());
         } else {
             changeTilePropGroupState(true);
         }
@@ -576,64 +576,83 @@ void CFGEditor::bindDisplayButtons() {
 
     connect(ui->lineEditTileBL, &QLineEdit::editingFinished, this, [&]() {
         qDebug() << "bottom left tile updated";
-        ui->map16GraphicsView->tileChanged(TileChangeAction::Number, TileChangeType::BottomLeft, ui->lineEditTileBL->text().toInt(nullptr, 16));
+        ui->map16GraphicsView->tileChanged(ui->lineEditTileBL, TileChangeAction::Number, TileChangeType::BottomLeft, ui->lineEditTileBL->text().toInt(nullptr, 16));
     });
     connect(ui->lineEditTileBR, &QLineEdit::editingFinished, this, [&]() {
         qDebug() << "bottom right tile updated";
-        ui->map16GraphicsView->tileChanged(TileChangeAction::Number, TileChangeType::BottomRight, ui->lineEditTileBR->text().toInt(nullptr, 16));
+        ui->map16GraphicsView->tileChanged(ui->lineEditTileBR, TileChangeAction::Number, TileChangeType::BottomRight, ui->lineEditTileBR->text().toInt(nullptr, 16));
     });
     connect(ui->lineEditTileTL, &QLineEdit::editingFinished, this, [&]() {
         qDebug() << "top left tile updated";
-        ui->map16GraphicsView->tileChanged(TileChangeAction::Number, TileChangeType::TopLeft, ui->lineEditTileTL->text().toInt(nullptr, 16));
+        ui->map16GraphicsView->tileChanged(ui->lineEditTileTL,TileChangeAction::Number, TileChangeType::TopLeft, ui->lineEditTileTL->text().toInt(nullptr, 16));
     });
     connect(ui->lineEditTileTR, &QLineEdit::editingFinished, this, [&]() {
         qDebug() << "top right tile updated";
-        ui->map16GraphicsView->tileChanged(TileChangeAction::Number, TileChangeType::TopRight, ui->lineEditTileTR->text().toInt(nullptr, 16));
+        ui->map16GraphicsView->tileChanged(ui->lineEditTileTR,TileChangeAction::Number, TileChangeType::TopRight, ui->lineEditTileTR->text().toInt(nullptr, 16));
     });
 
     connect(ui->comboBoxTilePalette, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [&](int index){
         qDebug() << "palette for tile changed";
-        ui->map16GraphicsView->tileChanged(TileChangeAction::Palette, TileChangeType::All, index);
+        ui->map16GraphicsView->tileChanged(ui->comboBoxTilePalette, TileChangeAction::Palette, ui->map16GraphicsView->getChangeType(), index);
     });
 
     connect(ui->pushButtonFlipX, &QPushButton::clicked, this, [&](){
        qDebug() << "flip x for tile clicked";
-       ui->map16GraphicsView->tileChanged(TileChangeAction::FlipX);
+       ui->map16GraphicsView->tileChanged(ui->pushButtonFlipX, TileChangeAction::FlipX, ui->map16GraphicsView->getChangeType());
     });
 
 
     connect(ui->pushButtonFlipY, &QPushButton::clicked, this, [&](){
        qDebug() << "flip x for tile clicked";
-       ui->map16GraphicsView->tileChanged(TileChangeAction::FlipY);
+       ui->map16GraphicsView->tileChanged(ui->pushButtonFlipY, TileChangeAction::FlipY, ui->map16GraphicsView->getChangeType());
     });
 
     // tiles get updated
     // TODO
 }
 
-void CFGEditor::changeTilePropGroupState(bool enabled) {
-    ui->comboBoxTilePalette->setDisabled(enabled);
-    ui->pushButtonFlipX->setDisabled(enabled);
-    ui->pushButtonFlipY->setDisabled(enabled);
-    ui->lineEditTileBL->setDisabled(enabled);
-    ui->lineEditTileBR->setDisabled(enabled);
-    ui->lineEditTileTR->setDisabled(enabled);
-    ui->lineEditTileTL->setDisabled(enabled);
+void CFGEditor::changeTilePropGroupState(bool disabled, TileChangeType type) {
+    ui->comboBoxTilePalette->setDisabled(disabled);
+    ui->pushButtonFlipX->setDisabled(disabled);
+    ui->pushButtonFlipY->setDisabled(disabled);
+    if (type != TileChangeType::All) {
+        ui->lineEditTileBL->setDisabled(true);
+        ui->lineEditTileBR->setDisabled(true);
+        ui->lineEditTileTR->setDisabled(true);
+        ui->lineEditTileTL->setDisabled(true);
+        switch (type) {
+        case TileChangeType::BottomLeft:
+            ui->lineEditTileBL->setDisabled(disabled);
+            break;
+        case TileChangeType::TopLeft:
+            ui->lineEditTileTL->setDisabled(disabled);
+            break;
+        case TileChangeType::BottomRight:
+            ui->lineEditTileBR->setDisabled(disabled);
+            break;
+        case TileChangeType::TopRight:
+            ui->lineEditTileTR->setDisabled(disabled);
+            break;
+        default:
+            Q_ASSERT(false);
+        }
+    } else {
+        ui->lineEditTileBL->setDisabled(disabled);
+        ui->lineEditTileBR->setDisabled(disabled);
+        ui->lineEditTileTR->setDisabled(disabled);
+        ui->lineEditTileTL->setDisabled(disabled);
+    }
 }
 
 void CFGEditor::setTilePropGroupState(FullTile tileInfo) {
-    if ((tileInfo.bottomleft.pal == tileInfo.bottomright.pal)
-            && (tileInfo.bottomleft.pal == tileInfo.topleft.pal)
-            && (tileInfo.bottomleft.pal == tileInfo.topright.pal)) {
-        ui->comboBoxTilePalette->setCurrentIndex(tileInfo.bottomleft.pal);
-    } else {
-        ui->comboBoxTilePalette->setCurrentIndex(8);
-    }
+    ui->map16GraphicsView->noSignals = true;
+    ui->map16GraphicsView->changePaletteIndex(ui->comboBoxTilePalette, tileInfo);
     qDebug() << QString::asprintf("%d %d %d %d", tileInfo.bottomleft.pal, tileInfo.bottomright.pal, tileInfo.topleft.pal, tileInfo.topright.pal);
     ui->lineEditTileBL->setText(QString::asprintf("%03X", tileInfo.bottomleft.tilenum));
     ui->lineEditTileBR->setText(QString::asprintf("%03X", tileInfo.bottomright.tilenum));
     ui->lineEditTileTR->setText(QString::asprintf("%03X", tileInfo.topright.tilenum));
     ui->lineEditTileTL->setText(QString::asprintf("%03X", tileInfo.topleft.tilenum));
+    ui->map16GraphicsView->noSignals = false;
 }
 
 void CFGEditor::bindCollectionButtons() {

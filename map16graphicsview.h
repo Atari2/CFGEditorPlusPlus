@@ -11,6 +11,8 @@
 #include <QFile>
 #include <QLabel>
 #include <QScrollBar>
+#include <QSignalBlocker>
+#include <QComboBox>
 #include <functional>
 #include "snesgfxconverter.h"
 #include "spritepalettecreator.h"
@@ -23,6 +25,7 @@ struct TileInfo {
     quint8 pal;
     quint16 tilenum;
     QImage get8x8Tile();
+    QImage get8x8Scaled(int width);
 };
 
 struct FullTile {
@@ -32,13 +35,14 @@ struct FullTile {
     TileInfo topright;
     TileInfo bottomright;
     QImage getFullTile();
+    QImage getScaled(int width);
     void SetPalette(int pal);
     void FlipX();
     void FlipY();
 };
 
 
-enum class SelectorType {
+enum class SelectorType : int {
     Eight = 8,
     Sixteen = 16
 };
@@ -73,18 +77,20 @@ private:
 public:
     int imageWidth = 0;
     int imageHeight = 0;
+    bool noSignals = false;
     bool useGrid = false;
     bool usePageSep = false;
-    bool hasAlreadyDrawnOnce = false;
     int currentTile = -1;
     int currentClickedTile = -1;
-    QPoint currentClickedPoint;
+    QPoint currentTopLeftClicked;
     int previousTile = -1;
     SelectorType currType = SelectorType::Sixteen;
-    std::function<void(FullTile, int, int)> clickCallback;
+    int CellSize();
+    std::function<void(FullTile, int, SelectorType)> clickCallback;
     QVector<QVector<FullTile>> tiles;
     Map16GraphicsView(QWidget* parent = nullptr);
     void setControllingLabel(QLabel *tileNoLabel);
+    void changePaletteIndex(QComboBox* box, FullTile tile);
     void mouseMoveEvent(QMouseEvent *event);
     void readInternalMap16File(const QString& name = ":/Resources/spriteMapData.map16");
     void readExternalMap16File(const QString& name);
@@ -93,9 +99,10 @@ public:
     QPoint translateToRect(QPoint position);
     FullTile& tileNumToTile();
     void drawCurrentSelectedTile(QPixmap& map);
-    void tileChanged(TileChangeAction action, TileChangeType type = TileChangeType::All, int value = -1);
+    void tileChanged(QObject* toBlock, TileChangeAction action, TileChangeType type = TileChangeType::All, int value = -1);
     void mousePressEvent(QMouseEvent* event);
-    void registerMouseClickCallback(const std::function<void(FullTile, int, int)>& callback);
+    void registerMouseClickCallback(const std::function<void(FullTile, int, SelectorType)>& callback);
+    TileChangeType getChangeType();
     ~Map16GraphicsView();
     void useGridChanged();
     void usePageSepChanged();
