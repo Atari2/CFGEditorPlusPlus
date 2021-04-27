@@ -1490,6 +1490,12 @@
           </item>
           <item>
            <widget class="QLineEdit" name="lineEdit1656">
+            <property name="maximumSize">
+             <size>
+              <width>50</width>
+              <height>16777215</height>
+             </size>
+            </property>
             <property name="text">
              <string>00</string>
             </property>
@@ -1547,6 +1553,12 @@
           </item>
           <item>
            <widget class="QLineEdit" name="lineEdit1662">
+            <property name="maximumSize">
+             <size>
+              <width>50</width>
+              <height>16777215</height>
+             </size>
+            </property>
             <property name="text">
              <string>00</string>
             </property>
@@ -1604,6 +1616,12 @@
           </item>
           <item>
            <widget class="QLineEdit" name="lineEdit166E">
+            <property name="maximumSize">
+             <size>
+              <width>51</width>
+              <height>16777215</height>
+             </size>
+            </property>
             <property name="text">
              <string>00</string>
             </property>
@@ -1661,6 +1679,12 @@
           </item>
           <item>
            <widget class="QLineEdit" name="lineEdit167a">
+            <property name="maximumSize">
+             <size>
+              <width>49</width>
+              <height>16777215</height>
+             </size>
+            </property>
             <property name="text">
              <string>00</string>
             </property>
@@ -1718,6 +1742,12 @@
           </item>
           <item>
            <widget class="QLineEdit" name="lineEdit1686">
+            <property name="maximumSize">
+             <size>
+              <width>50</width>
+              <height>16777215</height>
+             </size>
+            </property>
             <property name="text">
              <string>00</string>
             </property>
@@ -1775,6 +1805,12 @@
           </item>
           <item>
            <widget class="QLineEdit" name="lineEdit190f">
+            <property name="maximumSize">
+             <size>
+              <width>51</width>
+              <height>16777215</height>
+             </size>
+            </property>
             <property name="text">
              <string>00</string>
             </property>
@@ -2380,7 +2416,7 @@
          <rect>
           <x>10</x>
           <y>30</y>
-          <width>201</width>
+          <width>191</width>
           <height>131</height>
          </rect>
         </property>
@@ -2389,6 +2425,12 @@
           <layout class="QHBoxLayout" name="horizontalLayout_18">
            <item>
             <widget class="QLineEdit" name="lineEditGFXSp0">
+             <property name="maximumSize">
+              <size>
+               <width>155</width>
+               <height>16777215</height>
+              </size>
+             </property>
              <property name="text">
               <string>GFX00</string>
              </property>
@@ -2407,6 +2449,12 @@
           <layout class="QHBoxLayout" name="horizontalLayout_19">
            <item>
             <widget class="QLineEdit" name="lineEditGFXSp1">
+             <property name="maximumSize">
+              <size>
+               <width>155</width>
+               <height>16777215</height>
+              </size>
+             </property>
              <property name="text">
               <string>GFX01</string>
              </property>
@@ -2425,6 +2473,12 @@
           <layout class="QHBoxLayout" name="horizontalLayout_20">
            <item>
             <widget class="QLineEdit" name="lineEditGFXSp2">
+             <property name="maximumSize">
+              <size>
+               <width>155</width>
+               <height>16777215</height>
+              </size>
+             </property>
              <property name="text">
               <string>GFX13</string>
              </property>
@@ -2443,6 +2497,12 @@
           <layout class="QHBoxLayout" name="horizontalLayout_33">
            <item>
             <widget class="QLineEdit" name="lineEditGFXSp3">
+             <property name="maximumSize">
+              <size>
+               <width>155</width>
+               <height>16777215</height>
+              </size>
+             </property>
              <property name="text">
               <string>GFX02</string>
              </property>

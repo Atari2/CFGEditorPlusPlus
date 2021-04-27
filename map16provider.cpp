@@ -11,9 +11,37 @@ int Map16Provider::mouseCoordinatesToTile(QPoint position) {
     return ((position.y() / 16) * 16) + (position.x() / 16);
 }
 
-void Map16Provider::mouseMoveEvent(QMouseEvent *event) {
-    qDebug() << "Tile " << mouseCoordinatesToTile(event->position().toPoint());
+QPoint Map16Provider::alignToGrid(QPoint position, int size) {
+    return QPoint(position.x() - (position.x() % size), position.y() - (position.y() % size));
+}
+
+void Map16Provider::mousePressEvent(QMouseEvent *event) {
+    QPixmap map = pixmap();
+    QPainter p{&map};
+    if (event->button() == Qt::MouseButton::LeftButton) {
+        qDebug() << "Left mouse button pressed";
+        return;
+    } else if (event->button() == Qt::MouseButton::RightButton) {
+        qDebug() << "Right mouse button pressed";
+        int size = copiedTile->size();
+        QPoint aligned = alignToGrid(event->position().toPoint(), size);
+        p.drawImage(QRect{aligned.x(), aligned.y(), size, size}, copiedTile->draw(size));
+    }
+    setPixmap(map);
     event->accept();
+}
+
+void Map16Provider::mouseMoveEvent(QMouseEvent *event) {
+    qDebug() << QString::asprintf("Tile %02X", mouseCoordinatesToTile(event->position().toPoint()));
+    event->accept();
+}
+
+void Map16Provider::setCopiedTile(ClipboardTile& tile) {
+    copiedTile = &tile;
+}
+
+ClipboardTile* Map16Provider::getCopiedTile() {
+    return copiedTile;
 }
 
 QPixmap Map16Provider::createRedGrid() {

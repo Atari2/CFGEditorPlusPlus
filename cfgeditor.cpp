@@ -8,6 +8,7 @@ CFGEditor::CFGEditor(QWidget *parent)
     , hexValidator(new QRegularExpressionValidator{QRegularExpression(R"([A-Fa-f0-9]{0,2})")})
     , hexNumberList(new QStringList(0x100))
     , models()
+    , copiedTile()
     , displays(new QVector<DisplayData>())
 {
     ui->setupUi(this);
@@ -351,9 +352,6 @@ void CFGEditor::bindGFXSelector() {
         loadFullbitmap();
     });
     changeTilePropGroupState(true);
-    QObject::connect(ui->comboBoxTilePalette, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [&](int index) {
-        //
-    });
     QObject::connect(viewPalette, &PaletteView::paletteChanged, this, [&](){
         qDebug() << "Custom signal change palette received";
         loadFullbitmap();
@@ -438,6 +436,8 @@ void CFGEditor::advanceDisplayIndex() {
 }
 
 void CFGEditor::bindDisplayButtons() {
+    ui->map16GraphicsView->setCopiedTile(copiedTile);
+    ui->labelDisplayTilesGrid->setCopiedTile(copiedTile);
     QObject::connect(ui->toolButtonGrid, &QToolButton::clicked, this, [&]() {
         ui->map16GraphicsView->useGridChanged();
     });
@@ -572,6 +572,7 @@ void CFGEditor::bindDisplayButtons() {
             changeTilePropGroupState(true);
         }
         setTilePropGroupState(tileInfo);
+        ui->labelDisplayTilesGrid->getCopiedTile()->update(ui->map16GraphicsView->getCopiedTile());
     });
 
     connect(ui->lineEditTileBL, &QLineEdit::editingFinished, this, [&]() {

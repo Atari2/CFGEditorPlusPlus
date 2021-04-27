@@ -59,6 +59,8 @@ set(PROJECT_SOURCES
         map16provider.h
         map16graphicsview.cpp
         map16graphicsview.h
+        clipboardtile.cpp
+        clipboardtile.h
         ${TS_FILES}
 )
 

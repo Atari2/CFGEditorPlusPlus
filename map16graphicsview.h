@@ -14,33 +14,7 @@
 #include <QSignalBlocker>
 #include <QComboBox>
 #include <functional>
-#include "snesgfxconverter.h"
-#include "spritepalettecreator.h"
-
-struct TileInfo {
-    TileInfo(quint16 tile);
-    bool vflip;
-    bool hflip;
-    bool prio;
-    quint8 pal;
-    quint16 tilenum;
-    QImage get8x8Tile();
-    QImage get8x8Scaled(int width);
-};
-
-struct FullTile {
-    FullTile(quint16 tl, quint16 bl, quint16 tr, quint16 br);
-    TileInfo topleft;
-    TileInfo bottomleft;
-    TileInfo topright;
-    TileInfo bottomright;
-    QImage getFullTile();
-    QImage getScaled(int width);
-    void SetPalette(int pal);
-    void FlipX();
-    void FlipY();
-};
-
+#include "clipboardtile.h"
 
 enum class SelectorType : int {
     Eight = 8,
@@ -74,6 +48,7 @@ private:
     QImage PageSep;
     QPixmap currentWithNoHighlight;
     QPixmap currentWithNoSelection;
+    ClipboardTile* copiedTile = nullptr;
 public:
     int imageWidth = 0;
     int imageHeight = 0;
@@ -102,6 +77,7 @@ public:
     void tileChanged(QObject* toBlock, TileChangeAction action, TileChangeType type = TileChangeType::All, int value = -1);
     void mousePressEvent(QMouseEvent* event);
     void registerMouseClickCallback(const std::function<void(FullTile, int, SelectorType)>& callback);
+    void copyTileToClipboard(const FullTile& tile);
     TileChangeType getChangeType();
     ~Map16GraphicsView();
     void useGridChanged();
@@ -110,7 +86,8 @@ public:
     void removeGrid();
     void addPageSep();
     void removePageSep();
-
+    void setCopiedTile(ClipboardTile& tile);
+    const ClipboardTile& getCopiedTile();
     void switchCurrSelectionType();
 };
 

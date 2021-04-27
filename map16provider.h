@@ -4,6 +4,7 @@
 #include <QPainter>
 #include <QLabel>
 #include <QMouseEvent>
+#include "clipboardtile.h"
 
 class Map16Provider : public QLabel
 {
@@ -11,9 +12,14 @@ class Map16Provider : public QLabel
 public:
     Map16Provider(QWidget* parent = nullptr);
     void mouseMoveEvent(QMouseEvent *event);
+    void mousePressEvent(QMouseEvent *event);
     int mouseCoordinatesToTile(QPoint position);
+    void setCopiedTile(ClipboardTile& tile);
+    QPoint alignToGrid(QPoint position, int size);
     static QPixmap createRedGrid();
+    ClipboardTile* getCopiedTile();
 private:
+    ClipboardTile* copiedTile = nullptr;
 signals:
 };
 

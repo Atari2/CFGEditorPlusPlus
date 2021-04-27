@@ -1,80 +1,5 @@
 #include "map16graphicsview.h"
 
-TileInfo::TileInfo(quint16 info) {
-    vflip = info & 0x8000;
-    hflip = info & 0x4000;
-    prio = info & 0x2000;
-    pal = ((info & 0x1C00) >> 10) & 0xFF;
-    tilenum = (info & 0x3FF);
-}
-
-FullTile::FullTile(quint16 tl, quint16 bl, quint16 tr, quint16 br) :
-    topleft(tl),
-    bottomleft(bl),
-    topright(tr),
-    bottomright(br)
-{
-
-}
-
-void FullTile::SetPalette(int pal) {
-    topleft.pal = pal;
-    topright.pal = pal;
-    bottomleft.pal = pal;
-    bottomright.pal = pal;
-}
-
-void FullTile::FlipX() {
-    auto temp1 = topleft;
-    auto temp2 = bottomleft;
-    topleft = topright;
-    bottomleft = bottomright;
-    topright = temp1;
-    bottomright = temp2;
-    topleft.hflip = !topleft.hflip;
-    bottomleft.hflip = !bottomleft.hflip;
-    topright.hflip = !topright.hflip;
-    bottomright.hflip = !bottomright.hflip;
-}
-
-void FullTile::FlipY() {
-    auto temp1 = topleft;
-    auto temp2 = topright;
-    topleft = bottomleft;
-    topright = bottomright;
-    bottomleft = temp1;
-    bottomright = temp2;
-    topleft.vflip = !topleft.vflip;
-    bottomleft.vflip = !bottomleft.vflip;
-    topright.vflip = !topright.vflip;
-    bottomright.vflip = !bottomright.vflip;
-}
-
-QImage TileInfo::get8x8Tile() {
-    auto ig = SnesGFXConverter::get8x8TileFromVect(tilenum, SpritePaletteCreator::getPalette(pal + 8));
-    ig.mirror(hflip, vflip);
-    return ig;
-}
-
-QImage TileInfo::get8x8Scaled(int width) {
-    return get8x8Tile().scaledToWidth(width, Qt::SmoothTransformation);
-}
-
-QImage FullTile::getFullTile() {
-    QImage img{16, 16, QImage::Format::Format_RGB32};
-    QPainter p{&img};
-    p.drawImage(QRect{0, 0, 8, 8}, topleft.get8x8Tile());
-    p.drawImage(QRect{0, 8, 8, 8}, bottomleft.get8x8Tile());
-    p.drawImage(QRect{8, 0, 8, 8}, topright.get8x8Tile());
-    p.drawImage(QRect{8, 8, 8, 8}, bottomright.get8x8Tile());
-    p.end();
-    return img;
-}
-
-QImage FullTile::getScaled(int width) {
-    return getFullTile().scaledToWidth(width, Qt::SmoothTransformation);
-}
-
 
 Map16GraphicsView::Map16GraphicsView(QWidget* parent) : QGraphicsView(parent)
 {
@@ -293,7 +218,14 @@ QPoint Map16GraphicsView::translateToRect(QPoint position) {
 }
 
 FullTile& Map16GraphicsView::tileNumToTile() {
-    int realClickedTile = currType == SelectorType::Sixteen ? currentClickedTile : currentClickedTile >> 2;
+    int realClickedTile;
+    if (currType == SelectorType::Sixteen) {
+        realClickedTile = currentClickedTile;
+    } else {
+        int r = (currentClickedTile / 32) / 2;
+        int c = (currentClickedTile % 32) / 2;
+        realClickedTile = r * 16 + c;
+    }
     int row = realClickedTile / (imageWidth / 22);
     int col = realClickedTile % (imageWidth / 22);
     qDebug() << row << " " << col << " " << imageWidth;
@@ -320,19 +252,61 @@ void Map16GraphicsView::mouseMoveEvent(QMouseEvent *event) {
 
 void Map16GraphicsView::mousePressEvent(QMouseEvent *event) {
     qDebug() << "Mouse" << (event->button() == Qt::LeftButton ? "left click" : "right click") << "was pressed";
-    if (event->button() == Qt::RightButton)
-        // todo: implement right button => save selected tile to ""clipboard""
+    if (event->button() == Qt::RightButton) {
+        if (currentClickedTile == -1 || (currType == SelectorType::Sixteen && currentTile < 0x300) || (currType == SelectorType::Eight && currentTile < 0xC00))
+            return;
+        int temp = currentClickedTile;
+        currentClickedTile = currentTile;
+        auto& tile = tileNumToTile();
+        currentClickedTile = temp;
+        // auto pos = translateToRect(event->position().toPoint());
+        tile = tileNumToTile();
+        QPainter og{&TileMap};
+        QPainter high{&currentWithNoHighlight};
+        QPainter sel{&currentWithNoSelection};
+        auto size = CellSize();
+        auto img = tile.getFullTile();
+        high.drawImage(QRect{(currentTile % 16) * size, (currentTile / 16) * size, size, size}, img);
+        sel.drawImage(QRect{(currentTile % 16) * size, (currentTile / 16) * size, size, size}, img);
+        og.drawImage(QRect{(currentTile % 16) * size, (currentTile / 16) * size, size, size}, img);
+        sel.end();
+        high.end();
+        og.end();
+        drawCurrentSelectedTile(currentWithNoHighlight);
+        currentMap16->setPixmap(currentWithNoHighlight);
         return;
+    }
     if (currentTile == -1)
         return;
     currentClickedTile = currentTile;
     currentTopLeftClicked = translateToRect(event->position().toPoint());
+    copyTileToClipboard(tileNumToTile());
     clickCallback(tileNumToTile(), currentTile, currType);
     QPixmap selected = currentWithNoSelection;
     drawCurrentSelectedTile(selected);
     currentMap16->setPixmap(selected);
     currentWithNoHighlight = selected;
     event->accept();
+}
+
+void Map16GraphicsView::copyTileToClipboard(const FullTile& tile) {
+    switch (getChangeType()) {
+    case TileChangeType::All:
+        copiedTile->update(tile);
+        break;
+    case TileChangeType::BottomLeft:
+        copiedTile->update(tile.bottomleft);
+        break;
+    case TileChangeType::BottomRight:
+        copiedTile->update(tile.bottomright);
+        break;
+    case TileChangeType::TopLeft:
+        copiedTile->update(tile.topleft);
+        break;
+    case TileChangeType::TopRight:
+        copiedTile->update(tile.topright);
+        break;
+    }
 }
 
 void Map16GraphicsView::registerMouseClickCallback(const std::function<void(FullTile, int, SelectorType)>& callback) {
@@ -472,6 +446,14 @@ void Map16GraphicsView::tileChanged(QObject* toBlock, TileChangeAction action, T
     og.end();
     drawCurrentSelectedTile(currentWithNoHighlight);
     currentMap16->setPixmap(currentWithNoHighlight);
+}
+
+void Map16GraphicsView::setCopiedTile(ClipboardTile& tile) {
+    copiedTile = &tile;
+}
+
+const ClipboardTile& Map16GraphicsView::getCopiedTile() {
+    return *copiedTile;
 }
 
 void Map16GraphicsView::switchCurrSelectionType() {

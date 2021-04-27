@@ -76,6 +76,7 @@ private:
     QImage* full8x8Bitmap = nullptr;
     EightByEightView* view8x8 = nullptr;
     PaletteView* viewPalette = nullptr;
+    ClipboardTile copiedTile;
     QAtomicPointer<QVector<DisplayData>> displays;
     QAtomicInteger<int> currentDisplayIndex = -1;
 };
