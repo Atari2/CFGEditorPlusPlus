@@ -92,6 +92,8 @@ void Map16GraphicsView::readExternalMap16File(const QString &name) {
 void Map16GraphicsView::drawInternalMap16File() {
     TileMap = QImage{imageWidth, imageHeight, QImage::Format::Format_ARGB32};
     QPainter p{&TileMap};
+    p.setCompositionMode(QPainter::CompositionMode_SourceOver);
+    p.fillRect(TileMap.rect(), QBrush(QGradient(QGradient::AmourAmour)));
     for (int i = 0; i < tiles.length(); i++) {
         for (int j = 0; j < tiles[i].length(); j++) {
             p.drawImage(QRect{j * 16, i * 16, 16, 16}, tiles[i][j].getFullTile());
@@ -290,21 +292,22 @@ void Map16GraphicsView::mousePressEvent(QMouseEvent *event) {
 }
 
 void Map16GraphicsView::copyTileToClipboard(const FullTile& tile) {
-    switch (getChangeType()) {
+    auto t = getChangeType();
+    switch (t) {
     case TileChangeType::All:
         copiedTile->update(tile);
         break;
     case TileChangeType::BottomLeft:
-        copiedTile->update(tile.bottomleft);
+        copiedTile->update(tile.bottomleft, t);
         break;
     case TileChangeType::BottomRight:
-        copiedTile->update(tile.bottomright);
+        copiedTile->update(tile.bottomright, t);
         break;
     case TileChangeType::TopLeft:
-        copiedTile->update(tile.topleft);
+        copiedTile->update(tile.topleft, t);
         break;
     case TileChangeType::TopRight:
-        copiedTile->update(tile.topright);
+        copiedTile->update(tile.topright, t);
         break;
     }
 }

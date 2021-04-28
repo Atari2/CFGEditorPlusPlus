@@ -18,6 +18,15 @@ FullTile::FullTile(quint16 tl, quint16 bl, quint16 tr, quint16 br) :
 
 }
 
+FullTile::FullTile(TileInfo tl, TileInfo bl, TileInfo tr, TileInfo br) :
+    topleft(tl),
+    bottomleft(bl),
+    topright(tr),
+    bottomright(br)
+{
+
+}
+
 void FullTile::SetPalette(int pal) {
     topleft.pal = pal;
     topright.pal = pal;
@@ -62,8 +71,9 @@ QImage TileInfo::get8x8Scaled(int width) {
 }
 
 QImage FullTile::getFullTile() {
-    QImage img{16, 16, QImage::Format::Format_RGB32};
+    QImage img{16, 16, QImage::Format::Format_ARGB32};
     QPainter p{&img};
+    p.setCompositionMode(QPainter::CompositionMode_SourceOver);
     p.drawImage(QRect{0, 0, 8, 8}, topleft.get8x8Tile());
     p.drawImage(QRect{0, 8, 8, 8}, bottomleft.get8x8Tile());
     p.drawImage(QRect{8, 0, 8, 8}, topright.get8x8Tile());
@@ -78,7 +88,7 @@ QImage FullTile::getScaled(int width) {
 
 
 ClipboardTile::ClipboardTile() :
-    type(TileType::Sixteen)
+    type(TileChangeType::All)
   , tile(0, 0, 0, 0)
   , quarter(0)
 {
@@ -86,11 +96,11 @@ ClipboardTile::ClipboardTile() :
 }
 
 void ClipboardTile::update(const FullTile& tile) {
-    type = TileType::Sixteen;
+    type = TileChangeType::All;
     this->tile = tile;
 }
-void ClipboardTile::update(const TileInfo& quarter) {
-    type = TileType::Eight;
+void ClipboardTile::update(const TileInfo& quarter, TileChangeType type) {
+    this->type = type;
     this->quarter = quarter;
 }
 
@@ -100,14 +110,36 @@ void ClipboardTile::update(const ClipboardTile& other) {
     quarter = other.quarter;
 }
 
-QImage ClipboardTile::draw(int size) {
-    if (type == TileType::Eight) {
-        return quarter.get8x8Scaled(size);
+QImage ClipboardTile::draw() {
+    if (type != TileChangeType::All) {
+        return quarter.get8x8Tile();
     } else {
-        return tile.getScaled(size);
+        return tile.getFullTile();
     }
 }
 
 int ClipboardTile::size() {
-    return type == TileType::Eight ? 8 : 16;
+    return type == TileChangeType::All ? 16 : 8;
+}
+
+TileChangeType ClipboardTile::getType() {
+    return type;
+}
+
+FullTile ClipboardTile::getTile() {
+    switch (type) {
+    case TileChangeType::All:
+        return tile;
+    case TileChangeType::BottomLeft:
+        return FullTile{0, quarter, 0, 0};
+    case TileChangeType::BottomRight:
+        return FullTile{0, 0, 0, quarter};
+    case TileChangeType::TopLeft:
+        return FullTile{quarter, 0, 0, 0};
+    case TileChangeType::TopRight:
+        return FullTile{0, 0, quarter, 0};
+    default:
+        Q_ASSERT(false);
+    }
+    return {0, 0, 0, 0};
 }

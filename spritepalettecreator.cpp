@@ -16,11 +16,14 @@ void SpritePaletteCreator::ReadPaletteFile(int offset, int rows, int columns, co
     for (int row = 0; row < rows; row++) {
         paletteData.append(QVector<QColor>());
         for (int col = 0; col < columns; col++) {
-            paletteData[row].append(QColor::fromRgb(
-                                        bytes[offset + columns * 3 * row + 3 * col + 0] & 0xFF,
-                                        bytes[offset + columns * 3 * row + 3 * col + 1] & 0xFF,
-                                        bytes[offset + columns * 3 * row + 3 * col + 2] & 0xFF
-                                    ));
+            paletteData[row].append(QColor::fromRgba(
+                                                   qRgba(
+                                                        bytes[offset + columns * 3 * row + 3 * col + 0] & 0xFF,
+                                                        bytes[offset + columns * 3 * row + 3 * col + 1] & 0xFF,
+                                                        bytes[offset + columns * 3 * row + 3 * col + 2] & 0xFF,
+                                                        255
+                                                   ))
+                                   );
         }
     }
 }

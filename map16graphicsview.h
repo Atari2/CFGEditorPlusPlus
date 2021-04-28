@@ -21,14 +21,6 @@ enum class SelectorType : int {
     Sixteen = 16
 };
 
-enum class TileChangeType {
-    All,
-    BottomLeft,
-    BottomRight,
-    TopLeft,
-    TopRight
-};
-
 enum class TileChangeAction {
     Number,
     FlipX,

@@ -6,6 +6,7 @@
 
 struct TileInfo {
     TileInfo(quint16 tile);
+    TileInfo() = default;
     bool vflip;
     bool hflip;
     bool prio;
@@ -17,6 +18,8 @@ struct TileInfo {
 
 struct FullTile {
     FullTile(quint16 tl, quint16 bl, quint16 tr, quint16 br);
+    FullTile(TileInfo tl, TileInfo bl, TileInfo tr, TileInfo br);
+    FullTile() = default;
     TileInfo topleft;
     TileInfo bottomleft;
     TileInfo topright;
@@ -28,24 +31,29 @@ struct FullTile {
     void FlipY();
 };
 
-enum class TileType {
-    Sixteen,
-    Eight
+enum class TileChangeType {
+    All,
+    BottomLeft,
+    BottomRight,
+    TopLeft,
+    TopRight
 };
 
 class ClipboardTile
 {
 private:
-    TileType type;
+    TileChangeType type;
     FullTile tile;
     TileInfo quarter;
 public:
     ClipboardTile();
     void update(const FullTile& tile);
-    void update(const TileInfo& quarter);
+    void update(const TileInfo& quarter, TileChangeType type);
     void update(const ClipboardTile& other);
-    QImage draw(int size);
+    QImage draw();
+    FullTile getTile();
     int size();
+    TileChangeType getType();
 };
 
 #endif // CLIPBOARDTILE_H

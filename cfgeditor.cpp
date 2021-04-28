@@ -454,6 +454,7 @@ void CFGEditor::bindDisplayButtons() {
     // new, delete, clone
     QObject::connect(ui->pushButtonNewDisplay, &QPushButton::clicked, this, [&]() {
         qDebug() << "New row button pushed";
+        ui->labelDisplayTilesGrid->addDisplay(currentDisplayIndex);
         addBlankRow();
     });
     QObject::connect(ui->pushButtonCloneDisplay, &QPushButton::clicked, this, [&]() {
@@ -463,6 +464,7 @@ void CFGEditor::bindDisplayButtons() {
         }
         qDebug() << "Clone display button clicked";
         addCloneRow();
+        ui->labelDisplayTilesGrid->cloneDisplay(currentDisplayIndex);
     });
     QObject::connect(ui->pushButtonDeleteDisplay, &QPushButton::clicked, this, [&]() {
         if (!ui->tableViewDisplays->currentIndex().isValid()) {
@@ -470,6 +472,7 @@ void CFGEditor::bindDisplayButtons() {
             return;
         }
         qDebug() << "Delete display button clicked";
+        ui->labelDisplayTilesGrid->removeDisplay(currentDisplayIndex);
         removeExistingRow();
     });
 
@@ -501,6 +504,7 @@ void CFGEditor::bindDisplayButtons() {
             ui->textEditDisplayText->setText("");
         }
         ui->textEditLMDescription->setText(d.Description());
+        ui->labelDisplayTilesGrid->changeDisplay(currentDisplayIndex);
         // TODO: also update tiles
     });
 
@@ -608,6 +612,10 @@ void CFGEditor::bindDisplayButtons() {
        ui->map16GraphicsView->tileChanged(ui->pushButtonFlipY, TileChangeAction::FlipY, ui->map16GraphicsView->getChangeType());
     });
 
+    connect(ui->comboBoxSizeType, QOverload<const QString&>::of(&QComboBox::currentTextChanged), this, [&](const QString& text) {
+        qDebug() << "combo box for size of tile clicked";
+        ui->labelDisplayTilesGrid->setSelectorSize(static_cast<SizeSelector>(text.split("x").takeFirst().toInt()));
+    });
     // tiles get updated
     // TODO
 }
