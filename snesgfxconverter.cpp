@@ -59,10 +59,8 @@ QImage SnesGFXConverter::get8x8Tile(int orig_row, int orig_column, const QVector
     int offset = (orig_row * 16 * 32) + (32 * orig_column);
     QImage image(8, 8, QImage::Format_ARGB32);
     QVector<QRgb> rgbColors;
-    rgbColors.reserve(16);
+    rgbColors.reserve(15);
     // skip the first color and append it manually cause it needs to be transparent
-    // cause it's the background color
-    rgbColors.append(qRgba(0, 0, 0, 0));
     std::for_each(colors.cbegin() + 1, colors.cend(), [&](const QColor& col) {
          rgbColors.append(col.rgba());
     });
@@ -75,7 +73,7 @@ QImage SnesGFXConverter::get8x8Tile(int orig_row, int orig_column, const QVector
             uint8_t pixel = 0;
             for (int i = 0; i < 4; i++)
                 pixel |= ((bytes[i] & (1 << bit)) >> bit) << i;
-            image.setPixelColor(7 - bit, row, rgbColors[pixel]);
+            image.setPixelColor(7 - bit, row, pixel == 0 ? Qt::transparent : rgbColors[pixel]);
         }
     }
     return image;
