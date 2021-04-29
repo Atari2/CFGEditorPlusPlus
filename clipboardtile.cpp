@@ -88,7 +88,8 @@ QImage FullTile::getScaled(int width) {
 
 
 ClipboardTile::ClipboardTile() :
-    type(TileChangeType::All)
+    valid(false)
+  , type(TileChangeType::All)
   , tile(0, 0, 0, 0)
   , quarter(0)
 {
@@ -96,15 +97,18 @@ ClipboardTile::ClipboardTile() :
 }
 
 void ClipboardTile::update(const FullTile& tile) {
+    valid = true;
     type = TileChangeType::All;
     this->tile = tile;
 }
 void ClipboardTile::update(const TileInfo& quarter, TileChangeType type) {
+    valid = true;
     this->type = type;
     this->quarter = quarter;
 }
 
 void ClipboardTile::update(const ClipboardTile& other) {
+    valid = true;
     type = other.type;
     tile = other.tile;
     quarter = other.quarter;
@@ -142,4 +146,8 @@ FullTile ClipboardTile::getTile() {
         Q_ASSERT(false);
     }
     return {0, 0, 0, 0};
+}
+
+bool ClipboardTile::isValid() {
+    return valid;
 }

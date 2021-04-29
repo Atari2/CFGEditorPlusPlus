@@ -93,7 +93,7 @@ void Map16GraphicsView::drawInternalMap16File() {
     TileMap = QImage{imageWidth, imageHeight, QImage::Format::Format_ARGB32};
     QPainter p{&TileMap};
     p.setCompositionMode(QPainter::CompositionMode_SourceOver);
-    p.fillRect(TileMap.rect(), QBrush(QGradient(QGradient::AmourAmour)));
+    p.fillRect(TileMap.rect(), QBrush(QGradient(QGradient::EternalConstance)));
     for (int i = 0; i < tiles.length(); i++) {
         for (int j = 0; j < tiles[i].length(); j++) {
             p.drawImage(QRect{j * 16, i * 16, 16, 16}, tiles[i][j].getFullTile());
@@ -131,9 +131,6 @@ void Map16GraphicsView::drawInternalMap16File() {
     currentWithNoSelection = currentMap16->pixmap();
 }
 
-// todo: this apparently doesn't take into account the scrollbar
-// very nice
-// update: this very much takes into account the scrollbar, maybe it does way too much
 void Map16GraphicsView::drawCurrentSelectedTile(QPixmap& map) {
     if (currentClickedTile == -1)
         return;

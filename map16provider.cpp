@@ -2,7 +2,7 @@
 
 Map16Provider::Map16Provider(QWidget* parent) : QLabel(parent)  {
     tileGrid = createGrid();
-    base = createCurrent();
+    base = createBase();
     setPixmap(overlay());
     setMargin(0);
     setFixedSize(208, 208);
@@ -44,13 +44,8 @@ void Map16Provider::mousePressEvent(QMouseEvent *event) {
     if (event->button() == Qt::MouseButton::LeftButton) {
         // todo:
         // also make the selected tile move around? idk how to do that
-        // will have to save offsets
         // also keep in mind the "text only" version
         // we also need to serialize the tiles + offsets in some way
-        // save them to the sprite display if the user changes index?
-        // gonna be complex
-        // if the user changes back to us we need to bring back up the old one with the saved tiles
-        // a matrix of pair of FullTile, QPoint could work
         auto ret = std::find_if(m_tiles[currentIndex].begin(), m_tiles[currentIndex].end(), [&](TiledPosition& pos) {
                 return QRect{pos.pos.x(), pos.pos.y(), 16, 16}.contains(event->position().toPoint(), true);
             });
@@ -63,6 +58,8 @@ void Map16Provider::mousePressEvent(QMouseEvent *event) {
         return;
     } else if (event->button() == Qt::MouseButton::RightButton) {
         qDebug() << "Right mouse button pressed";
+        if (!copiedTile->isValid())
+            return;
         int size = static_cast<int>(selectorSize);
         QPoint aligned = alignToGrid(event->position().toPoint(), size);
         m_tiles[currentIndex].append({copiedTile->getType(), copiedTile->getTile(), aligned, 0, TiledPosition::unique_index++});
@@ -121,12 +118,10 @@ ClipboardTile* Map16Provider::getCopiedTile() {
     return copiedTile;
 }
 
-QPixmap Map16Provider::createCurrent() {
-    QImage img{208, 208, QImage::Format::Format_ARGB32};
-    QPainter p{&img};
-    p.fillRect(QRect{0, 0, 208, 208}, QBrush(QGradient(QGradient::AmourAmour)));
-    p.end();
-    return QPixmap::fromImage(img);
+QPixmap Map16Provider::createBase() {
+    QPixmap pix{208, 208};
+    pix.fill(Qt::transparent);
+    return pix;
 }
 
 QPixmap Map16Provider::createGrid() {
@@ -147,15 +142,16 @@ QPixmap Map16Provider::createGrid() {
 }
 
 QPixmap Map16Provider::overlay() {
-    QImage img;
+    QPixmap pix{208, 208};
+    QPainter p{&pix};
+    p.fillRect(pix.rect(), QBrush(QGradient(QGradient::AmourAmour)));
+    p.drawImage(pix.rect(), tileGrid.toImage());
     if (currentIndex == -1) {
-        img = base.toImage();
+        p.drawImage(pix.rect(), base.toImage());
     } else {
-        img = displays[currentIndex].toImage();
+        p.drawImage(pix.rect(), displays[currentIndex].toImage());
     }
-    QPainter p{&img};
-    p.drawImage(img.rect(), tileGrid.toImage(), tileGrid.rect());
-    return QPixmap::fromImage(img);
+    return pix;
 }
 
 const Map16Provider::DisplayTiles& Map16Provider::Tiles() {
@@ -163,17 +159,19 @@ const Map16Provider::DisplayTiles& Map16Provider::Tiles() {
 }
 
 void Map16Provider::addDisplay(int index) {
+    qDebug() << "Index is " << index;
     if (index == -1) {
         m_tiles.append(DisplayTiles());
-        displays.append(overlay());
-        setPixmap(displays.last());
+        displays.append(createBase());
         currentIndex++;
+        setPixmap(overlay());
     }
     else {
+        index++;
         m_tiles.insert(index, DisplayTiles());
-        displays.insert(index, overlay());
-        setPixmap(displays[index]);
+        displays.insert(index, createBase());
         currentIndex = index;
+        setPixmap(overlay());
     }
 }
 void Map16Provider::removeDisplay(int index) {
@@ -187,15 +185,13 @@ void Map16Provider::removeDisplay(int index) {
     }
 }
 void Map16Provider::changeDisplay(int index) {
-    displays[currentIndex] = pixmap();
     currentIndex = index;
-    setPixmap(displays[currentIndex]);
+    setPixmap(overlay());
 }
 
 void Map16Provider::cloneDisplay(int index) {
     if (index == -1)
         index = currentIndex;
-    displays[index] = pixmap();
     displays.insert(index, displays[index]);
     m_tiles.insert(index, m_tiles.last());
 }

@@ -41,7 +41,7 @@ public:
     QPoint alignToGrid(QPoint position, int size);
     QPixmap drawSelectedTile();
     QPixmap createGrid();
-    QPixmap createCurrent();
+    QPixmap createBase();
     QPixmap overlay();
     void redraw();
     ClipboardTile* getCopiedTile();

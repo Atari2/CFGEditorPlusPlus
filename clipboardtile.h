@@ -42,6 +42,7 @@ enum class TileChangeType {
 class ClipboardTile
 {
 private:
+    bool valid;
     TileChangeType type;
     FullTile tile;
     TileInfo quarter;
@@ -54,6 +55,7 @@ public:
     FullTile getTile();
     int size();
     TileChangeType getType();
+    bool isValid();
 };
 
 #endif // CLIPBOARDTILE_H
