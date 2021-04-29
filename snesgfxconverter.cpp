@@ -73,7 +73,7 @@ QImage SnesGFXConverter::get8x8Tile(int orig_row, int orig_column, const QVector
             uint8_t pixel = 0;
             for (int i = 0; i < 4; i++)
                 pixel |= ((bytes[i] & (1 << bit)) >> bit) << i;
-            image.setPixelColor(7 - bit, row, pixel == 0 ? Qt::transparent : rgbColors[pixel]);
+            image.setPixelColor(7 - bit, row, pixel == 0 ? Qt::transparent : rgbColors[pixel - 1]);
         }
     }
     return image;
