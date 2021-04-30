@@ -514,6 +514,7 @@ void CFGEditor::bindDisplayButtons() {
     ui->textEditDisplayText->setPalette(readOnlyPalette);
     QObject::connect(ui->checkBoxUseText, &QCheckBox::stateChanged, this, [&]() {
         ui->textEditDisplayText->setReadOnly(!ui->checkBoxUseText->isChecked());
+        ui->labelDisplayTilesGrid->setUseText(ui->checkBoxUseText->isChecked());
         QPalette readOnlyPalette = palette();
         if (ui->textEditDisplayText->isReadOnly()) {
             ui->textEditDisplayText->setText("");
@@ -566,6 +567,7 @@ void CFGEditor::bindDisplayButtons() {
             return;
         qDebug() << currentDisplayIndex << " " << (*displays).length();
         (*displays)[currentDisplayIndex].setDisplayText(ui->textEditDisplayText->toPlainText());
+        ui->labelDisplayTilesGrid->insertText(ui->textEditDisplayText->toPlainText());
     });
 
     ui->map16GraphicsView->registerMouseClickCallback([&](FullTile tileInfo, int tileNo, SelectorType type) {

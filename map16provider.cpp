@@ -7,6 +7,15 @@ Map16Provider::Map16Provider(QWidget* parent) : QLabel(parent)  {
     setMargin(0);
     setFixedSize(208, 208);
     setMouseTracking(true);
+    QImage letters{":/Resources/Text/Letters.png"};
+    size_t n = 0;
+    int sizes[3] = {26, 26, 19};
+    for (int i = 0; i < 3; i++) {
+        for (int j = 0; j < sizes[i]; j++) {
+            m_letters[n] = letters.copy(QRect{j * 8, i * 8, 8, 8});
+            n++;
+        }
+    }
 }
 
 int Map16Provider::mouseCoordinatesToTile(QPoint position) {
@@ -37,14 +46,17 @@ QPixmap Map16Provider::drawSelectedTile() {
     return curr;
 }
 
+void Map16Provider::insertText(const QString& text) {
+    m_descriptions[currentIndex] = text;
+    setPixmap(overlay());
+}
+
 void Map16Provider::mousePressEvent(QMouseEvent *event) {
     if (m_tiles.length() == 0)
         return;
     QPainter p{&displays[currentIndex]};
     if (event->button() == Qt::MouseButton::LeftButton) {
         // todo:
-        // also make the selected tile move around? idk how to do that
-        // also keep in mind the "text only" version
         // we also need to serialize the tiles + offsets in some way
         qDebug() << "Left mouse button pressed";
         auto ret = std::find_if(m_tiles[currentIndex].rbegin(), m_tiles[currentIndex].rend(), [&](TiledPosition& pos) {
@@ -57,6 +69,8 @@ void Map16Provider::mousePressEvent(QMouseEvent *event) {
         currentlyPressed = true;
         return;
     } else if (event->button() == Qt::MouseButton::RightButton) {
+        if (usesText[currentIndex])
+            return;
         qDebug() << "Right mouse button pressed";
         if (!copiedTile->isValid())
             return;
@@ -78,11 +92,6 @@ void Map16Provider::mouseReleaseEvent(QMouseEvent *event) {
 
 void Map16Provider::mouseMoveEvent(QMouseEvent *event) {
     if (currentlyPressed) {
-        // here we should move the current selected tile around
-        // which means:
-        // snap the mouse position to the grid
-        // redraw everything?
-        qDebug() << "Pressing...";
         int size = static_cast<int>(selectorSize);
         QPoint aligned = alignToGrid(event->position().toPoint(), size);
         auto& tile = findIndex(currentSelected);
@@ -168,37 +177,89 @@ QPixmap Map16Provider::overlay() {
     if (currentIndex == -1) {
         p.drawImage(pix.rect(), base.toImage());
     } else {
-        auto img = displays[currentIndex].toImage();
-        p.drawImage(pix.rect(), img);
+        if (usesText[currentIndex]) {
+            drawLetters(p);
+        } else {
+            p.drawImage(pix.rect(), displays[currentIndex].toImage());
+        }
     }
+    p.end();
     return pix;
+}
+
+void Map16Provider::drawLetters(QPainter& p) {
+    // TODO: figure out a good algorithm to center the text
+    constexpr int cpl = 24; // 26 is a whole line
+    auto slines = m_descriptions[currentIndex].split("\n", Qt::SkipEmptyParts);
+    for (qsizetype i = 0; i < slines.length(); i++) {
+        QString str{slines[i].trimmed()};
+        int max = str.length();
+        if (max > cpl) {
+            slines.removeAt(i);
+            int curr = 0;
+            int j = 0;
+            while (max - curr > cpl) {
+                auto slice = str.sliced(curr, (curr + cpl >= max) ? (max - curr) : cpl).trimmed();
+                auto space = slice.lastIndexOf(' ');
+                if (space == -1) {
+                    slines.insert(i + j, slice);
+                    curr += cpl;
+                }
+                else {
+                    slines.insert(i + j, slice.sliced(0, space));
+                    curr += (space + 1);
+                }
+                j++;
+            }
+            slines.insert(i + j, str.sliced(curr));
+        }
+    }
+    auto str = m_descriptions[currentIndex].toStdString();
+    int lines = slines.length();
+    int vmargin = (208 - (lines * 8)) / 2;
+    for (int row = 0; row < lines; row++) {
+        auto str = slines[row].toStdString();
+        int hmargin = (208 - (str.length() * 8)) / 2;
+        for (int col = 0; col < (int)str.length(); col++) {
+            char c = str[col];
+            if (table.find(c) == table.cend()) {
+                p.drawImage(QRect{hmargin + (col * 8), vmargin + (row * 8), 8, 8}, m_letters[(*table.find(' ')).second]);
+            } else {
+                p.drawImage(QRect{hmargin + (col * 8), vmargin + (row * 8), 8, 8}, m_letters[(*table.find(c)).second]);
+            }
+        }
+    }
 }
 
 const Map16Provider::DisplayTiles& Map16Provider::Tiles() {
     return m_tiles[currentIndex];
 }
 
+void Map16Provider::setUseText(bool enabled) {
+    if (currentIndex == -1)
+        return;
+    usesText[currentIndex] = enabled;
+    if (enabled)
+        m_tiles[currentIndex].clear();
+}
+
 void Map16Provider::addDisplay(int index) {
     qDebug() << "Index is " << index;
-    if (index == -1) {
-        m_tiles.append(DisplayTiles());
-        displays.append(createBase());
-        currentIndex++;
-        setPixmap(overlay());
-    }
-    else {
-        index++;
-        m_tiles.insert(index, DisplayTiles());
-        displays.insert(index, createBase());
-        currentIndex = index;
-        setPixmap(overlay());
-    }
+    index++;
+    m_tiles.insert(index, DisplayTiles());
+    displays.insert(index, createBase());
+    usesText.insert(index, false);
+    m_descriptions.insert(index, "");
+    currentIndex = index;
+    setPixmap(overlay());
 }
 void Map16Provider::removeDisplay(int index) {
     if (index == -1)
         index = currentIndex;
     displays.removeAt(index);
     m_tiles.removeAt(index);
+    usesText.removeAt(index);
+    m_descriptions.removeAt(index);
     if (displays.length() == 0) {
         currentIndex = -1;
         setPixmap(overlay());
@@ -212,8 +273,11 @@ void Map16Provider::changeDisplay(int index) {
 void Map16Provider::cloneDisplay(int index) {
     if (index == -1)
         index = currentIndex;
+    index++;
     displays.insert(index, displays[index]);
-    m_tiles.insert(index, m_tiles.last());
+    m_tiles.insert(index, m_tiles[index]);
+    usesText.insert(index, usesText[index]);
+    m_descriptions.insert(index, m_descriptions[index]);
 }
 SizeSelector Map16Provider::getSelectorSize() {
     return selectorSize;
