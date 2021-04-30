@@ -34,6 +34,7 @@ void SnesGFXConverter::populateFullMap16Data(const QVector<QString>& names) {
 QImage SnesGFXConverter::get8x8TileFromVect(int index, const QVector<QColor>& colors) {
     int offset = index * 8 * 4;
     QImage image(8, 8, QImage::Format::Format_ARGB32);
+    image.fill(qRgba(0, 0, 0, 0));
     QVector<QRgb> rgbColors;
     rgbColors.reserve(15);
     // we skip the first color to make it transparent
@@ -49,7 +50,8 @@ QImage SnesGFXConverter::get8x8TileFromVect(int index, const QVector<QColor>& co
             uint8_t pixel = 0;
             for (int i = 0; i < 4; i++)
                 pixel |= ((bytes[i] & (1 << bit)) >> bit) << i;
-            image.setPixelColor(7 - bit, row, pixel == 0 ? Qt::transparent : rgbColors[pixel - 1]);
+            if (pixel != 0)
+                image.setPixelColor(7 - bit, row, rgbColors[pixel - 1]);
         }
     }
     return image;

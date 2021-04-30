@@ -44,6 +44,7 @@ public:
     QPixmap createBase();
     QPixmap overlay();
     void redraw();
+    void redrawNoSort();
     ClipboardTile* getCopiedTile();
     QPixmap tileGrid;
     QPixmap base;

@@ -46,15 +46,15 @@ void Map16Provider::mousePressEvent(QMouseEvent *event) {
         // also make the selected tile move around? idk how to do that
         // also keep in mind the "text only" version
         // we also need to serialize the tiles + offsets in some way
-        auto ret = std::find_if(m_tiles[currentIndex].begin(), m_tiles[currentIndex].end(), [&](TiledPosition& pos) {
+        qDebug() << "Left mouse button pressed";
+        auto ret = std::find_if(m_tiles[currentIndex].rbegin(), m_tiles[currentIndex].rend(), [&](TiledPosition& pos) {
                 return QRect{pos.pos.x(), pos.pos.y(), 16, 16}.contains(event->position().toPoint(), true);
             });
-        if (ret == m_tiles[currentIndex].end())
+        if (ret == m_tiles[currentIndex].rend())
             return;
         currentSelected = (*ret).tid;
         setPixmap(drawSelectedTile());
         currentlyPressed = true;
-        qDebug() << "Left mouse button pressed";
         return;
     } else if (event->button() == Qt::MouseButton::RightButton) {
         qDebug() << "Right mouse button pressed";
@@ -71,14 +71,23 @@ void Map16Provider::mousePressEvent(QMouseEvent *event) {
 }
 
 void Map16Provider::mouseReleaseEvent(QMouseEvent *event) {
-    if (event->button() == Qt::MouseButton::LeftButton) {
-        currentlyPressed = false;
-    }
+    qDebug() << "Mouse released";
+    currentlyPressed = false;
+    event->accept();
 }
 
 void Map16Provider::mouseMoveEvent(QMouseEvent *event) {
     if (currentlyPressed) {
-        qDebug() << "Do thing";
+        // here we should move the current selected tile around
+        // which means:
+        // snap the mouse position to the grid
+        // redraw everything?
+        qDebug() << "Pressing...";
+        int size = static_cast<int>(selectorSize);
+        QPoint aligned = alignToGrid(event->position().toPoint(), size);
+        auto& tile = findIndex(currentSelected);
+        tile.pos = aligned;
+        redrawNoSort();
     }
     event->accept();
 }
@@ -98,12 +107,22 @@ void Map16Provider::wheelEvent(QWheelEvent *event) {
     }
 }
 
+void Map16Provider::redrawNoSort() {
+    displays[currentIndex].fill(Qt::transparent);
+    QPainter p{&displays[currentIndex]};
+    for (auto& t : m_tiles[currentIndex]) {
+        p.drawImage(QRect{t.pos.x(), t.pos.y(), 16, 16}, t.tile.getFullTile());
+    }
+    p.end();
+    setPixmap(drawSelectedTile());
+}
+
 void Map16Provider::redraw() {
+    displays[currentIndex].fill(Qt::transparent);
     QPainter p{&displays[currentIndex]};
     std::sort(m_tiles[currentIndex].begin(), m_tiles[currentIndex].end(), [](TiledPosition& lhs, TiledPosition& rhs) {
         return lhs.zpos < rhs.zpos;
     });
-    qDebug() << "length " << m_tiles[currentIndex].length();
     for (auto& t : m_tiles[currentIndex]) {
         p.drawImage(QRect{t.pos.x(), t.pos.y(), 16, 16}, t.tile.getFullTile());
     }
@@ -149,7 +168,8 @@ QPixmap Map16Provider::overlay() {
     if (currentIndex == -1) {
         p.drawImage(pix.rect(), base.toImage());
     } else {
-        p.drawImage(pix.rect(), displays[currentIndex].toImage());
+        auto img = displays[currentIndex].toImage();
+        p.drawImage(pix.rect(), img);
     }
     return pix;
 }

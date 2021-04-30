@@ -72,6 +72,7 @@ QImage TileInfo::get8x8Scaled(int width) {
 
 QImage FullTile::getFullTile() {
     QImage img{16, 16, QImage::Format::Format_ARGB32};
+    img.fill(Qt::transparent);
     QPainter p{&img};
     p.setCompositionMode(QPainter::CompositionMode_SourceOver);
     p.drawImage(QRect{0, 0, 8, 8}, topleft.get8x8Tile());
