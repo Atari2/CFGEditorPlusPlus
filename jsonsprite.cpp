@@ -10,13 +10,24 @@ Display::Display(const QJsonObject& d) {
     if (useText) {
         tiles.reserve(1);
         tiles.append(Tile(tilesArr[0].toObject()));
-        tiles[0].text = d["DisplayText"].toString();
+        displaytext = d["DisplayText"].toString();
     } else {
         tiles.reserve(tilesArr.size());
         std::for_each(tilesArr.cbegin(), tilesArr.cend(), [&](auto& t) {
             tiles.append(Tile(t.toObject()));
         });
     }
+}
+
+Display::Display(const QString& d, const QVector<Tile>& ts, bool bit, int xx, int yy, bool text, const QString& disp) :
+    description(d),
+    extrabit(bit),
+    x(xx),
+    y(yy),
+    useText(text),
+    displaytext(disp)
+{
+   tiles.append(ts);
 }
 
 QJsonObject Display::toJson() const {
@@ -28,7 +39,7 @@ QJsonObject Display::toJson() const {
     obj["UseText"] = useText;
     QJsonArray tilesArr{};
     if (useText) {
-        obj["DisplayText"] = tiles[0].text;
+        obj["DisplayText"] = displaytext;
         tilesArr.append(tiles[0].toJson());
     } else {
         std::for_each(tiles.cbegin(), tiles.cend(), [&](auto& t) {
@@ -43,6 +54,10 @@ Tile::Tile(const QJsonObject& t) {
     xoff = t["X offset"].toInt();
     yoff = t["Y offset"].toInt();
     tilenumber = t["map16 tile"].toInt();
+}
+
+Tile::Tile(int x, int y, int tileno) : xoff(x), yoff(y), tilenumber(tileno) {
+
 }
 
 QJsonObject Tile::toJson() const {
@@ -189,12 +204,11 @@ QString& JsonSprite::name() {
 }
 
 void JsonSprite::to_file(const QString& name) {
-    if (obj.isEmpty()) {
-        m_name = QFileDialog::getSaveFileName();
+    if (name.length() == 0) {
+        if (m_name.length() == 0)
+            m_name = QFileDialog::getSaveFileName();
         if (m_name.length() == 0)
             return;
-    }
-    if (name.length() == 0) {
         QFile outFile{m_name};
         outFile.open(QFile::OpenModeFlag::Truncate | QFile::OpenModeFlag::Text | QFile::OpenModeFlag::WriteOnly);
         outFile.write(to_text().toStdString().c_str());
@@ -218,7 +232,10 @@ void JsonSprite::addCollections(QTableView* view) {
     }
 }
 
-void JsonSprite::addDisplays(QTableView* view) {
-    qDebug() << "Implement add display";
-    Q_ASSERT(false);
+void JsonSprite::addDisplay(const Display& display) {
+    displays.append(display);
+}
+
+void JsonSprite::setMap16(const QString& mapdata) {
+    map16 = mapdata;
 }

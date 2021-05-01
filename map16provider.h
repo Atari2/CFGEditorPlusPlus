@@ -4,7 +4,8 @@
 #include <QPainter>
 #include <QLabel>
 #include <QMouseEvent>
-#include "clipboardtile.h"
+#include "spritedatamodel.h"
+#include "map16graphicsview.h"
 
 enum SizeSelector : int {
     Sixteen = 16,
@@ -21,6 +22,7 @@ struct TiledPosition {
     QPoint pos;
     int zpos;
     size_t tid;
+    int map16tileno;
     bool operator==(const TiledPosition& other) {
         return tid == other.tid;
     }
@@ -61,8 +63,10 @@ public:
     void removeDisplay(int index = -1);
     void changeDisplay(int newindex);
     void cloneDisplay(int index = -1);
+    void serializeDisplays(QVector<DisplayData>& data);
+    void deserializeDisplays(const QVector<Display>& display, Map16GraphicsView* view);
 private:
-    TiledPosition invalid {TileChangeType::All, {0, 0, 0, 0}, {0, 0}, 0, SIZE_MAX};
+    TiledPosition invalid {TileChangeType::All, {0, 0, 0, 0}, {0, 0}, 0, SIZE_MAX, -1};
     TiledPosition& findIndex(size_t index);
     size_t currentSelected = SIZE_MAX;
     int currentIndex = -1;
@@ -73,7 +77,7 @@ private:
     QVector<bool> usesText;
     QVector<DisplayTiles> m_tiles;
     ClipboardTile* copiedTile = nullptr;
-    QVector<QPixmap> displays;
+    QVector<QPixmap> m_displays;
 signals:
 };
 

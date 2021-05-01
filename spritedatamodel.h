@@ -33,16 +33,17 @@ private:
     int m_y_offset;
     int m_tile_number;
 public:
+    TileData(int x_off, int y_off, int tile_num);
     TileData(const TileData& other);
     void setXOffset(int x);
     void setYOffset(int y);
     void setOffset(int x, int y);
     void setOffset(QPoint point);
     void setTileNumber(int number);
-    int XOffset();
-    int YOffset();
-    QPoint Offset();
-    int TileNumber();
+    int XOffset() const;
+    int YOffset() const;
+    QPoint Offset() const;
+    int TileNumber() const;
     TileData& operator=(const TileData& other);
 signals:
 };
@@ -62,6 +63,7 @@ private:
 public:
     DisplayData& operator=(const DisplayData& other);
     DisplayData(const DisplayData& other);
+    DisplayData(const Display& other);
     void setUseText(bool enabled);
     void setExtraBit(bool enabled);
     void setDescription(const QString& description);
@@ -71,8 +73,6 @@ public:
     void setPos(int x, int y);
     void setDisplayText(const QString& displayText);
     void addTile(const TileData& data);
-    void removeTile(int index);
-    void addTiles(const QVector<TileData>& tiles);
 
     bool UseText() const;
     bool ExtraBit() const;

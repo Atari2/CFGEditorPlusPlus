@@ -74,16 +74,16 @@ void TileData::setOffset(QPoint point) {
 void TileData::setTileNumber(int number) {
     m_tile_number = number;
 }
-int TileData::XOffset() {
+int TileData::XOffset() const {
     return m_x_offset;
 }
-int TileData::YOffset() {
+int TileData::YOffset() const {
     return m_y_offset;
 }
-QPoint TileData::Offset() {
+QPoint TileData::Offset() const {
     return QPoint(m_x_offset, m_y_offset);
 }
-int TileData::TileNumber() {
+int TileData::TileNumber() const {
     return m_tile_number;
 }
 
@@ -96,6 +96,10 @@ TileData& TileData::operator=(const TileData& other) {
 
 TileData::TileData(const TileData& other) {
     this->operator=(other);
+}
+
+TileData::TileData(int x_off, int y_off, int tile_num) : m_x_offset(x_off), m_y_offset(y_off), m_tile_number(tile_num) {
+
 }
 
 void DisplayData::setUseText(bool enabled) {
@@ -129,12 +133,6 @@ void DisplayData::setDisplayText(const QString& displayText) {
 void DisplayData::addTile(const TileData& data) {
     m_tiles.append(data);
 }
-void DisplayData::removeTile(int index) {
-    m_tiles.removeAt(index);
-}
-void DisplayData::addTiles(const QVector<TileData>& tiles) {
-    m_tiles.append(tiles);
-}
 
 bool DisplayData::UseText() const {
     return m_use_text;
@@ -165,6 +163,20 @@ QPoint DisplayData::Pos() const {
 DisplayData::DisplayData(const DisplayData& other) {
     this->operator=(other);
 }
+
+DisplayData::DisplayData(const Display& other) {
+    m_extra_bit = other.extrabit;
+    m_x = other.x;
+    m_y = other.y;
+    m_tiles.reserve(other.tiles.length());
+    std::for_each(other.tiles.cbegin(), other.tiles.cend(), [&](const Tile& tile) {
+        m_tiles.append({tile.xoff, tile.yoff, tile.tilenumber});
+    });
+    m_description = other.description;
+    m_use_text = other.useText;
+    m_display_text = other.displaytext;
+}
+
 
 DisplayData& DisplayData::operator=(const DisplayData& other) {
     m_extra_bit = other.m_extra_bit;

@@ -79,6 +79,8 @@ public:
     void addPageSep();
     void removePageSep();
     void setCopiedTile(ClipboardTile& tile);
+    void setMap16(const QString& data);
+    QString getMap16();
     const ClipboardTile& getCopiedTile();
     void switchCurrSelectionType();
 };

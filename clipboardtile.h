@@ -14,6 +14,8 @@ struct TileInfo {
     quint16 tilenum;
     QImage get8x8Tile();
     QImage get8x8Scaled(int width);
+    bool isEmpty();
+    quint16 TileValue();
 };
 
 struct FullTile {
@@ -29,6 +31,7 @@ struct FullTile {
     void SetPalette(int pal);
     void FlipX();
     void FlipY();
+    bool isEmpty();
 };
 
 enum class TileChangeType {
@@ -46,6 +49,7 @@ private:
     TileChangeType type;
     FullTile tile;
     TileInfo quarter;
+    int map16tile;
 public:
     ClipboardTile();
     void update(const FullTile& tile);
@@ -56,6 +60,8 @@ public:
     int size();
     TileChangeType getType();
     bool isValid();
+    void setTileNum(int num);
+    int TileNum();
 };
 
 #endif // CLIPBOARDTILE_H

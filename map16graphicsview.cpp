@@ -227,7 +227,6 @@ FullTile& Map16GraphicsView::tileNumToTile() {
     }
     int row = realClickedTile / (imageWidth / 22);
     int col = realClickedTile % (imageWidth / 22);
-    qDebug() << row << " " << col << " " << imageWidth;
     return tiles[row][col];
 }
 
@@ -280,6 +279,7 @@ void Map16GraphicsView::mousePressEvent(QMouseEvent *event) {
     currentClickedTile = currentTile;
     currentTopLeftClicked = translateToRect(event->position().toPoint());
     copyTileToClipboard(tileNumToTile());
+    copiedTile->setTileNum(mouseCoordinatesToTile(event->position().toPoint()));
     clickCallback(tileNumToTile(), currentTile, currType);
     QPixmap selected = currentWithNoSelection;
     drawCurrentSelectedTile(selected);
@@ -366,6 +366,7 @@ void Map16GraphicsView::changePaletteIndex(QComboBox* box, FullTile tileInfo) {
 }
 
 void Map16GraphicsView::tileChanged(QObject* toBlock, TileChangeAction action, TileChangeType type, int value) {
+    qDebug() << "new value :" << value;
     if (noSignals)
         return;
     if (
@@ -397,7 +398,7 @@ void Map16GraphicsView::tileChanged(QObject* toBlock, TileChangeAction action, T
     if (partial != nullptr) {
         switch (action) {
         case TileChangeAction::Number:
-            partial->tilenum = (value & 0x37F);
+            partial->tilenum = std::min(value, 0x37F);
             break;
         case TileChangeAction::Palette:
             partial->pal = value;
@@ -462,6 +463,71 @@ void Map16GraphicsView::switchCurrSelectionType() {
     } else {
         currType = SelectorType::Eight;
     }
+}
+
+void Map16GraphicsView::setMap16(const QString& data) {
+    QByteArray arr = QByteArray::fromBase64(data.toUtf8());
+    QDataStream str{&arr, QIODevice::ReadOnly};
+    str.setByteOrder(QDataStream::LittleEndian);
+    int i = (16 * 3);
+    int j = 0;
+    QPainter og{&TileMap};
+    QPainter high{&currentWithNoHighlight};
+    QPainter sel{&currentWithNoSelection};
+    auto size = CellSize();
+    while (!str.atEnd()) {
+        quint16 tl, tr, bl, br;
+        str >> tl;
+        str >> bl;
+        str >> tr;
+        str >> br;
+        tiles[i][j] = FullTile(tl, bl, tr, br);
+        auto img = tiles[i][j].getScaled(size);
+        high.drawImage(QRect{j * size, i * size, size, size}, img);
+        sel.drawImage(QRect{j * size, i * size, size, size}, img);
+        og.drawImage(QRect{j * size, i * size, size, size}, img);
+        if (j == 15) {
+            j = 0;
+            i++;
+        } else {
+            j++;
+        }
+    }
+    og.end();
+    high.end();
+    sel.end();
+    drawCurrentSelectedTile(currentWithNoHighlight);
+    currentMap16->setPixmap(currentWithNoHighlight);
+}
+
+QString Map16GraphicsView::getMap16() {
+    qDebug() << "Tot rows: " << tiles.length();
+    constexpr int base_row = (16 * 3);
+    int row = tiles.length() - 1, col = 15;
+    bool found = false;
+    for (; row >= base_row; row--) {
+        for (; col >= 0; col--)
+            if ((found = !tiles[row][col].isEmpty()))
+                break;
+        if (found) break;
+        col = 15;
+    }
+    if (!found) return "";
+    QByteArray data;
+    QDataStream str{&data, QIODevice::WriteOnly};
+    str.setByteOrder(QDataStream::LittleEndian);
+    qDebug() << "col: " << col << " row: " << row;
+    for (int i = base_row; i <= row; i++) {
+        for (int j = 0; j <= (i == row ? col : 15); j++) {
+            FullTile& t = tiles[i][j];
+            str << t.topleft.TileValue();
+            str << t.bottomleft.TileValue();
+            str << t.topright.TileValue();
+            str << t.bottomright.TileValue();
+        }
+    }
+    qDebug() << data;
+    return QString{data.toBase64()};
 }
 
 Map16GraphicsView::~Map16GraphicsView() {

@@ -70,6 +70,26 @@ QImage TileInfo::get8x8Scaled(int width) {
     return get8x8Tile().scaledToWidth(width, Qt::SmoothTransformation);
 }
 
+bool TileInfo::isEmpty() {
+    quint16 val = 0;
+    val |= (vflip ? 0x8000 : 0);
+    val |= (hflip ? 0x4000 : 0);
+    val |= (prio ? 0x2000 : 0);
+    val |= ((pal & 7)  << 10);
+    val |= (tilenum & 0x3FF);
+    return val == 0;
+}
+
+quint16 TileInfo::TileValue() {
+    quint16 val = 0;
+    val |= (vflip ? 0x8000 : 0);
+    val |= (hflip ? 0x4000 : 0);
+    val |= (prio ? 0x2000 : 0);
+    val |= ((pal & 7)  << 10);
+    val |= (tilenum & 0x3FF);
+    return val;
+}
+
 QImage FullTile::getFullTile() {
     QImage img{16, 16, QImage::Format::Format_ARGB32};
     img.fill(Qt::transparent);
@@ -87,6 +107,9 @@ QImage FullTile::getScaled(int width) {
     return getFullTile().scaledToWidth(width, Qt::SmoothTransformation);
 }
 
+bool FullTile::isEmpty() {
+    return topleft.isEmpty() && topright.isEmpty() && bottomleft.isEmpty() && topleft.isEmpty();
+}
 
 ClipboardTile::ClipboardTile() :
     valid(false)
@@ -151,4 +174,12 @@ FullTile ClipboardTile::getTile() {
 
 bool ClipboardTile::isValid() {
     return valid;
+}
+
+void ClipboardTile::setTileNum(int num) {
+    map16tile = num;
+}
+
+int ClipboardTile::TileNum() {
+    return map16tile;
 }

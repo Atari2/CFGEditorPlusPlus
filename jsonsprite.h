@@ -12,7 +12,7 @@ struct Tile {
     int xoff;
     int yoff;
     int tilenumber;
-    QString text;
+    Tile(int x, int y, int tileno);
     Tile(const QJsonObject& d);
     QJsonObject toJson() const;
 };
@@ -24,7 +24,9 @@ struct Display {
     int x;
     int y;
     bool useText;
+    QString displaytext;
     Display(const QJsonObject& t);
+    Display(const QString& d, const QVector<Tile>& ts, bool bit, int xx, int yy, bool text, const QString& disp);
     QJsonObject toJson() const;
 };
 
@@ -44,9 +46,10 @@ public:
     void deserialize();
     void serialize();
     void addCollections(QTableView* view);
-    void addDisplays(QTableView* view);
+    void addDisplay(const Display& display);
+    void setMap16(const QString& mapdata);
     QString to_text();
-    void to_file(const QString& name = QString());
+    void to_file(const QString& name = "");
     QString& name();
     J1656 t1656;
     J1662 t1662;

@@ -9,7 +9,7 @@ CFGEditor::CFGEditor(QWidget *parent)
     , hexNumberList(new QStringList(0x100))
     , models()
     , copiedTile()
-    , displays(new QVector<DisplayData>())
+    , displays()
 {
     ui->setupUi(this);
     this->setFixedSize(this->size());
@@ -77,7 +77,7 @@ void CFGEditor::initCompleter() {
 
 void CFGEditor::loadFullbitmap(int index) {
     if (index == -1)
-        index = ui->comboBoxTilePalette->currentIndex();
+        index = ui->paletteComboBox->currentIndex();
     QVector<QString> gfxFiles{ui->lineEditGFXSp0->text(), ui->lineEditGFXSp1->text(), ui->lineEditGFXSp2->text(), ui->lineEditGFXSp3->text()};
     if (full8x8Bitmap) {
         full8x8Bitmap->~QImage();
@@ -122,6 +122,7 @@ void CFGEditor::setUpMenuBar(QMenuBar* mb) {
             }
             resetTweaks();
             ui->tableView->model()->removeRows(0, ui->tableView->model()->rowCount());
+            // TODO: clear displays, etc
         }
     }, Qt::CTRL | Qt::Key_N);
 
@@ -134,7 +135,8 @@ void CFGEditor::setUpMenuBar(QMenuBar* mb) {
                                   "Do you want to save it before opening the other one?",
                                   QMessageBox::Yes | QMessageBox::No | QMessageBox::Abort );
             if (res == QMessageBox::Yes) {
-                sprite->addDisplays(ui->tableViewDisplays);
+                for (auto& disp : displays)
+                    sprite->addDisplay(createDisplay(disp));
                 sprite->addCollections(ui->tableView);
                 sprite->to_file(QFileDialog::getSaveFileName());
             } else if (res == QMessageBox::Abort) {
@@ -147,18 +149,30 @@ void CFGEditor::setUpMenuBar(QMenuBar* mb) {
         std::for_each(sprite->collections.cbegin(), sprite->collections.cend(), [&](auto& coll) {
             ((QStandardItemModel*)ui->tableView->model())->appendRow(CollectionDataModel::fromCollection(coll));
         });
+        ui->map16GraphicsView->setMap16(sprite->map16);
+        ui->labelDisplayTilesGrid->deserializeDisplays(sprite->displays, ui->map16GraphicsView);
+        populateDisplays();
 
-        // TODO: handle save displays here
     }, Qt::CTRL | Qt::Key_O);
 
     file->addAction("&Save", qApp, [&]() {
-        sprite->addDisplays(ui->tableViewDisplays);
+        ui->labelDisplayTilesGrid->serializeDisplays(displays);
+        sprite->displays.clear();
+        sprite->collections.clear();
+        for (auto& disp : displays)
+            sprite->addDisplay(createDisplay(disp));
+        sprite->setMap16(ui->map16GraphicsView->getMap16());
         sprite->addCollections(ui->tableView);
         sprite->to_file();
     }, Qt::CTRL | Qt::Key_S);
 
     file->addAction("&Save As", qApp, [&]() {
-        sprite->addDisplays(ui->tableViewDisplays);
+        ui->labelDisplayTilesGrid->serializeDisplays(displays);
+        sprite->displays.clear();
+        sprite->collections.clear();
+        for (auto& disp : displays)
+            sprite->addDisplay(createDisplay(disp));
+        sprite->setMap16(ui->map16GraphicsView->getMap16());
         sprite->addCollections(ui->tableView);
         sprite->to_file(QFileDialog::getSaveFileName());
     }, Qt::CTRL | Qt::ALT | Qt::Key_S);
@@ -189,6 +203,32 @@ void CFGEditor::setUpMenuBar(QMenuBar* mb) {
 
     mb->addMenu(file);
     mb->addMenu(display);
+}
+
+void CFGEditor::populateDisplays() {
+    currentDisplayIndex = -1;
+    QSignalBlocker block{ui->tableViewDisplays};
+    for (auto& d : sprite->displays) {
+        DisplayData display{d};
+        ((QStandardItemModel*)ui->tableViewDisplays->model())->appendRow(display.itemsFromDisplay());
+        displays.append(display);
+        ui->checkBoxDisplayExtraBit->setChecked(display.ExtraBit());
+        ui->checkBoxUseText->setChecked(display.UseText());
+        ui->spinBoxXPos->setValue(display.X());
+        ui->spinBoxYPos->setValue(display.Y());
+        ui->textEditLMDescription->setText(display.Description());
+        if (display.UseText())
+           ui->textEditDisplayText->setText(display.DisplayText());
+    }
+}
+
+Display CFGEditor::createDisplay(const DisplayData& data) {
+    QVector<Tile> tiles;
+    tiles.reserve(displays.length());
+    for (auto& t : data.Tiles()) {
+        tiles.append({t.XOffset(), t.YOffset(), t.TileNumber()});
+    }
+    return {data.Description(), tiles, data.ExtraBit(), data.X(), data.Y(), data.UseText(), data.DisplayText()};
 }
 
 QVector<QStandardItem*> CollectionDataModel::getRow(void* ui) {
@@ -350,6 +390,8 @@ void CFGEditor::bindGFXSelector() {
         qDebug() << "Index of GFX set changed";
         splitSetGFx();
         loadFullbitmap();
+        if (currentDisplayIndex != -1)
+            ui->labelDisplayTilesGrid->redrawNoSort();
     });
     changeTilePropGroupState(true);
     QObject::connect(viewPalette, &PaletteView::paletteChanged, this, [&](){
@@ -395,10 +437,10 @@ void CFGEditor::bindGFXSelector() {
 }
 
 void CFGEditor::addCloneRow() {
-    DisplayData display((*displays)[currentDisplayIndex]);
+    DisplayData display(displays[currentDisplayIndex]);
     ((QStandardItemModel*)ui->tableViewDisplays->model())->appendRow(display.itemsFromDisplay());
     advanceDisplayIndex();
-    (*displays).insert(currentDisplayIndex, display);
+    displays.insert(currentDisplayIndex, display);
     ui->checkBoxDisplayExtraBit->setChecked(display.ExtraBit());
     ui->checkBoxUseText->setChecked(display.UseText());
     ui->spinBoxXPos->setValue(display.X());
@@ -410,10 +452,10 @@ void CFGEditor::addCloneRow() {
 
 void CFGEditor::addBlankRow() {
     DisplayData display = DisplayData::blankData();
-    (*displays).insert(currentDisplayIndex + 1, display);
+    displays.insert(currentDisplayIndex + 1, display);
     advanceDisplayIndex();
     ((QStandardItemModel*)ui->tableViewDisplays->model())->appendRow(display.itemsFromDisplay());
-    qDebug() << (*displays).length();
+    qDebug() << displays.length();
     ui->checkBoxDisplayExtraBit->setChecked(false);
     ui->checkBoxUseText->setChecked(false);
     ui->spinBoxXPos->setValue(0);
@@ -423,7 +465,7 @@ void CFGEditor::addBlankRow() {
 }
 
 void CFGEditor::removeExistingRow() {
-    (*displays).removeAt(currentDisplayIndex);
+    displays.removeAt(currentDisplayIndex);
     currentDisplayIndex--;
     qDebug() << currentDisplayIndex;
     ui->tableViewDisplays->model()->removeRow(ui->tableViewDisplays->currentIndex().row());
@@ -480,7 +522,7 @@ void CFGEditor::bindDisplayButtons() {
     QObject::connect(ui->tableViewDisplays->selectionModel(),
                      QOverload<const QModelIndex&, const QModelIndex&>::of(&QItemSelectionModel::currentRowChanged), this, [&](const QModelIndex& now, const QModelIndex& pre) {
         qDebug() << "current row changed called";
-        int len = (*displays).length();
+        int len = displays.length();
         if (ui->tableViewDisplays->model()->rowCount() == 0)
             return;
         if (currentDisplayIndex == -1 && len == 0)
@@ -492,7 +534,9 @@ void CFGEditor::bindDisplayButtons() {
         if (currentDisplayIndex > len - 1)
             currentDisplayIndex = 0;
         qDebug() << currentDisplayIndex << " " << ui->tableViewDisplays->model()->rowCount();
-        const DisplayData& d = len == 0 ? DisplayData::blankData() : (*displays)[currentDisplayIndex];
+        const DisplayData& d = len == 0 ? DisplayData::blankData() : displays[currentDisplayIndex];
+        ui->textEditLMDescription->setText(d.Description());
+        ui->labelDisplayTilesGrid->changeDisplay(currentDisplayIndex);
         ui->checkBoxDisplayExtraBit->setChecked(d.ExtraBit());
         ui->spinBoxXPos->setValue(d.X());
         ui->spinBoxYPos->setValue(d.Y());
@@ -503,9 +547,6 @@ void CFGEditor::bindDisplayButtons() {
         } else {
             ui->textEditDisplayText->setText("");
         }
-        ui->textEditLMDescription->setText(d.Description());
-        ui->labelDisplayTilesGrid->changeDisplay(currentDisplayIndex);
-        // TODO: also update tiles
     });
 
     // useText
@@ -525,9 +566,9 @@ void CFGEditor::bindDisplayButtons() {
         ui->textEditDisplayText->setPalette(readOnlyPalette);
         if (currentDisplayIndex == -1)
             return;
-        (*displays)[currentDisplayIndex].setUseText(ui->checkBoxUseText->isChecked());
+        displays[currentDisplayIndex].setUseText(ui->checkBoxUseText->isChecked());
         if (!ui->checkBoxUseText->isChecked())
-            (*displays)[currentDisplayIndex].setDisplayText("");
+            displays[currentDisplayIndex].setDisplayText("");
     });
 
     // checkbox or spinner get updated
@@ -537,7 +578,7 @@ void CFGEditor::bindDisplayButtons() {
         }
         auto realIndex = ui->tableViewDisplays->model()->index(ui->tableViewDisplays->currentIndex().row(), 0);
         ui->tableViewDisplays->model()->setData(realIndex, ui->checkBoxDisplayExtraBit->isChecked() ? "True" : "False");
-        (*displays)[currentDisplayIndex].setExtraBit(ui->checkBoxDisplayExtraBit->isChecked());
+        displays[currentDisplayIndex].setExtraBit(ui->checkBoxDisplayExtraBit->isChecked());
     });
     QObject::connect(ui->spinBoxXPos, QOverload<const QString&>::of(&QSpinBox::textChanged), this, [&](const QString& text) {
         if (!ui->tableViewDisplays->currentIndex().isValid()) {
@@ -545,7 +586,7 @@ void CFGEditor::bindDisplayButtons() {
         }
         auto realIndex = ui->tableViewDisplays->model()->index(ui->tableViewDisplays->currentIndex().row(), 1);
         ui->tableViewDisplays->model()->setData(realIndex, text);
-        (*displays)[currentDisplayIndex].setX(text.toInt());
+        displays[currentDisplayIndex].setX(text.toInt());
     });
     QObject::connect(ui->spinBoxYPos, QOverload<const QString&>::of(&QSpinBox::textChanged), this, [&](const QString& text) {
         if (!ui->tableViewDisplays->currentIndex().isValid()) {
@@ -553,20 +594,20 @@ void CFGEditor::bindDisplayButtons() {
         }
         auto realIndex = ui->tableViewDisplays->model()->index(ui->tableViewDisplays->currentIndex().row(), 2);
         ui->tableViewDisplays->model()->setData(realIndex, text);
-        (*displays)[currentDisplayIndex].setY(text.toInt());
+        displays[currentDisplayIndex].setY(text.toInt());
     });
 
     // description or displaytext get updated
     QObject::connect(ui->textEditLMDescription, &QTextEdit::textChanged, this, [&]() {
         if (currentDisplayIndex == -1)
             return;
-        (*displays)[currentDisplayIndex].setDescription(ui->textEditLMDescription->toPlainText());
+        displays[currentDisplayIndex].setDescription(ui->textEditLMDescription->toPlainText());
     });
     QObject::connect(ui->textEditDisplayText, &QTextEdit::textChanged, this, [&]() {
         if (currentDisplayIndex == -1)
             return;
-        qDebug() << currentDisplayIndex << " " << (*displays).length();
-        (*displays)[currentDisplayIndex].setDisplayText(ui->textEditDisplayText->toPlainText());
+        qDebug() << currentDisplayIndex << " " << displays.length();
+        displays[currentDisplayIndex].setDisplayText(ui->textEditDisplayText->toPlainText());
         ui->labelDisplayTilesGrid->insertText(ui->textEditDisplayText->toPlainText());
     });
 
@@ -618,8 +659,6 @@ void CFGEditor::bindDisplayButtons() {
         qDebug() << "combo box for size of tile clicked";
         ui->labelDisplayTilesGrid->setSelectorSize(static_cast<SizeSelector>(text.split("x").takeFirst().toInt()));
     });
-    // tiles get updated
-    // TODO
 }
 
 void CFGEditor::changeTilePropGroupState(bool disabled, TileChangeType type) {
@@ -744,9 +783,90 @@ void CFGEditor::resetTweaks() {
     emit ui->lineEdit190f->editingFinished();
 }
 
+void CFGEditor::setupForNormal() {
+    changeAllCheckBoxState(false);
+
+    ui->lineEditAsmFile->setEnabled(false);
+    ui->lineEditExtraProp1->setEnabled(false);
+    ui->lineEditExtraProp2->setEnabled(false);
+    ui->spinBoxextraBitClear->setEnabled(false);
+    ui->spinBoxextraBitSet->setEnabled(false);
+}
+
+void CFGEditor::setupForCustom() {
+    changeAllCheckBoxState(false);
+
+    ui->lineEditAsmFile->setEnabled(true);
+    ui->lineEditExtraProp1->setEnabled(true);
+    ui->lineEditExtraProp2->setEnabled(true);
+    ui->spinBoxextraBitClear->setEnabled(true);
+    ui->spinBoxextraBitSet->setEnabled(true);
+
+}
+
+void CFGEditor::setupForGenShoot() {
+    changeAllCheckBoxState(true);
+
+    ui->lineEditAsmFile->setEnabled(true);
+    ui->lineEditExtraProp1->setEnabled(true);
+    ui->lineEditExtraProp2->setEnabled(true);
+    ui->spinBoxextraBitClear->setEnabled(true);
+    ui->spinBoxextraBitSet->setEnabled(true);
+}
+
+void CFGEditor::changeAllCheckBoxState(bool state) {
+    ui->lineEdit1656->setDisabled(state);
+    ui->checkBox1656DiesJumped->setDisabled(state);
+    ui->checkBox1656Hopin->setDisabled(state);
+    ui->checkBox1656JumpedOn->setDisabled(state);
+    ui->checkBox1656Smoke->setDisabled(state);
+    ui->objClipCmbBox->setDisabled(state);
+
+    ui->lineEdit1662->setDisabled(state);
+    ui->checkBox1662deathframe->setDisabled(state);
+    ui->checkBox1662strdown->setDisabled(state);
+    ui->sprClipCmbBox->setDisabled(state);
+
+    ui->lineEdit166E->setDisabled(state);
+    ui->checkBox166ecape->setDisabled(state);
+    ui->checkBox166efireball->setDisabled(state);
+    ui->checkBox166esecondpage->setDisabled(state);
+    ui->checkBox166esplash->setDisabled(state);
+    ui->checkBox166elay2->setDisabled(state);
+    ui->paletteComboBox->setDisabled(state);
+
+    ui->lineEdit167a->setDisabled(state);
+    ui->checkBox167astar->setDisabled(state);
+    ui->checkBox167ablk->setDisabled(state);
+    ui->checkBox167aoffscr->setDisabled(state);
+    ui->checkBox167astunned->setDisabled(state);
+    ui->checkBox167akick->setDisabled(state);
+    ui->checkBox167aeveryframe->setDisabled(state);
+    ui->checkBox167apowerup->setDisabled(state);
+    ui->checkBox167adefaultint->setDisabled(state);
+
+    ui->lineEdit1686->setDisabled(state);
+    ui->checkBox1686Inedible->setDisabled(state);
+    ui->checkBox1686mouth->setDisabled(state);
+    ui->checkBox1686ground->setDisabled(state);
+    ui->checkBox1686sprint->setDisabled(state);
+    ui->checkBox1686dir->setDisabled(state);
+    ui->checkBox1686goalcoin->setDisabled(state);
+    ui->checkBox1686spawnSpr->setDisabled(state);
+    ui->checkBox1686noObjInt->setDisabled(state);
+
+    ui->lineEdit190f->setDisabled(state);
+    ui->checkBox190fbelow->setDisabled(state);
+    ui->checkBox190fgoalpass->setDisabled(state);
+    ui->checkBox190fsliding->setDisabled(state);
+    ui->checkBox190ffivefire->setDisabled(state);
+    ui->checkBox190fupysp->setDisabled(state);
+    ui->checkBox190fdeathframe->setDisabled(state);
+    ui->checkBox190fnosilver->setDisabled(state);
+    ui->checkBox190fwallstuck->setDisabled(state);
+}
+
 void CFGEditor::bindSpriteProp() {
-    // Map16, Displays, Collection -> todo
-    // FIXME: handle map16, displays
     // Extra Prop Bytes
     ui->lineEditExtraProp1->setMaxLength(2);
     ui->lineEditExtraProp1->setValidator(hexValidator);
@@ -762,7 +882,21 @@ void CFGEditor::bindSpriteProp() {
     });
     // Type
     QObject::connect(ui->comboBoxType, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [&](int index) {
+        // disable stuff
         sprite->type = index;
+        switch (index) {
+        case 0:
+            setupForNormal();
+            break;
+        case 1:
+            setupForCustom();
+            break;
+        case 2:
+            setupForGenShoot();
+            break;
+        default:
+            Q_ASSERT(false);
+        }
     });
     // ActLike
     ui->lineEditActLike->setMaxLength(2);
@@ -784,6 +918,7 @@ void CFGEditor::bindSpriteProp() {
         qDebug() << "Extra byte (set) changed to " << value;
         sprite->addbcountset = value;
     });
+    setupForNormal();
     // 1656
     bindTweak1656();
     // 1662
@@ -952,7 +1087,7 @@ void CFGEditor::bindTweak190F() {
 
 CFGEditor::~CFGEditor()
 {
-    (*displays).clear();
+    displays.clear();
     for (auto p : models)
         delete p;
     delete full8x8Bitmap;

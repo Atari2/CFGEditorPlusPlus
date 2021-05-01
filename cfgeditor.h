@@ -12,12 +12,10 @@
 #include <QStandardItemModel>
 #include <QDir>
 #include "jsonsprite.h"
-#include "spritedatamodel.h"
 #include "snesgfxconverter.h"
 #include "eightbyeightview.h"
 #include "paletteview.h"
 #include "map16provider.h"
-#include "map16graphicsview.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class CFGEditor; }
@@ -55,6 +53,14 @@ public:
     void removeExistingRow();
     void changeTilePropGroupState(bool, TileChangeType type = TileChangeType::All);
     void setTilePropGroupState(FullTile tileInfo);
+    Display createDisplay(const DisplayData& data);
+    void populateDisplays();
+
+    void changeAllCheckBoxState(bool state);
+    void setupForNormal();
+    void setupForCustom();
+    void setupForGenShoot();
+
     template <typename J>
     void connectCheckBox(QLineEdit* edit, QCheckBox* box, J* tweak, bool& tochange) {
         QObject::connect(box, &QCheckBox::stateChanged, this, [=, &tochange]() mutable {
@@ -77,7 +83,7 @@ private:
     EightByEightView* view8x8 = nullptr;
     PaletteView* viewPalette = nullptr;
     ClipboardTile copiedTile;
-    QAtomicPointer<QVector<DisplayData>> displays;
+    QVector<DisplayData> displays;
     QAtomicInteger<int> currentDisplayIndex = -1;
 };
 

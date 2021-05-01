@@ -24,7 +24,7 @@
      </rect>
     </property>
     <property name="currentIndex">
-     <number>1</number>
+     <number>0</number>
     </property>
     <widget class="QWidget" name="Default">
      <attribute name="title">
@@ -2695,7 +2695,7 @@
                <widget class="QLineEdit" name="lineEditCollExByte1">
                 <property name="maximumSize">
                  <size>
-                  <width>33</width>
+                  <width>40</width>
                   <height>16777215</height>
                  </size>
                 </property>
@@ -2725,7 +2725,7 @@
                <widget class="QLineEdit" name="lineEditCollExByte2">
                 <property name="maximumSize">
                  <size>
-                  <width>33</width>
+                  <width>40</width>
                   <height>16777215</height>
                  </size>
                 </property>
@@ -2755,7 +2755,7 @@
                <widget class="QLineEdit" name="lineEditCollExByte3">
                 <property name="maximumSize">
                  <size>
-                  <width>33</width>
+                  <width>40</width>
                   <height>16777215</height>
                  </size>
                 </property>
@@ -2785,7 +2785,7 @@
                <widget class="QLineEdit" name="lineEditCollExByte4">
                 <property name="maximumSize">
                  <size>
-                  <width>33</width>
+                  <width>40</width>
                   <height>16777215</height>
                  </size>
                 </property>
@@ -2819,7 +2819,7 @@
                <widget class="QLineEdit" name="lineEditCollExByte5">
                 <property name="maximumSize">
                  <size>
-                  <width>33</width>
+                  <width>40</width>
                   <height>16777215</height>
                  </size>
                 </property>
@@ -2849,7 +2849,7 @@
                <widget class="QLineEdit" name="lineEditCollExByte6">
                 <property name="maximumSize">
                  <size>
-                  <width>33</width>
+                  <width>40</width>
                   <height>16777215</height>
                  </size>
                 </property>
@@ -2879,7 +2879,7 @@
                <widget class="QLineEdit" name="lineEditCollExByte7">
                 <property name="maximumSize">
                  <size>
-                  <width>33</width>
+                  <width>40</width>
                   <height>16777215</height>
                  </size>
                 </property>
@@ -2909,7 +2909,7 @@
                <widget class="QLineEdit" name="lineEditCollExByte8">
                 <property name="maximumSize">
                  <size>
-                  <width>33</width>
+                  <width>40</width>
                   <height>16777215</height>
                  </size>
                 </property>
@@ -2943,7 +2943,7 @@
                <widget class="QLineEdit" name="lineEditCollExByte9">
                 <property name="maximumSize">
                  <size>
-                  <width>33</width>
+                  <width>40</width>
                   <height>16777215</height>
                  </size>
                 </property>
@@ -2973,7 +2973,7 @@
                <widget class="QLineEdit" name="lineEditCollExByte10">
                 <property name="maximumSize">
                  <size>
-                  <width>33</width>
+                  <width>40</width>
                   <height>16777215</height>
                  </size>
                 </property>
@@ -3003,7 +3003,7 @@
                <widget class="QLineEdit" name="lineEditCollExByte11">
                 <property name="maximumSize">
                  <size>
-                  <width>33</width>
+                  <width>40</width>
                   <height>16777215</height>
                  </size>
                 </property>
@@ -3033,7 +3033,7 @@
                <widget class="QLineEdit" name="lineEditCollExByte12">
                 <property name="maximumSize">
                  <size>
-                  <width>33</width>
+                  <width>40</width>
                   <height>16777215</height>
                  </size>
                 </property>
