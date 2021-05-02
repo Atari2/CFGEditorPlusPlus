@@ -43,6 +43,7 @@ public:
     void bindCollectionButtons();
     void bindDisplayButtons();
     void bindGFXSelector();
+    void bindGFXFilesButtons();
     void initCompleter();
     void loadFullbitmap(int index = -1);
     void addLunarMagicIcons();
@@ -55,6 +56,7 @@ public:
     void setTilePropGroupState(FullTile tileInfo);
     Display createDisplay(const DisplayData& data);
     void populateDisplays();
+    void populateGFXFiles();
 
     void changeAllCheckBoxState(bool state);
     void setupForNormal();
@@ -85,6 +87,7 @@ private:
     ClipboardTile copiedTile;
     QVector<DisplayData> displays;
     QAtomicInteger<int> currentDisplayIndex = -1;
+    int currentGFXFileIndex = -1;
 };
 
 class DefaultMissingImpl {

@@ -35,22 +35,22 @@
         <location filename="cfgeditor.ui" line="1689"/>
         <location filename="cfgeditor.ui" line="1752"/>
         <location filename="cfgeditor.ui" line="1815"/>
-        <location filename="cfgeditor.ui" line="2292"/>
         <location filename="cfgeditor.ui" line="2305"/>
         <location filename="cfgeditor.ui" line="2318"/>
         <location filename="cfgeditor.ui" line="2331"/>
-        <location filename="cfgeditor.ui" line="2703"/>
-        <location filename="cfgeditor.ui" line="2733"/>
-        <location filename="cfgeditor.ui" line="2763"/>
-        <location filename="cfgeditor.ui" line="2793"/>
-        <location filename="cfgeditor.ui" line="2827"/>
-        <location filename="cfgeditor.ui" line="2857"/>
-        <location filename="cfgeditor.ui" line="2887"/>
-        <location filename="cfgeditor.ui" line="2917"/>
-        <location filename="cfgeditor.ui" line="2951"/>
-        <location filename="cfgeditor.ui" line="2981"/>
-        <location filename="cfgeditor.ui" line="3011"/>
-        <location filename="cfgeditor.ui" line="3041"/>
+        <location filename="cfgeditor.ui" line="2344"/>
+        <location filename="cfgeditor.ui" line="2815"/>
+        <location filename="cfgeditor.ui" line="2845"/>
+        <location filename="cfgeditor.ui" line="2875"/>
+        <location filename="cfgeditor.ui" line="2905"/>
+        <location filename="cfgeditor.ui" line="2939"/>
+        <location filename="cfgeditor.ui" line="2969"/>
+        <location filename="cfgeditor.ui" line="2999"/>
+        <location filename="cfgeditor.ui" line="3029"/>
+        <location filename="cfgeditor.ui" line="3063"/>
+        <location filename="cfgeditor.ui" line="3093"/>
+        <location filename="cfgeditor.ui" line="3123"/>
+        <location filename="cfgeditor.ui" line="3153"/>
         <source>00</source>
         <translation type="unfinished"></translation>
     </message>
@@ -786,7 +786,7 @@
     </message>
     <message>
         <location filename="cfgeditor.ui" line="1977"/>
-        <location filename="cfgeditor.ui" line="2669"/>
+        <location filename="cfgeditor.ui" line="2781"/>
         <source>Extra Bit</source>
         <translation type="unfinished"></translation>
     </message>
@@ -796,238 +796,256 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="cfgeditor.ui" line="2040"/>
+        <location filename="cfgeditor.ui" line="2039"/>
+        <source>Extra Byte</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="cfgeditor.ui" line="2053"/>
         <source>Map16</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="cfgeditor.ui" line="2184"/>
+        <location filename="cfgeditor.ui" line="2197"/>
         <source>Flip X</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="cfgeditor.ui" line="2203"/>
+        <location filename="cfgeditor.ui" line="2216"/>
         <source>Flip Y</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="cfgeditor.ui" line="2225"/>
+        <location filename="cfgeditor.ui" line="2238"/>
         <source>Palette 0</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="cfgeditor.ui" line="2230"/>
+        <location filename="cfgeditor.ui" line="2243"/>
         <source>Palette 1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="cfgeditor.ui" line="2235"/>
+        <location filename="cfgeditor.ui" line="2248"/>
         <source>Palette 2</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="cfgeditor.ui" line="2240"/>
+        <location filename="cfgeditor.ui" line="2253"/>
         <source>Palette 3</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="cfgeditor.ui" line="2245"/>
+        <location filename="cfgeditor.ui" line="2258"/>
         <source>Palette 4</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="cfgeditor.ui" line="2250"/>
+        <location filename="cfgeditor.ui" line="2263"/>
         <source>Palette 5</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="cfgeditor.ui" line="2255"/>
+        <location filename="cfgeditor.ui" line="2268"/>
         <source>Palette 6</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="cfgeditor.ui" line="2260"/>
+        <location filename="cfgeditor.ui" line="2273"/>
         <source>Palette 7</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="cfgeditor.ui" line="2265"/>
+        <location filename="cfgeditor.ui" line="2278"/>
         <source>Palette -</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="cfgeditor.ui" line="2355"/>
+        <location filename="cfgeditor.ui" line="2368"/>
         <source>00 01 13 02 (Forest)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="cfgeditor.ui" line="2360"/>
+        <location filename="cfgeditor.ui" line="2373"/>
         <source>00 01 12 03 (Castle)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="cfgeditor.ui" line="2365"/>
+        <location filename="cfgeditor.ui" line="2378"/>
         <source>00 01 13 05 (Mushroom)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="cfgeditor.ui" line="2370"/>
+        <location filename="cfgeditor.ui" line="2383"/>
         <source>00 01 13 04 (Underground)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="cfgeditor.ui" line="2375"/>
+        <location filename="cfgeditor.ui" line="2388"/>
         <source>00 01 13 06 (Water)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="cfgeditor.ui" line="2380"/>
+        <location filename="cfgeditor.ui" line="2393"/>
         <source>00 01 13 09 (Pokey)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="cfgeditor.ui" line="2385"/>
+        <location filename="cfgeditor.ui" line="2398"/>
         <source>00 01 06 11 (Ghost House)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="cfgeditor.ui" line="2390"/>
+        <location filename="cfgeditor.ui" line="2403"/>
         <source>00 01 13 20 (Banzai Bill)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="cfgeditor.ui" line="2395"/>
+        <location filename="cfgeditor.ui" line="2408"/>
         <source>10 0F 1C 1D (Overworld)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="cfgeditor.ui" line="2412"/>
+        <location filename="cfgeditor.ui" line="2425"/>
         <source>Graphics</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="cfgeditor.ui" line="2435"/>
+        <location filename="cfgeditor.ui" line="2448"/>
         <source>GFX00</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="cfgeditor.ui" line="2442"/>
-        <location filename="cfgeditor.ui" line="2466"/>
-        <location filename="cfgeditor.ui" line="2490"/>
-        <location filename="cfgeditor.ui" line="2514"/>
+        <location filename="cfgeditor.ui" line="2455"/>
+        <location filename="cfgeditor.ui" line="2479"/>
+        <location filename="cfgeditor.ui" line="2503"/>
+        <location filename="cfgeditor.ui" line="2527"/>
         <source>...</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="cfgeditor.ui" line="2459"/>
+        <location filename="cfgeditor.ui" line="2472"/>
         <source>GFX01</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="cfgeditor.ui" line="2483"/>
+        <location filename="cfgeditor.ui" line="2496"/>
         <source>GFX13</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="cfgeditor.ui" line="2507"/>
+        <location filename="cfgeditor.ui" line="2520"/>
         <source>GFX02</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="cfgeditor.ui" line="2533"/>
+        <location filename="cfgeditor.ui" line="2546"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:10pt;&quot;&gt;Tile:&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="cfgeditor.ui" line="2567"/>
-        <location filename="cfgeditor.ui" line="3074"/>
+        <location filename="cfgeditor.ui" line="2580"/>
+        <location filename="cfgeditor.ui" line="2655"/>
+        <location filename="cfgeditor.ui" line="3186"/>
         <source>New</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="cfgeditor.ui" line="2580"/>
-        <location filename="cfgeditor.ui" line="3087"/>
+        <location filename="cfgeditor.ui" line="2593"/>
+        <location filename="cfgeditor.ui" line="2668"/>
+        <location filename="cfgeditor.ui" line="3199"/>
         <source>Clone</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="cfgeditor.ui" line="2593"/>
-        <location filename="cfgeditor.ui" line="3100"/>
+        <location filename="cfgeditor.ui" line="2606"/>
+        <location filename="cfgeditor.ui" line="2681"/>
+        <location filename="cfgeditor.ui" line="3212"/>
         <source>Delete</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="cfgeditor.ui" line="2599"/>
+        <location filename="cfgeditor.ui" line="2619"/>
+        <source>GFX Files</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="cfgeditor.ui" line="2704"/>
+        <source>Separate</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="cfgeditor.ui" line="2711"/>
         <source>Custom List</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="cfgeditor.ui" line="2611"/>
+        <location filename="cfgeditor.ui" line="2723"/>
         <source>Entry</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="cfgeditor.ui" line="2640"/>
+        <location filename="cfgeditor.ui" line="2752"/>
         <source>Name</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="cfgeditor.ui" line="2690"/>
+        <location filename="cfgeditor.ui" line="2802"/>
         <source>Extra Byte 1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="cfgeditor.ui" line="2720"/>
+        <location filename="cfgeditor.ui" line="2832"/>
         <source>Extra Byte 2</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="cfgeditor.ui" line="2750"/>
+        <location filename="cfgeditor.ui" line="2862"/>
         <source>Extra Byte 3</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="cfgeditor.ui" line="2780"/>
+        <location filename="cfgeditor.ui" line="2892"/>
         <source>Extra Byte 4</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="cfgeditor.ui" line="2814"/>
+        <location filename="cfgeditor.ui" line="2926"/>
         <source>Extra Byte 5</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="cfgeditor.ui" line="2844"/>
+        <location filename="cfgeditor.ui" line="2956"/>
         <source>Extra Byte 6</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="cfgeditor.ui" line="2874"/>
+        <location filename="cfgeditor.ui" line="2986"/>
         <source>Extra Byte 7</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="cfgeditor.ui" line="2904"/>
+        <location filename="cfgeditor.ui" line="3016"/>
         <source>Extra Byte 8</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="cfgeditor.ui" line="2938"/>
+        <location filename="cfgeditor.ui" line="3050"/>
         <source>Extra Byte 9</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="cfgeditor.ui" line="2968"/>
+        <location filename="cfgeditor.ui" line="3080"/>
         <source>Extra Byte 10</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="cfgeditor.ui" line="2998"/>
+        <location filename="cfgeditor.ui" line="3110"/>
         <source>Extra Byte 11</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="cfgeditor.ui" line="3028"/>
+        <location filename="cfgeditor.ui" line="3140"/>
         <source>Extra Byte 12</source>
         <translation type="unfinished"></translation>
     </message>

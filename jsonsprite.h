@@ -8,6 +8,22 @@
 #include <QFileDialog>
 #include "tweak_bytes.h"
 
+enum DisplayType {
+    XY,
+    ExtraByte
+};
+
+struct GFXFiles {
+    bool separate;
+    int sp0;
+    int sp1;
+    int sp2;
+    int sp3;
+    GFXFiles(bool sep, int s0, int s1, int s2, int s3);
+    GFXFiles(const QJsonObject& g);
+    QJsonObject toJson() const;
+};
+
 struct Tile {
     int xoff;
     int yoff;
@@ -21,11 +37,12 @@ struct Display {
     QString description;
     QVector<Tile> tiles;
     bool extrabit;
-    int x;
-    int y;
+    DisplayType disp_type;
+    int x_or_index;
+    int y_or_value;
     bool useText;
     QString displaytext;
-    Display(const QJsonObject& t);
+    Display(const QJsonObject& t, DisplayType type);
     Display(const QString& d, const QVector<Tile>& ts, bool bit, int xx, int yy, bool text, const QString& disp);
     QJsonObject toJson() const;
 };
@@ -47,6 +64,7 @@ public:
     void serialize();
     void addCollections(QTableView* view);
     void addDisplay(const Display& display);
+    void addGfxList(bool sep, int sp0, int sp1, int sp2, int sp3);
     void setMap16(const QString& mapdata);
     QString to_text();
     void to_file(const QString& name = "");
@@ -67,8 +85,10 @@ public:
     QString map16;
     QVector<Display> displays;
     QVector<Collection> collections;
+    QVector<GFXFiles> gfxfiles;
     QString m_name;
     QJsonObject obj;
+    DisplayType dispType;
 };
 
 

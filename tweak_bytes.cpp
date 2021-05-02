@@ -4,8 +4,8 @@ void J1656::from_json(const QJsonObject& byte) {
     objclip = byte["Object Clipping"].toInt() & 0x0F;
     canbejumped = byte["Can be jumped on"].toBool();
     diesjumped = byte["Dies when jumped on"].toBool();
-    hopin = byte["Hop in/kick shells"].toBool();
-    disapp = byte["Disappear in a cloud of smoke"].toBool();
+    hopin = byte["Hop in/kick shell"].toBool();
+    disapp = byte["Disappears in a cloud of smoke"].toBool();
 }
 
 void J1656::from_byte(uint8_t byte) {
@@ -47,7 +47,7 @@ void J166E::from_byte(uint8_t byte) {
 }
 
 void J167A::from_json(const QJsonObject& byte) {
-    star = byte["Don't disable clipping when starkilled"].toBool();
+    star = byte["Don't disable cliping when starkilled"].toBool();
     blk = byte["Invincible to star/cape/fire/bounce blk."].toBool();
     offscr = byte["Process when off screen"].toBool();
     stunn = byte["Don't change into shell when stunned"].toBool();
@@ -185,8 +185,8 @@ QJsonObject J1656::to_json() const {
     obj["Object Clipping"] = objclip;
     obj["Can be jumped on"] = canbejumped;
     obj["Dies when jumped on"] = diesjumped;
-    obj["Hop in/kick shells"] = hopin;
-    obj["Disappear in a cloud of smoke"] = disapp;
+    obj["Hop in/kick shell"] = hopin;
+    obj["Disappears in a cloud of smoke"] = disapp;
     return obj;
 }
 
@@ -211,12 +211,12 @@ QJsonObject J166E::to_json() const {
 
 QJsonObject J167A::to_json() const {
     QJsonObject obj{};
-    obj["Don't disable clipping when starkilled"] = star;
+    obj["Don't disable cliping when starkilled"] = star;
     obj["Invincible to star/cape/fire/bounce blk."] = blk;
     obj["Process when off screen"] = offscr;
     obj["Don't change into shell when stunned"] = stunn;
     obj["Can't be kicked like shell"] = kick;
-    obj["Process interaction with Mario ever frame"] = everyframe;
+    obj["Process interaction with Mario every frame"] = everyframe;
     obj["Gives power-up when eaten by yoshi"] = powerup;
     obj["Don't use default interaction with Mario"] = defaultint;
     return obj;

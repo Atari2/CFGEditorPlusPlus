@@ -5,7 +5,7 @@ CFGEditor::CFGEditor(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::CFGEditor)
     , sprite(new JsonSprite)
-    , hexValidator(new QRegularExpressionValidator{QRegularExpression(R"([A-Fa-f0-9]{0,2})")})
+    , hexValidator(new QRegularExpressionValidator{QRegularExpression(R"([A-Fa-f0-9]+)")})
     , hexNumberList(new QStringList(0x100))
     , models()
     , copiedTile()
@@ -26,6 +26,7 @@ CFGEditor::CFGEditor(QWidget *parent)
     setDisplayModel();
     bindCollectionButtons();
     bindDisplayButtons();
+    bindGFXFilesButtons();
     bindGFXSelector();
     ui->Default->setAutoFillBackground(true);
     mb->show();
@@ -152,7 +153,7 @@ void CFGEditor::setUpMenuBar(QMenuBar* mb) {
         ui->map16GraphicsView->setMap16(sprite->map16);
         ui->labelDisplayTilesGrid->deserializeDisplays(sprite->displays, ui->map16GraphicsView);
         populateDisplays();
-
+        populateGFXFiles();
     }, Qt::CTRL | Qt::Key_O);
 
     file->addAction("&Save", qApp, [&]() {
@@ -219,6 +220,20 @@ void CFGEditor::populateDisplays() {
         ui->textEditLMDescription->setText(display.Description());
         if (display.UseText())
            ui->textEditDisplayText->setText(display.DisplayText());
+    }
+}
+
+void CFGEditor::populateGFXFiles() {
+    currentGFXFileIndex = 0;
+    auto len = sprite->gfxfiles.size();
+    for (auto i = 0; i < len; i++) {
+        ui->comboBoxGFXIndex->addItem(QString::asprintf("%d", i));
+    }
+    if (len > 0) {
+        ui->comboBoxGFXIndex->setCurrentIndex(0);
+        currentGFXFileIndex = 0;
+    } else {
+        currentGFXFileIndex = -1;
     }
 }
 
@@ -477,6 +492,83 @@ void CFGEditor::advanceDisplayIndex() {
     qDebug() << "Row got added at " << currentDisplayIndex << " and at " << ui->tableViewDisplays->currentIndex().row();
 }
 
+void CFGEditor::bindGFXFilesButtons() {
+    ui->lineEditSp0->setMaxLength(3);
+    ui->lineEditSp0->setValidator(hexValidator);
+    ui->lineEditSp1->setMaxLength(3);
+    ui->lineEditSp1->setValidator(hexValidator);
+    ui->lineEditSp2->setMaxLength(3);
+    ui->lineEditSp2->setValidator(hexValidator);
+    ui->lineEditSp3->setMaxLength(3);
+    ui->lineEditSp3->setValidator(hexValidator);
+
+    QObject::connect(ui->pushButtonGFXNew, &QPushButton::clicked, this, [&]() {
+        sprite->gfxfiles.insert(++currentGFXFileIndex, {false, 0x7F, 0x7F, 0x7F, 0x7F});
+        ui->comboBoxGFXIndex->addItem(QString::asprintf("%d", ui->comboBoxGFXIndex->count()));
+        ui->comboBoxGFXIndex->setCurrentIndex(currentGFXFileIndex);
+    });
+    QObject::connect(ui->pushButtonGFXDelete, &QPushButton::clicked, this, [&]() {
+        if (currentGFXFileIndex == -1)
+            return;
+        sprite->gfxfiles.removeAt(currentGFXFileIndex);
+        if (sprite->gfxfiles.empty())
+            currentGFXFileIndex = -1;
+        ui->comboBoxGFXIndex->removeItem(ui->comboBoxGFXIndex->count() - 1);
+        if (ui->comboBoxGFXIndex->count() > 0)
+            emit ui->comboBoxGFXIndex->currentIndexChanged(currentGFXFileIndex);
+
+    });
+    QObject::connect(ui->pushButtonGFXClone, &QPushButton::clicked, this, [&]() {
+        if (currentGFXFileIndex == -1)
+            return;
+        auto gfx = sprite->gfxfiles[currentGFXFileIndex++];
+        sprite->gfxfiles.insert(currentGFXFileIndex, gfx);
+        ui->comboBoxGFXIndex->addItem(QString::asprintf("%d", ui->comboBoxGFXIndex->count()));
+        ui->comboBoxGFXIndex->setCurrentIndex(currentGFXFileIndex);
+    });
+    QObject::connect(ui->comboBoxGFXIndex, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [&](int index) {
+        currentGFXFileIndex = index;
+        if (currentGFXFileIndex == -1) {
+            ui->lineEditSp0->setText(QString::asprintf("%03X", 0x7F));
+            ui->lineEditSp1->setText(QString::asprintf("%03X", 0x7F));
+            ui->lineEditSp2->setText(QString::asprintf("%03X", 0x7F));
+            ui->lineEditSp3->setText(QString::asprintf("%03X", 0x7F));
+            ui->checkBoxGFXSeparate->setCheckState(Qt::CheckState::Unchecked);
+            return;
+        }
+        ui->lineEditSp0->setText(QString::asprintf("%03X", sprite->gfxfiles[index].sp0));
+        ui->lineEditSp1->setText(QString::asprintf("%03X", sprite->gfxfiles[index].sp1));
+        ui->lineEditSp2->setText(QString::asprintf("%03X", sprite->gfxfiles[index].sp2));
+        ui->lineEditSp3->setText(QString::asprintf("%03X", sprite->gfxfiles[index].sp3));
+        ui->checkBoxGFXSeparate->setCheckState(sprite->gfxfiles[index].separate ? Qt::CheckState::Checked : Qt::CheckState::Unchecked);
+    });
+    QObject::connect(ui->lineEditSp0, &QLineEdit::editingFinished, this, [&]() {
+        if (sprite->gfxfiles.empty())
+            return;
+        sprite->gfxfiles[currentGFXFileIndex].sp0 = ui->lineEditSp0->text().toInt(nullptr, 16);
+    });
+    QObject::connect(ui->lineEditSp1, &QLineEdit::editingFinished, this, [&]() {
+        if (sprite->gfxfiles.empty())
+            return;
+        sprite->gfxfiles[currentGFXFileIndex].sp1 = ui->lineEditSp1->text().toInt(nullptr, 16);
+    });
+    QObject::connect(ui->lineEditSp2, &QLineEdit::editingFinished, this, [&]() {
+        if (sprite->gfxfiles.empty())
+            return;
+        sprite->gfxfiles[currentGFXFileIndex].sp2 = ui->lineEditSp2->text().toInt(nullptr, 16);
+    });
+    QObject::connect(ui->lineEditSp3, &QLineEdit::editingFinished, this, [&]() {
+        if (sprite->gfxfiles.empty())
+            return;
+        sprite->gfxfiles[currentGFXFileIndex].sp3 = ui->lineEditSp3->text().toInt(nullptr, 16);
+    });
+    QObject::connect(ui->checkBoxGFXSeparate, &QCheckBox::stateChanged, this, [&]() {
+        if (sprite->gfxfiles.empty())
+            return;
+       sprite->gfxfiles[currentGFXFileIndex].separate = ui->checkBoxGFXSeparate->isChecked();
+    });
+}
+
 void CFGEditor::bindDisplayButtons() {
     ui->map16GraphicsView->setCopiedTile(copiedTile);
     ui->labelDisplayTilesGrid->setCopiedTile(copiedTile);
@@ -572,6 +664,21 @@ void CFGEditor::bindDisplayButtons() {
     });
 
     // checkbox or spinner get updated
+    QObject::connect(ui->checkBoxDisplayExtraByte, &QCheckBox::stateChanged, this, [&]() {
+        if (ui->checkBoxDisplayExtraByte->checkState() == Qt::CheckState::Checked) {
+            sprite->dispType = DisplayType::ExtraByte;
+            ui->labelDisplayX->setText("ExByte Index:");
+            ui->labelDisplayY->setText("Value:");
+            ui->spinBoxXPos->setMaximum(12);
+            ui->spinBoxYPos->setMaximum(0xFF);
+        } else {
+            sprite->dispType = DisplayType::XY;
+            ui->labelDisplayX->setText("X");
+            ui->labelDisplayY->setText("Y");
+            ui->spinBoxXPos->setMaximum(15);
+            ui->spinBoxYPos->setMaximum(15);
+        }
+    });
     QObject::connect(ui->checkBoxDisplayExtraBit, &QCheckBox::stateChanged, this, [&]() {
         if (!ui->tableViewDisplays->currentIndex().isValid()) {
             return;

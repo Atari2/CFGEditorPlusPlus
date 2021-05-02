@@ -1,10 +1,16 @@
 #include "jsonsprite.h"
 
-Display::Display(const QJsonObject& d) {
+Display::Display(const QJsonObject& d, DisplayType type) {
+    disp_type = type;
     description = d["Description"].toString();
     extrabit = d["ExtraBit"].toBool();
-    x = d["X"].toInt();
-    y = d["Y"].toInt();
+    if (disp_type == DisplayType::XY) {
+        x_or_index = d["X"].toInt();
+        y_or_value = d["Y"].toInt();
+    } else {
+        x_or_index = d["Index"].toInt();
+        y_or_value = d["Value"].toInt();
+    }
     useText = d["UseText"].toBool();
     auto tilesArr = d["Tiles"].toArray();
     if (useText) {
@@ -22,8 +28,8 @@ Display::Display(const QJsonObject& d) {
 Display::Display(const QString& d, const QVector<Tile>& ts, bool bit, int xx, int yy, bool text, const QString& disp) :
     description(d),
     extrabit(bit),
-    x(xx),
-    y(yy),
+    x_or_index(xx),
+    y_or_value(yy),
     useText(text),
     displaytext(disp)
 {
@@ -34,8 +40,13 @@ QJsonObject Display::toJson() const {
     QJsonObject obj{};
     obj["Description"] = description;
     obj["ExtraBit"] = extrabit;
-    obj["X"] = x;
-    obj["Y"] = y;
+    if (disp_type == DisplayType::XY) {
+        obj["X"] = x_or_index;
+        obj["Y"] = y_or_value;
+    } else {
+        obj["Index"] = x_or_index;
+        obj["Value"] = y_or_value;
+    }
     obj["UseText"] = useText;
     QJsonArray tilesArr{};
     if (useText) {
@@ -49,6 +60,40 @@ QJsonObject Display::toJson() const {
     obj["Tiles"] = tilesArr;
     return obj;
 }
+
+
+GFXFiles::GFXFiles(bool sep, int s0, int s1, int s2, int s3) :
+    separate(sep),
+    sp0(s0),
+    sp1(s1),
+    sp2(s2),
+    sp3(s3)
+{
+
+}
+
+GFXFiles::GFXFiles(const QJsonObject& g) {
+    separate = g["Separate"].toBool();
+    sp0 = g.find("0") == g.constEnd() ? 0x7F : g["0"].toInt();
+    sp1 = g.find("1") == g.constEnd() ? 0x7F : g["1"].toInt();
+    sp2 = g.find("2") == g.constEnd() ? 0x7F : g["2"].toInt();
+    sp3 = g.find("3") == g.constEnd() ? 0x7F : g["3"].toInt();
+}
+
+QJsonObject GFXFiles::toJson() const {
+    QJsonObject obj{};
+    obj["Separate"] = separate;
+    if (sp0 != 0x7F)
+        obj["0"] = sp0;
+    if (sp1 != 0x7F)
+        obj["1"] = sp1;
+    if (sp2 != 0x7F)
+        obj["2"] = sp2;
+    if (sp3 != 0x7F)
+        obj["3"] = sp3;
+    return obj;
+}
+
 
 Tile::Tile(const QJsonObject& t) {
     xoff = t["X offset"].toInt();
@@ -118,6 +163,7 @@ JsonSprite::JsonSprite() {
     map16 = QString();
     displays = QVector<Display>();
     collections = QVector<Collection>();
+    gfxfiles = QVector<GFXFiles>();
 }
 
 void JsonSprite::reset() {
@@ -137,6 +183,7 @@ void JsonSprite::reset() {
     map16.clear();
     displays.clear();
     collections.clear();
+    gfxfiles.clear();
 }
 
 void JsonSprite::deserialize() {
@@ -154,15 +201,21 @@ void JsonSprite::deserialize() {
     addbcountclear = obj["Additional Byte Count (extra bit clear)"].toInt();
     addbcountset = obj["Additional Byte Count (extra bit set)"].toInt();
     map16 = obj["Map16"].toString();
+    dispType = obj["DisplayType"].toString() == "XY" ? DisplayType::XY : DisplayType::ExtraByte;
     auto dispArr = obj["Displays"].toArray();
     auto collArr = obj["Collection"].toArray();
+    auto gfiles = obj["GFXInfo"].toArray();
     displays.reserve(dispArr.size());
     collections.reserve(collArr.size());
+    gfxfiles.reserve(gfiles.size());
     std::for_each(dispArr.cbegin(), dispArr.cend(), [&](auto& d) {
-        displays.push_back(Display(d.toObject()));
+        displays.push_back(Display(d.toObject(), dispType));
     });
     std::for_each(collArr.cbegin(), collArr.cend(), [&](auto& c) {
         collections.push_back(Collection(c.toObject()));
+    });
+    std::for_each(gfiles.cbegin(), gfiles.cend(), [&](auto& g) {
+        gfxfiles.push_back(GFXFiles(g.toObject()));
     });
 }
 
@@ -177,14 +230,20 @@ void JsonSprite::serialize() {
     obj["Map16"] = map16;
     QJsonArray dispArr{};
     QJsonArray collArr{};
+    QJsonArray gfiles{};
     std::for_each(displays.cbegin(), displays.cend(), [&](auto& d) {
         dispArr.append(d.toJson());
     });
     std::for_each(collections.cbegin(), collections.cend(), [&](auto& c) {
         collArr.append(c.toJson());
     });
+    std::for_each(gfxfiles.cbegin(), gfxfiles.cend(), [&](auto& g) {
+        gfiles.append(g.toJson());
+    });
+    obj["DisplayType"] = dispType == DisplayType::XY ? "XY" : "ExByte";
     obj["Displays"] = dispArr;
     obj["Collection"] = collArr;
+    obj["GFXInfo"] = gfiles;
     obj["$1656"] = t1656.to_json();
     obj["$1662"] = t1662.to_json();
     obj["$166E"] = t166e.to_json();
@@ -230,6 +289,10 @@ void JsonSprite::addCollections(QTableView* view) {
         }
         collections.append(Collection{obj});
     }
+}
+
+void JsonSprite::addGfxList(bool sep, int sp0, int sp1, int sp2, int sp3) {
+    gfxfiles.append({sep, sp0, sp1, sp2, sp3});
 }
 
 void JsonSprite::addDisplay(const Display& display) {
