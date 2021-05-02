@@ -166,8 +166,8 @@ DisplayData::DisplayData(const DisplayData& other) {
 
 DisplayData::DisplayData(const Display& other) {
     m_extra_bit = other.extrabit;
-    m_x = other.x;
-    m_y = other.y;
+    m_x = other.x_or_index;
+    m_y = other.y_or_value;
     m_tiles.reserve(other.tiles.length());
     std::for_each(other.tiles.cbegin(), other.tiles.cend(), [&](const Tile& tile) {
         m_tiles.append({tile.xoff, tile.yoff, tile.tilenumber});
