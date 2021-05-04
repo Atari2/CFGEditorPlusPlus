@@ -57,8 +57,8 @@ private:
     QVector<TileData> m_tiles;
     QString m_description;
     QString m_display_text;
-    int m_x;
-    int m_y;
+    int m_x_or_index;
+    int m_y_or_value;
     DisplayData();
 public:
     DisplayData& operator=(const DisplayData& other);
@@ -67,21 +67,22 @@ public:
     void setUseText(bool enabled);
     void setExtraBit(bool enabled);
     void setDescription(const QString& description);
-    void setX(int x);
-    void setY(int y);
-    void setPos(QPoint point);
-    void setPos(int x, int y);
+    void setXOrIndex(int x);
+    void setYOrValue(int y);
+    void setPosOrExtra(QPoint point);
+    void setPosOrExtra(int x, int y);
     void setDisplayText(const QString& displayText);
     void addTile(const TileData& data);
+    void clearTiles();
 
     bool UseText() const;
     bool ExtraBit() const;
     const QVector<TileData>& Tiles() const;
     const QString& Description() const;
     const QString& DisplayText() const;
-    int X() const;
-    int Y() const;
-    QPoint Pos() const;
+    int XOrIndex() const;
+    int YOrValue() const;
+    QPoint PosOrExtra() const;
 
     static DisplayData blankData();
     static DisplayData cloneData(QStandardItemModel* model, const QString& description, int row, const QString& display_text);

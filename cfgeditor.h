@@ -11,6 +11,7 @@
 #include <QRegularExpressionValidator>
 #include <QStandardItemModel>
 #include <QDir>
+#include <QMap>
 #include "jsonsprite.h"
 #include "snesgfxconverter.h"
 #include "eightbyeightview.h"
@@ -38,6 +39,8 @@ public:
     void bindTweak1686();
     void bindTweak190F();
     void resetTweaks();
+    void resetAll();
+    void saveSprite();
     void setCollectionModel();
     void setDisplayModel();
     void bindCollectionButtons();
@@ -80,7 +83,8 @@ private:
     QVector<QPixmap> paletteImages;
     QVector<QPixmap> objClipImages;
     QVector<QPixmap> sprClipImages;
-    QVector<QStandardItemModel*> models;
+    QStandardItemModel* collectionModel = nullptr;
+    QStandardItemModel* displayModel = nullptr;
     QImage* full8x8Bitmap = nullptr;
     EightByEightView* view8x8 = nullptr;
     PaletteView* viewPalette = nullptr;
@@ -90,20 +94,11 @@ private:
     int currentGFXFileIndex = -1;
 };
 
-class DefaultMissingImpl {
+class DefaultAlertImpl : QMessageBox {
+    Q_OBJECT
 private:
-    QString name;
-    QMessageBox* messageBox = nullptr;
 public:
-    DefaultMissingImpl(const QString& impl_name);
-    void operator()();
-};
-
-class DefaultAlertImpl {
-private:
-    QMessageBox* messageBox = nullptr;
-public:
-    DefaultAlertImpl(const QString& message);
+    DefaultAlertImpl(QWidget* parent, const QString& message);
     void operator()();
 };
 

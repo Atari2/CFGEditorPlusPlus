@@ -7,6 +7,7 @@ Map16Provider::Map16Provider(QWidget* parent) : QLabel(parent)  {
     setMargin(0);
     setFixedSize(208, 208);
     setMouseTracking(true);
+    setFocusPolicy(Qt::FocusPolicy::ClickFocus);
     QImage letters{":/Resources/Text/Letters.png"};
     size_t n = 0;
     int sizes[3] = {26, 26, 19};
@@ -54,10 +55,11 @@ void Map16Provider::insertText(const QString& text) {
 }
 
 void Map16Provider::mousePressEvent(QMouseEvent *event) {
-    if (m_tiles.length() == 0)
+    if (m_tiles.length() == 0 || currentIndex == -1)
         return;
     QPainter p{&m_displays[currentIndex]};
     if (event->button() == Qt::MouseButton::LeftButton) {
+        grabKeyboard();
         qDebug() << "Left mouse button pressed";
         auto ret = std::find_if(m_tiles[currentIndex].rbegin(), m_tiles[currentIndex].rend(), [&](TiledPosition& pos) {
                 return QRect{pos.pos.x(), pos.pos.y(), 16, 16}.contains(event->position().toPoint(), true);
@@ -294,21 +296,47 @@ void Map16Provider::setSelectorSize(SizeSelector size) {
 }
 
 void Map16Provider::serializeDisplays(QVector<DisplayData>& data) {
+    qDebug() << "data : " << data.length() << " tiles: " << m_tiles.length();
     Q_ASSERT(data.length() == m_tiles.length());
     for (int i = 0; i < m_tiles.length(); i++) {
         if (usesText[i]) {
             data[i].setUseText(true);
             data[i].setDisplayText(m_descriptions[i]);
+            data[i].addTile({0, 0, 0});
         }
         else {
             data[i].setUseText(false);
             data[i].setDisplayText("");
+            data[i].clearTiles();
             for (auto& t : m_tiles[i]) {
                 QPoint newpos = t.pos - QPoint(96, 96);
                 data[i].addTile({newpos.x(), newpos.y(), t.map16tileno});
             }
         }
     }
+}
+
+void Map16Provider::focusOutEvent(QFocusEvent *event) {
+    qDebug() << "Focus out";
+    event->accept();
+    releaseKeyboard();
+}
+
+void Map16Provider::keyPressEvent(QKeyEvent *event) {
+    if (currentSelected == SIZE_MAX)
+        return;
+    qDebug() << "Key press event received";
+    if (event->key() == Qt::Key_Backspace || event->key() == Qt::Key_Delete) {
+        auto index = m_tiles[currentIndex].indexOf(currentSelected);
+        m_tiles[currentIndex].removeAt(index);
+        currentSelected = SIZE_MAX;
+        redrawNoSort();
+    } else if (event->key() == Qt::Key_Escape) {
+        currentSelected = SIZE_MAX;
+        redrawNoSort();
+    }
+    releaseKeyboard();
+    event->accept();
 }
 
 void Map16Provider::deserializeDisplays(const QVector<Display>& displays, Map16GraphicsView* view) {
@@ -345,4 +373,17 @@ void Map16Provider::deserializeDisplays(const QVector<Display>& displays, Map16G
         currentIndex++;
     }
     currentIndex = -1;
+}
+
+void Map16Provider::reset() {
+    currentIndex = -1;
+    currentSelected = SIZE_MAX;
+    usesText.clear();
+    m_descriptions.clear();
+    m_tiles.clear();
+    m_displays.clear();
+    tileGrid = createGrid();
+    base = createBase();
+    setPixmap(overlay());
+    currentlyPressed = false;
 }

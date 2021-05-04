@@ -23,8 +23,11 @@ struct TiledPosition {
     int zpos;
     size_t tid;
     int map16tileno;
-    bool operator==(const TiledPosition& other) {
+    bool operator==(const TiledPosition& other) const {
         return tid == other.tid;
+    }
+    bool operator==(size_t other) const {
+        return tid == other;
     }
 };
 
@@ -34,10 +37,12 @@ class Map16Provider : public QLabel
 public:
     using DisplayTiles = QVector<TiledPosition>;
     Map16Provider(QWidget* parent = nullptr);
+    void focusOutEvent(QFocusEvent* event);
     void mouseMoveEvent(QMouseEvent *event);
     void mousePressEvent(QMouseEvent *event);
     void mouseReleaseEvent(QMouseEvent *event);
     void wheelEvent(QWheelEvent *event);
+    void keyPressEvent(QKeyEvent *event);
     int mouseCoordinatesToTile(QPoint position);
     void setCopiedTile(ClipboardTile& tile);
     QPoint alignToGrid(QPoint position, int size);
@@ -50,11 +55,10 @@ public:
     void redraw();
     void redrawNoSort();
     ClipboardTile* getCopiedTile();
+    void reset();
     QPixmap tileGrid;
     QPixmap base;
     bool currentlyPressed = false;
-    // tiles should not be saved here
-    // they need to be saved elsewhere too
     const DisplayTiles& Tiles();
     SizeSelector getSelectorSize();
     void setSelectorSize(SizeSelector size);

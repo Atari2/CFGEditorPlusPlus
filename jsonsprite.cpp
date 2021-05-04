@@ -1,10 +1,9 @@
 #include "jsonsprite.h"
 
 Display::Display(const QJsonObject& d, DisplayType type) {
-    disp_type = type;
     description = d["Description"].toString();
     extrabit = d["ExtraBit"].toBool();
-    if (disp_type == DisplayType::XY) {
+    if (type == DisplayType::XY) {
         x_or_index = d["X"].toInt();
         y_or_value = d["Y"].toInt();
     } else {
@@ -36,11 +35,11 @@ Display::Display(const QString& d, const QVector<Tile>& ts, bool bit, int xx, in
    tiles.append(ts);
 }
 
-QJsonObject Display::toJson() const {
+QJsonObject Display::toJson(DisplayType type) const {
     QJsonObject obj{};
     obj["Description"] = description;
     obj["ExtraBit"] = extrabit;
-    if (disp_type == DisplayType::XY) {
+    if (type == DisplayType::XY) {
         obj["X"] = x_or_index;
         obj["Y"] = y_or_value;
     } else {
@@ -137,13 +136,57 @@ QJsonObject Collection::toJson() const {
 }
 
 void JsonSprite::from_file(const QString& name) {
+    if (name.length() == 0)
+        return;
     qDebug() << "Reading from " << name;
     m_name = name;
     QFile file{m_name};
     file.open(QFile::OpenModeFlag::ReadOnly);
-    auto doc = QJsonDocument::fromJson(file.readAll());
-    obj = doc.object();
-    deserialize();
+    if (name.endsWith(".json")) {
+        auto doc = QJsonDocument::fromJson(file.readAll());
+        obj = doc.object();
+        deserialize();
+    }
+    else if (name.endsWith(".cfg")) {
+        deserialize_cfg(file);
+    }
+    else {
+        QMessageBox::warning(nullptr, "Error", "Unrecognized file extension, valid extensions are: .cfg, .json", QMessageBox::Ok );
+        return;
+    }
+
+}
+
+void JsonSprite::deserialize_cfg(QFile& file) {
+    type = QString{file.readLine()}.toInt(nullptr, 16);
+    actlike = QString{file.readLine()}.toInt(nullptr, 16);
+    auto tweaks = QString{file.readLine()}.split(" ", Qt::SplitBehaviorFlags::SkipEmptyParts);
+    if (tweaks.length() != 6) {
+        QMessageBox::warning(nullptr, "Error", "CFG has unrecognized format", QMessageBox::Ok);
+        return;
+    }
+    t1656.from_byte(tweaks[0].toInt(nullptr, 16));
+    t1662.from_byte(tweaks[1].toInt(nullptr, 16));
+    t166e.from_byte(tweaks[2].toInt(nullptr, 16));
+    t167a.from_byte(tweaks[3].toInt(nullptr, 16));
+    t1686.from_byte(tweaks[4].toInt(nullptr, 16));
+    t190f.from_byte(tweaks[5].toInt(nullptr, 16));
+    auto props = QString{file.readLine()}.split(" ", Qt::SplitBehaviorFlags::SkipEmptyParts);
+    if (props.length() != 2) {
+        QMessageBox::warning(nullptr, "Error", "CFG has unrecognized format", QMessageBox::Ok);
+        return;
+    }
+    extraProp1 = props[0].toInt(nullptr, 16);
+    extraProp2 = props[1].toInt(nullptr, 16);
+    asmfile = QString{file.readLine()};
+    auto bytecount = QString{file.readLine()}.split(QRegularExpression(R"(\s|:)"), Qt::SplitBehaviorFlags::SkipEmptyParts);
+    if (bytecount.length() != 2) {
+        addbcountclear = 0;
+        addbcountset = 0;
+    } else {
+        addbcountclear = bytecount[0].toInt(nullptr, 16);
+        addbcountset = bytecount[1].toInt(nullptr, 16);
+    }
 }
 
 JsonSprite::JsonSprite() {
@@ -167,6 +210,7 @@ JsonSprite::JsonSprite() {
 }
 
 void JsonSprite::reset() {
+    m_name.clear();
     t1656.from_byte(0);
     t1662.from_byte(0);
     t166e.from_byte(0);
@@ -231,8 +275,9 @@ void JsonSprite::serialize() {
     QJsonArray dispArr{};
     QJsonArray collArr{};
     QJsonArray gfiles{};
+    obj["DisplayType"] = dispType == DisplayType::XY ? "XY" : "ExByte";
     std::for_each(displays.cbegin(), displays.cend(), [&](auto& d) {
-        dispArr.append(d.toJson());
+        dispArr.append(d.toJson(dispType));
     });
     std::for_each(collections.cbegin(), collections.cend(), [&](auto& c) {
         collArr.append(c.toJson());
@@ -240,7 +285,6 @@ void JsonSprite::serialize() {
     std::for_each(gfxfiles.cbegin(), gfxfiles.cend(), [&](auto& g) {
         gfiles.append(g.toJson());
     });
-    obj["DisplayType"] = dispType == DisplayType::XY ? "XY" : "ExByte";
     obj["Displays"] = dispArr;
     obj["Collection"] = collArr;
     obj["GFXInfo"] = gfiles;
@@ -262,13 +306,15 @@ QString& JsonSprite::name() {
     return m_name;
 }
 
-void JsonSprite::to_file(const QString& name) {
+void JsonSprite::to_file(QString name) {
     if (name.length() == 0) {
         if (m_name.length() == 0)
-            m_name = QFileDialog::getSaveFileName();
-        if (m_name.length() == 0)
+            name = QFileDialog::getSaveFileName(nullptr, "Save file", "", "JSON (*.json)");
+        else
+            name = m_name;
+        if (name.length() == 0)
             return;
-        QFile outFile{m_name};
+        QFile outFile{name};
         outFile.open(QFile::OpenModeFlag::Truncate | QFile::OpenModeFlag::Text | QFile::OpenModeFlag::WriteOnly);
         outFile.write(to_text().toStdString().c_str());
     } else {

@@ -7,6 +7,7 @@ Map16GraphicsView::Map16GraphicsView(QWidget* parent) : QGraphicsView(parent)
     setMouseTracking(true);
     verticalScrollBar()->setFixedWidth(16);
     setScene(currScene);
+    setFocusPolicy(Qt::FocusPolicy::ClickFocus);
     QObject::connect(verticalScrollBar(), QOverload<int>::of(&QScrollBar::valueChanged), [&](int value) {
         int offset = value % CellSize();
         if (offset != 0)
@@ -47,6 +48,7 @@ void Map16GraphicsView::readInternalMap16File(const QString& name) {
     byteStream >> tableInformation.sizeX;
     byteStream >> tableInformation.sizeY;
     tiles.reserve(tableInformation.sizeY);
+    qDebug() << "length before: " << tiles.length();
     qDebug() << "Table offset = " << tableInformation.tableOffset << " Table size: " << tableInformation.tableSize;
     qDebug() << "Size X = " << tableInformation.sizeX << " Size Y = " << tableInformation.sizeY;
     byteStream.skipRawData(12 + 0x14);     // skip base coords, and "various flags" and 0x14 unused bytes
@@ -70,15 +72,23 @@ void Map16GraphicsView::readInternalMap16File(const QString& name) {
             byteStream >> br;
             subVector.append({tl, bl, tr, br});
         }
-        tiles.append(subVector);
+        if (tiles.length() <= i)
+            tiles.append(subVector);
+        else
+            tiles[i] = subVector;
     }
-    for (quint32 i = 0; i < tableInformation.sizeX; i++) {
-        QVector<FullTile> subVector{};
-        subVector.reserve(16);
-        for (quint32 j = 0; j < 16; j++)
-            subVector.append({0x00, 0x00, 0x00, 0x00});
-        tiles.append(subVector);
+    qDebug() << "length: " << tiles.length();
+    if (tiles.length() < 16 * 4) {
+        qDebug() << "Adding tiles of padding...";
+        for (quint32 i = 0; i < tableInformation.sizeX; i++) {
+            QVector<FullTile> subVector{};
+            subVector.reserve(16);
+            for (quint32 j = 0; j < 16; j++)
+                subVector.append({0x00, 0x00, 0x00, 0x00});
+            tiles.append(subVector);
+        }
     }
+    qDebug() << "length at end: " << tiles.length();
     imageWidth = (int)tableInformation.sizeX * 16;
     imageHeight = ((int)tableInformation.sizeY + 16) * 16;
     // we don't really care about the rest of the file, now we can draw
@@ -129,6 +139,14 @@ void Map16GraphicsView::drawInternalMap16File() {
     setFixedWidth(currentMap16->pixmap().width() + 19);
     currentWithNoHighlight = currentMap16->pixmap();
     currentWithNoSelection = currentMap16->pixmap();
+    if (usePageSep) {
+        usePageSep = false;
+        addPageSep();
+    }
+    if (useGrid) {
+        useGrid = false;
+        addGrid();
+    }
 }
 
 void Map16GraphicsView::drawCurrentSelectedTile(QPixmap& map) {
@@ -253,15 +271,13 @@ void Map16GraphicsView::mousePressEvent(QMouseEvent *event) {
     if (event->button() == Qt::RightButton) {
         if (currentClickedTile == -1 || (currType == SelectorType::Sixteen && currentTile < 0x300) || (currType == SelectorType::Eight && currentTile < 0xC00))
             return;
-        int temp = currentClickedTile;
-        currentClickedTile = currentTile;
         auto& tile = tileNumToTile();
-        currentClickedTile = temp;
-        // auto pos = translateToRect(event->position().toPoint());
-        tile = tileNumToTile();
         QPainter og{&TileMap};
         QPainter high{&currentWithNoHighlight};
         QPainter sel{&currentWithNoSelection};
+        og.setCompositionMode(QPainter::CompositionMode_Source);
+        high.setCompositionMode(QPainter::CompositionMode_Source);
+        sel.setCompositionMode(QPainter::CompositionMode_Source);
         auto size = CellSize();
         auto img = tile.getFullTile();
         high.drawImage(QRect{(currentTile % 16) * size, (currentTile / 16) * size, size, size}, img);
@@ -274,6 +290,7 @@ void Map16GraphicsView::mousePressEvent(QMouseEvent *event) {
         currentMap16->setPixmap(currentWithNoHighlight);
         return;
     }
+    grabKeyboard();
     if (currentTile == -1)
         return;
     currentClickedTile = currentTile;
@@ -286,6 +303,47 @@ void Map16GraphicsView::mousePressEvent(QMouseEvent *event) {
     currentMap16->setPixmap(selected);
     currentWithNoHighlight = selected;
     event->accept();
+}
+
+void Map16GraphicsView::keyPressEvent(QKeyEvent *event) {
+    if (event->key() == Qt::Key::Key_Delete && event->keyCombination().keyboardModifiers().testFlag(Qt::KeyboardModifier::ControlModifier)) {
+        qDebug() << "Delete + Ctrl pressed";
+        for (int i = 16  * 3; i < tiles.length(); i++)
+            for (int j = 0; j < tiles[i].length(); j++)
+                tiles[i][j] = FullTile{0, 0, 0, 0};
+        imageWidth = tiles.first().length() * 16;
+        imageHeight = tiles.length() * 16;
+        drawInternalMap16File();
+    } else if (event->key() == Qt::Key::Key_Delete || event->key() == Qt::Key::Key_Backspace) {
+        qDebug() << "Delete or backspace pressed";
+        if (currentClickedTile == -1 || (currType == SelectorType::Sixteen && currentTile < 0x300) || (currType == SelectorType::Eight && currentTile < 0xC00))
+            return;
+        QPainter og{&TileMap};
+        QPainter high{&currentWithNoHighlight};
+        QPainter sel{&currentWithNoSelection};
+        og.setCompositionMode(QPainter::CompositionMode_Source);
+        high.setCompositionMode(QPainter::CompositionMode_Source);
+        sel.setCompositionMode(QPainter::CompositionMode_Source);
+        auto size = CellSize();
+        auto& tile = tileNumToTile();
+        tile = FullTile{0, 0, 0, 0};
+        auto img = tile.getFullTile();
+        high.drawImage(QRect{(currentTile % 16) * size, (currentTile / 16) * size, size, size}, img);
+        sel.drawImage(QRect{(currentTile % 16) * size, (currentTile / 16) * size, size, size}, img);
+        og.drawImage(QRect{(currentTile % 16) * size, (currentTile / 16) * size, size, size}, img);
+        sel.end();
+        high.end();
+        og.end();
+        drawCurrentSelectedTile(currentWithNoHighlight);
+        currentMap16->setPixmap(currentWithNoHighlight);
+    }
+    event->accept();
+    releaseKeyboard();
+}
+
+void Map16GraphicsView::focusOutEvent(QFocusEvent *event) {
+    event->accept();
+    releaseKeyboard();
 }
 
 void Map16GraphicsView::copyTileToClipboard(const FullTile& tile) {
@@ -429,18 +487,23 @@ void Map16GraphicsView::tileChanged(QObject* toBlock, TileChangeAction action, T
     QPainter og{&TileMap};
     QPainter high{&currentWithNoHighlight};
     QPainter sel{&currentWithNoSelection};
+    og.setCompositionMode(QPainter::CompositionMode_Source);
+    high.setCompositionMode(QPainter::CompositionMode_Source);
+    sel.setCompositionMode(QPainter::CompositionMode_Source);
     auto size = CellSize();
     if (currType == SelectorType::Sixteen || partial == nullptr) {
         auto img = tile.getFullTile();
-        high.drawImage(QRect{(currentClickedTile % 16) * size, (currentClickedTile / 16) * size, size, size}, img);
-        sel.drawImage(QRect{(currentClickedTile % 16) * size, (currentClickedTile / 16) * size, size, size}, img);
-        og.drawImage(QRect{(currentClickedTile % 16) * size, (currentClickedTile / 16) * size, size, size}, img);
+        QRect rect{(currentClickedTile % 16) * size, (currentClickedTile / 16) * size, size, size};
+        high.drawImage(rect, img);
+        sel.drawImage(rect, img);
+        og.drawImage(rect, img);
     }
     else {
         auto img = partial->get8x8Tile();
-        high.drawImage(QRect{(currentClickedTile % 32) * size, (currentClickedTile / 32) * size, size, size}, img);
-        sel.drawImage(QRect{(currentClickedTile % 32) * size, (currentClickedTile / 32) * size, size, size}, img);
-        og.drawImage(QRect{(currentClickedTile % 32) * size, (currentClickedTile / 32) * size, size, size}, img);
+        QRect rect{(currentClickedTile % 32) * size, (currentClickedTile / 32) * size, size, size};
+        high.drawImage(rect, img);
+        sel.drawImage(rect, img);
+        og.drawImage(rect, img);
     }
     sel.end();
     high.end();

@@ -7,12 +7,13 @@ CFGEditor::CFGEditor(QWidget *parent)
     , sprite(new JsonSprite)
     , hexValidator(new QRegularExpressionValidator{QRegularExpression(R"([A-Fa-f0-9]+)")})
     , hexNumberList(new QStringList(0x100))
-    , models()
     , copiedTile()
     , displays()
 {
     ui->setupUi(this);
     this->setFixedSize(this->size());
+    setSizePolicy(QSizePolicy());
+    this->statusBar()->setSizeGripEnabled(false);
     setUpImages();
     view8x8 = new EightByEightView(new QGraphicsScene);
     viewPalette = new PaletteView(new QGraphicsScene);
@@ -39,33 +40,12 @@ void CFGEditor::closeEvent(QCloseEvent *event) {
     QMainWindow::closeEvent(event);
 }
 
-DefaultMissingImpl::DefaultMissingImpl(const QString& impl_name) : name(impl_name) {
-    // yes, we construct this here, and we do not call delete on it
-    // for some weird reason if I put delete messageBox in the destructor of DefaultMissingImpl
-    // the app will segfault with invalid memory access and clang tidy tells me that
-    // I'm trying to delete released memory ¯\_(ツ)_/¯, I'll just leave it be
-    // if it ever becomes a problem (e.g. memory leak), I'll fix it
-    messageBox = new QMessageBox();
-#ifdef QT_DEBUG
-    messageBox->setText("Implement " + name);
-#else
-    messageBox->setText(name + " has not been implemented yet");
-#endif
-}
-
-void DefaultMissingImpl::operator()() {
-    if (messageBox)
-        messageBox->exec();
-};
-
-DefaultAlertImpl::DefaultAlertImpl(const QString& impl_name) {
-    messageBox = new QMessageBox();
-    messageBox->setText(impl_name);
+DefaultAlertImpl::DefaultAlertImpl(QWidget* parent, const QString& impl_name) : QMessageBox(parent) {
+    setText(impl_name);
 }
 
 void DefaultAlertImpl::operator()() {
-    if (messageBox)
-        messageBox->exec();
+    exec();
 };
 
 void CFGEditor::initCompleter() {
@@ -106,25 +86,19 @@ void CFGEditor::setUpMenuBar(QMenuBar* mb) {
     QMenu* file = new QMenu("&File");
     QMenu* display = new QMenu("&Display");
     file->addAction("&New", qApp, [&]() {
-        if (sprite->name().length() == 0) {
-            sprite->reset();
-            resetTweaks();
-        } else {
+        if (sprite->name().length() != 0) {
             auto res = QMessageBox::question(this,
                                              "One file is already open",
                                              "Do you want to save it before opening a new one?",
                                              QMessageBox::Yes | QMessageBox::No | QMessageBox::Abort );
             if (res == QMessageBox::Yes) {
-                sprite->to_file(QFileDialog::getSaveFileName());
+                sprite->to_file(QFileDialog::getSaveFileName(this, tr("Save file"), sprite->name(), tr("JSON (*.json)")));
             } else if (res == QMessageBox::Abort) {
                 return;
-            } else {
-                sprite->reset();
             }
-            resetTweaks();
-            ui->tableView->model()->removeRows(0, ui->tableView->model()->rowCount());
-            // TODO: clear displays, etc
         }
+        resetAll();
+        resetTweaks();
     }, Qt::CTRL | Qt::Key_N);
 
     file->addSeparator();
@@ -136,19 +110,18 @@ void CFGEditor::setUpMenuBar(QMenuBar* mb) {
                                   "Do you want to save it before opening the other one?",
                                   QMessageBox::Yes | QMessageBox::No | QMessageBox::Abort );
             if (res == QMessageBox::Yes) {
-                for (auto& disp : displays)
-                    sprite->addDisplay(createDisplay(disp));
-                sprite->addCollections(ui->tableView);
-                sprite->to_file(QFileDialog::getSaveFileName());
+                saveSprite();
+                sprite->to_file(QFileDialog::getSaveFileName(this, tr("Save file"), sprite->name(), tr("JSON (*.json)")));
             } else if (res == QMessageBox::Abort) {
                 return;
             }
         }
-        auto file = QFileDialog::getOpenFileName();
+        resetAll();
+        auto file = QFileDialog::getOpenFileName(this, tr("Open file"), "", tr("JSON (*.json);;CFG (*.cfg)"));
         sprite->from_file(file);
         resetTweaks();
         std::for_each(sprite->collections.cbegin(), sprite->collections.cend(), [&](auto& coll) {
-            ((QStandardItemModel*)ui->tableView->model())->appendRow(CollectionDataModel::fromCollection(coll));
+            collectionModel->appendRow(CollectionDataModel::fromCollection(coll));
         });
         ui->map16GraphicsView->setMap16(sprite->map16);
         ui->labelDisplayTilesGrid->deserializeDisplays(sprite->displays, ui->map16GraphicsView);
@@ -157,35 +130,23 @@ void CFGEditor::setUpMenuBar(QMenuBar* mb) {
     }, Qt::CTRL | Qt::Key_O);
 
     file->addAction("&Save", qApp, [&]() {
-        ui->labelDisplayTilesGrid->serializeDisplays(displays);
-        sprite->displays.clear();
-        sprite->collections.clear();
-        for (auto& disp : displays)
-            sprite->addDisplay(createDisplay(disp));
-        sprite->setMap16(ui->map16GraphicsView->getMap16());
-        sprite->addCollections(ui->tableView);
+        saveSprite();
         sprite->to_file();
     }, Qt::CTRL | Qt::Key_S);
 
     file->addAction("&Save As", qApp, [&]() {
-        ui->labelDisplayTilesGrid->serializeDisplays(displays);
-        sprite->displays.clear();
-        sprite->collections.clear();
-        for (auto& disp : displays)
-            sprite->addDisplay(createDisplay(disp));
-        sprite->setMap16(ui->map16GraphicsView->getMap16());
-        sprite->addCollections(ui->tableView);
-        sprite->to_file(QFileDialog::getSaveFileName());
+        saveSprite();
+        sprite->to_file(QFileDialog::getSaveFileName(this, tr("Save file"), sprite->name(), tr("JSON (*.json)")));
     }, Qt::CTRL | Qt::ALT | Qt::Key_S);
 
     display->addAction("&Load Custom Map16", qApp, [&]() {
-        QString name = QFileDialog::getOpenFileName(this);
+        QString name = QFileDialog::getOpenFileName(this, tr("Open file"), "", tr("JSON (*.json)"));
         if (name.length() == 0)
             return;
         ui->map16GraphicsView->readExternalMap16File(name);
     });
     display->addAction("&Load Custom GFX33", qApp, [&]() {
-        QString name = QFileDialog::getOpenFileName(this);
+        QString name = QFileDialog::getOpenFileName(this, tr("Open file"), "", tr("JSON (*.json"));
         if (name.length() == 0)
             return;
         SnesGFXConverter::setCustomExanimation(name);
@@ -206,17 +167,38 @@ void CFGEditor::setUpMenuBar(QMenuBar* mb) {
     mb->addMenu(display);
 }
 
+void CFGEditor::resetAll() {
+    sprite->reset();
+    ui->tableView->model()->removeRows(0, ui->tableView->model()->rowCount());
+    ui->tableViewDisplays->model()->removeRows(0, ui->tableViewDisplays->model()->rowCount());
+    displays.clear();
+    ui->comboBoxGFXIndex->clear();
+    currentDisplayIndex = -1;
+    ui->labelDisplayTilesGrid->reset();
+    ui->checkBoxDisplayExtraByte->setChecked(false);
+}
+
+void CFGEditor::saveSprite() {
+    sprite->displays.clear();
+    sprite->collections.clear();
+    ui->labelDisplayTilesGrid->serializeDisplays(displays);
+    for (auto& disp : displays)
+        sprite->addDisplay(createDisplay(disp));
+    sprite->setMap16(ui->map16GraphicsView->getMap16());
+    sprite->addCollections(ui->tableView);
+}
+
 void CFGEditor::populateDisplays() {
     currentDisplayIndex = -1;
     QSignalBlocker block{ui->tableViewDisplays};
     for (auto& d : sprite->displays) {
         DisplayData display{d};
-        ((QStandardItemModel*)ui->tableViewDisplays->model())->appendRow(display.itemsFromDisplay());
+        displayModel->appendRow(display.itemsFromDisplay());
         displays.append(display);
         ui->checkBoxDisplayExtraBit->setChecked(display.ExtraBit());
         ui->checkBoxUseText->setChecked(display.UseText());
-        ui->spinBoxXPos->setValue(display.X());
-        ui->spinBoxYPos->setValue(display.Y());
+        ui->spinBoxXPos->setValue(display.XOrIndex());
+        ui->spinBoxYPos->setValue(display.YOrValue());
         ui->textEditLMDescription->setText(display.Description());
         if (display.UseText())
            ui->textEditDisplayText->setText(display.DisplayText());
@@ -239,11 +221,11 @@ void CFGEditor::populateGFXFiles() {
 
 Display CFGEditor::createDisplay(const DisplayData& data) {
     QVector<Tile> tiles;
-    tiles.reserve(displays.length());
+    tiles.reserve(data.Tiles().length());
     for (auto& t : data.Tiles()) {
         tiles.append({t.XOffset(), t.YOffset(), t.TileNumber()});
     }
-    return {data.Description(), tiles, data.ExtraBit(), data.X(), data.Y(), data.UseText(), data.DisplayText()};
+    return {data.Description(), tiles, data.ExtraBit(), data.XOrIndex(), data.YOrValue(), data.UseText(), data.DisplayText()};
 }
 
 QVector<QStandardItem*> CollectionDataModel::getRow(void* ui) {
@@ -277,12 +259,11 @@ QVector<QStandardItem*> CollectionDataModel::getRow(void* ui) {
 
 void CFGEditor::setDisplayModel() {
     ui->textEditDisplayText->setReadOnly(true);
-    QStandardItemModel* model = new QStandardItemModel;
-    models.append(model);
+    displayModel = new QStandardItemModel;
     QStringList labelList{"ExtraBit", "X", "Y"};
-    model->setHorizontalHeaderLabels(labelList);
+    displayModel->setHorizontalHeaderLabels(labelList);
     ui->tableViewDisplays->setFixedSize(ui->tableViewDisplays->size());
-    ui->tableViewDisplays->setModel(model);
+    ui->tableViewDisplays->setModel(displayModel);
     ui->tableViewDisplays->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
     ui->tableViewDisplays->horizontalHeader()->setSectionResizeMode(0, QHeaderView::ResizeToContents);
     ui->tableViewDisplays->setHorizontalScrollBarPolicy(Qt::ScrollBarPolicy::ScrollBarAlwaysOff);
@@ -290,19 +271,24 @@ void CFGEditor::setDisplayModel() {
 }
 
 void CFGEditor::setCollectionModel() {
-    QStandardItemModel* model = new QStandardItemModel;
-    models.append(model);
+    collectionModel = new QStandardItemModel;
     QStringList labelList{};
     labelList.append("Name");
     labelList.append("Extra bit");
     for (int i = 1; i <= 12; i++) {
         labelList.append(QString::asprintf("Ex%d", i));
     }
-    model->setHorizontalHeaderLabels(labelList);
+    collectionModel->setHorizontalHeaderLabels(labelList);
     ui->tableView->setFixedSize(ui->tableView->size());
-    ui->tableView->setModel(model);
+    ui->tableView->setModel(collectionModel);
     ui->tableView->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
-    ui->tableView->horizontalHeader()->setSectionResizeMode(0, QHeaderView::ResizeToContents);
+    ui->tableView->horizontalHeader()->setSectionResizeMode(0, QHeaderView::Stretch);
+    ui->tableView->horizontalHeader()->setSectionResizeMode(1, QHeaderView::Fixed);
+    ui->tableView->horizontalHeader()->resizeSection(1, 60);
+    for (int i = 2; i < 14; i++) {
+        ui->tableView->horizontalHeader()->resizeSection(i, 30);
+        ui->tableView->horizontalHeader()->setSectionResizeMode(i, QHeaderView::Fixed);
+    }
     ui->tableView->setHorizontalScrollBarPolicy(Qt::ScrollBarPolicy::ScrollBarAlwaysOff);
     ui->tableView->setVerticalScrollBarPolicy(Qt::ScrollBarPolicy::ScrollBarAsNeeded);
 
@@ -419,7 +405,7 @@ void CFGEditor::bindGFXSelector() {
     });
 
     QObject::connect(ui->toolButtonGFXSp0, &QToolButton::clicked, this, [&]() {
-        QString filename = QFileDialog::getOpenFileName();
+        QString filename = QFileDialog::getOpenFileName(this, "Open GFX File", "", tr("GFX Files (*.bin)"));
         if (filename.length() == 0)
             return;
         ui->lineEditGFXSp0->setText(filename);
@@ -427,7 +413,7 @@ void CFGEditor::bindGFXSelector() {
     });
 
     QObject::connect(ui->toolButtonGFXSp1, &QToolButton::clicked, this, [&]() {
-        QString filename = QFileDialog::getOpenFileName();
+        QString filename = QFileDialog::getOpenFileName(this, "Open GFX File", "", tr("GFX Files (*.bin)"));
         if (filename.length() == 0)
             return;
         ui->lineEditGFXSp1->setText(filename);
@@ -435,7 +421,7 @@ void CFGEditor::bindGFXSelector() {
     });
 
     QObject::connect(ui->toolButtonGFXSp2, &QToolButton::clicked, this, [&]() {
-        QString filename = QFileDialog::getOpenFileName();
+        QString filename = QFileDialog::getOpenFileName(this, "Open GFX File", "", tr("GFX Files (*.bin)"));
         if (filename.length() == 0)
             return;
         ui->lineEditGFXSp2->setText(filename);
@@ -443,7 +429,7 @@ void CFGEditor::bindGFXSelector() {
     });
 
     QObject::connect(ui->toolButtonGFXSp3, &QToolButton::clicked, this, [&]() {
-        QString filename = QFileDialog::getOpenFileName();
+        QString filename = QFileDialog::getOpenFileName(this, "Open GFX File", "", tr("GFX Files (*.bin)"));
         if (filename.length() == 0)
             return;
         ui->lineEditGFXSp3->setText(filename);
@@ -453,13 +439,13 @@ void CFGEditor::bindGFXSelector() {
 
 void CFGEditor::addCloneRow() {
     DisplayData display(displays[currentDisplayIndex]);
-    ((QStandardItemModel*)ui->tableViewDisplays->model())->appendRow(display.itemsFromDisplay());
+    displayModel->appendRow(display.itemsFromDisplay());
     advanceDisplayIndex();
     displays.insert(currentDisplayIndex, display);
     ui->checkBoxDisplayExtraBit->setChecked(display.ExtraBit());
     ui->checkBoxUseText->setChecked(display.UseText());
-    ui->spinBoxXPos->setValue(display.X());
-    ui->spinBoxYPos->setValue(display.Y());
+    ui->spinBoxXPos->setValue(display.XOrIndex());
+    ui->spinBoxYPos->setValue(display.YOrValue());
     ui->textEditLMDescription->setText(display.Description());
     if (display.UseText())
        ui->textEditDisplayText->setText(display.DisplayText());
@@ -469,7 +455,7 @@ void CFGEditor::addBlankRow() {
     DisplayData display = DisplayData::blankData();
     displays.insert(currentDisplayIndex + 1, display);
     advanceDisplayIndex();
-    ((QStandardItemModel*)ui->tableViewDisplays->model())->appendRow(display.itemsFromDisplay());
+    displayModel->appendRow(display.itemsFromDisplay());
     qDebug() << displays.length();
     ui->checkBoxDisplayExtraBit->setChecked(false);
     ui->checkBoxUseText->setChecked(false);
@@ -593,7 +579,7 @@ void CFGEditor::bindDisplayButtons() {
     });
     QObject::connect(ui->pushButtonCloneDisplay, &QPushButton::clicked, this, [&]() {
         if (!ui->tableViewDisplays->currentIndex().isValid()) {
-            DefaultAlertImpl("Select a row before cloning")();
+            DefaultAlertImpl(this, "Select a row before cloning")();
             return;
         }
         qDebug() << "Clone display button clicked";
@@ -602,7 +588,7 @@ void CFGEditor::bindDisplayButtons() {
     });
     QObject::connect(ui->pushButtonDeleteDisplay, &QPushButton::clicked, this, [&]() {
         if (!ui->tableViewDisplays->currentIndex().isValid()) {
-            DefaultAlertImpl("Select a row before deleting")();
+            DefaultAlertImpl(this, "Select a row before deleting")();
             return;
         }
         qDebug() << "Delete display button clicked";
@@ -630,8 +616,8 @@ void CFGEditor::bindDisplayButtons() {
         ui->textEditLMDescription->setText(d.Description());
         ui->labelDisplayTilesGrid->changeDisplay(currentDisplayIndex);
         ui->checkBoxDisplayExtraBit->setChecked(d.ExtraBit());
-        ui->spinBoxXPos->setValue(d.X());
-        ui->spinBoxYPos->setValue(d.Y());
+        ui->spinBoxXPos->setValue(d.XOrIndex());
+        ui->spinBoxYPos->setValue(d.YOrValue());
         ui->checkBoxUseText->setChecked(d.UseText());
         qDebug() << "Use text? " << (d.UseText() ? "True" : "False");
         if (d.UseText()) {
@@ -666,12 +652,16 @@ void CFGEditor::bindDisplayButtons() {
     // checkbox or spinner get updated
     QObject::connect(ui->checkBoxDisplayExtraByte, &QCheckBox::stateChanged, this, [&]() {
         if (ui->checkBoxDisplayExtraByte->checkState() == Qt::CheckState::Checked) {
+            QStringList labelList{"ExtraBit", "Index", "Value"};
+            displayModel->setHorizontalHeaderLabels(labelList);
             sprite->dispType = DisplayType::ExtraByte;
             ui->labelDisplayX->setText("ExByte Index:");
             ui->labelDisplayY->setText("Value:");
             ui->spinBoxXPos->setMaximum(12);
             ui->spinBoxYPos->setMaximum(0xFF);
         } else {
+            QStringList labelList{"ExtraBit", "X", "Y"};
+            displayModel->setHorizontalHeaderLabels(labelList);
             sprite->dispType = DisplayType::XY;
             ui->labelDisplayX->setText("X");
             ui->labelDisplayY->setText("Y");
@@ -693,7 +683,7 @@ void CFGEditor::bindDisplayButtons() {
         }
         auto realIndex = ui->tableViewDisplays->model()->index(ui->tableViewDisplays->currentIndex().row(), 1);
         ui->tableViewDisplays->model()->setData(realIndex, text);
-        displays[currentDisplayIndex].setX(text.toInt());
+        displays[currentDisplayIndex].setXOrIndex(text.toInt());
     });
     QObject::connect(ui->spinBoxYPos, QOverload<const QString&>::of(&QSpinBox::textChanged), this, [&](const QString& text) {
         if (!ui->tableViewDisplays->currentIndex().isValid()) {
@@ -701,7 +691,7 @@ void CFGEditor::bindDisplayButtons() {
         }
         auto realIndex = ui->tableViewDisplays->model()->index(ui->tableViewDisplays->currentIndex().row(), 2);
         ui->tableViewDisplays->model()->setData(realIndex, text);
-        displays[currentDisplayIndex].setY(text.toInt());
+        displays[currentDisplayIndex].setYOrValue(text.toInt());
     });
 
     // description or displaytext get updated
@@ -815,20 +805,20 @@ void CFGEditor::setTilePropGroupState(FullTile tileInfo) {
 void CFGEditor::bindCollectionButtons() {
     QObject::connect(ui->newCollButton, &QPushButton::clicked, this, [&]() {
         qDebug() << "New collection button clicked";
-        ((QStandardItemModel*)ui->tableView->model())->appendRow(CollectionDataModel().getRow(ui));
+        collectionModel->appendRow(CollectionDataModel().getRow(ui));
     });
     QObject::connect(ui->cloneCollButton, &QPushButton::clicked, this, [&]() {
         if (!ui->tableView->currentIndex().isValid()) {
-            DefaultAlertImpl("Select a row before cloning")();
+            DefaultAlertImpl(this, "Select a row before cloning")();
             return;
         }
         qDebug() << "Clone collection button clicked";
         CollectionDataModel model = CollectionDataModel::fromIndex(ui->tableView->currentIndex().row(), ui->tableView);
-        ((QStandardItemModel*)ui->tableView->model())->appendRow(model.getRow());
+        collectionModel->appendRow(model.getRow());
     });
     QObject::connect(ui->deleteCollButton, &QPushButton::clicked, this, [&]() {
         if (!ui->tableView->currentIndex().isValid()) {
-            DefaultAlertImpl("Select a row before deleting")();
+            DefaultAlertImpl(this, "Select a row before deleting")();
             return;
         }
         qDebug() << "Delete collection button clicked";
@@ -1195,8 +1185,8 @@ void CFGEditor::bindTweak190F() {
 CFGEditor::~CFGEditor()
 {
     displays.clear();
-    for (auto p : models)
-        delete p;
+    delete collectionModel;
+    delete displayModel;
     delete full8x8Bitmap;
     delete view8x8;
     delete viewPalette;

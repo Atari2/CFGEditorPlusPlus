@@ -111,19 +111,19 @@ void DisplayData::setExtraBit(bool enabled) {
 void DisplayData::setDescription(const QString& description) {
     m_description = description;
 }
-void DisplayData::setX(int x) {
-    m_x = x;
+void DisplayData::setXOrIndex(int x_or_index) {
+    m_x_or_index = x_or_index;
 }
-void DisplayData::setY(int y) {
-    m_y = y;
+void DisplayData::setYOrValue(int y_or_value) {
+    m_y_or_value = y_or_value;
 }
-void DisplayData::setPos(QPoint point) {
-    m_x = point.x();
-    m_y = point.y();
+void DisplayData::setPosOrExtra(QPoint point) {
+    m_x_or_index = point.x();
+    m_y_or_value = point.y();
 }
-void DisplayData::setPos(int x, int y) {
-    m_x = x;
-    m_y = y;
+void DisplayData::setPosOrExtra(int x_or_index, int y_or_value) {
+    m_x_or_index = x_or_index;
+    m_y_or_value = y_or_value;
 }
 void DisplayData::setDisplayText(const QString& displayText) {
     qDebug() << "Trying setting text " << (m_use_text ? "True" : "False") << " " << displayText;
@@ -132,6 +132,10 @@ void DisplayData::setDisplayText(const QString& displayText) {
 }
 void DisplayData::addTile(const TileData& data) {
     m_tiles.append(data);
+}
+
+void DisplayData::clearTiles() {
+    m_tiles.clear();
 }
 
 bool DisplayData::UseText() const {
@@ -149,14 +153,14 @@ const QString& DisplayData::Description() const {
 const QString& DisplayData::DisplayText() const {
     return m_display_text;
 }
-int DisplayData::X() const {
-    return m_x;
+int DisplayData::XOrIndex() const {
+    return m_x_or_index;
 }
-int DisplayData::Y() const {
-    return m_y;
+int DisplayData::YOrValue() const {
+    return m_y_or_value;
 }
-QPoint DisplayData::Pos() const {
-    return QPoint(m_x, m_y);
+QPoint DisplayData::PosOrExtra() const {
+    return QPoint(m_x_or_index, m_y_or_value);
 }
 
 
@@ -166,8 +170,8 @@ DisplayData::DisplayData(const DisplayData& other) {
 
 DisplayData::DisplayData(const Display& other) {
     m_extra_bit = other.extrabit;
-    m_x = other.x_or_index;
-    m_y = other.y_or_value;
+    m_x_or_index = other.x_or_index;
+    m_y_or_value = other.y_or_value;
     m_tiles.reserve(other.tiles.length());
     std::for_each(other.tiles.cbegin(), other.tiles.cend(), [&](const Tile& tile) {
         m_tiles.append({tile.xoff, tile.yoff, tile.tilenumber});
@@ -180,8 +184,8 @@ DisplayData::DisplayData(const Display& other) {
 
 DisplayData& DisplayData::operator=(const DisplayData& other) {
     m_extra_bit = other.m_extra_bit;
-    m_x = other.m_x;
-    m_y = other.m_y;
+    m_x_or_index = other.m_x_or_index;
+    m_y_or_value = other.m_y_or_value;
     m_tiles.reserve(other.m_tiles.size());
     std::for_each(other.m_tiles.cbegin(), other.m_tiles.cend(), [&](const TileData& tile) {
         m_tiles.append(tile);
@@ -199,8 +203,8 @@ DisplayData::DisplayData() {
 DisplayData DisplayData::blankData() {
     DisplayData data;
     data.m_extra_bit = false;
-    data.m_x = 0;
-    data.m_y = 0;
+    data.m_x_or_index = 0;
+    data.m_y_or_value = 0;
     data.m_tiles = QVector<TileData>();
     data.m_use_text = false;
     data.m_display_text = "";
@@ -210,8 +214,8 @@ DisplayData DisplayData::blankData() {
 DisplayData DisplayData::cloneData(QStandardItemModel* model, const QString& description, int row, const QString& display_text) {
     DisplayData data;
     data.m_extra_bit = model->item(row, 0)->data().toString() == "True";
-    data.m_x = model->item(row, 1)->data().toInt();
-    data.m_y = model->item(row, 2)->data().toInt();
+    data.m_x_or_index = model->item(row, 1)->data().toInt();
+    data.m_y_or_value = model->item(row, 2)->data().toInt();
     data.m_description = description;
     data.m_use_text = display_text.length() != 0;
     data.m_display_text = display_text;
@@ -221,7 +225,7 @@ DisplayData DisplayData::cloneData(QStandardItemModel* model, const QString& des
 QVector<QStandardItem*> DisplayData::itemsFromDisplay() {
     QVector<QStandardItem*> vec;
     vec.append(new QStandardItem(m_extra_bit ? "True" : "False"));
-    vec.append(new QStandardItem(QString::asprintf("%d", m_x)));
-    vec.append(new QStandardItem(QString::asprintf("%d", m_y)));
+    vec.append(new QStandardItem(QString::asprintf("%d", m_x_or_index)));
+    vec.append(new QStandardItem(QString::asprintf("%d", m_y_or_value)));
     return vec;
 }

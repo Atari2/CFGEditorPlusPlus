@@ -59,6 +59,8 @@ public:
     void setControllingLabel(QLabel *tileNoLabel);
     void changePaletteIndex(QComboBox* box, FullTile tile);
     void mouseMoveEvent(QMouseEvent *event);
+    void keyPressEvent(QKeyEvent *event);
+    void focusOutEvent(QFocusEvent *event);
     void readInternalMap16File(const QString& name = ":/Resources/spriteMapData.map16");
     void readExternalMap16File(const QString& name);
     void drawInternalMap16File();

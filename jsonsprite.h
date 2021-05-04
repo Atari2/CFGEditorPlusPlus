@@ -6,6 +6,7 @@
 #include <QJsonArray>
 #include <QTableView>
 #include <QFileDialog>
+#include <QMessageBox>
 #include "tweak_bytes.h"
 
 enum DisplayType {
@@ -37,14 +38,13 @@ struct Display {
     QString description;
     QVector<Tile> tiles;
     bool extrabit;
-    DisplayType disp_type;
     int x_or_index;
     int y_or_value;
     bool useText;
     QString displaytext;
     Display(const QJsonObject& t, DisplayType type);
     Display(const QString& d, const QVector<Tile>& ts, bool bit, int xx, int yy, bool text, const QString& disp);
-    QJsonObject toJson() const;
+    QJsonObject toJson(DisplayType type) const;
 };
 
 struct Collection {
@@ -61,13 +61,14 @@ public:
     void reset();
     void from_file(const QString& name);
     void deserialize();
+    void deserialize_cfg(QFile& file);
     void serialize();
     void addCollections(QTableView* view);
     void addDisplay(const Display& display);
     void addGfxList(bool sep, int sp0, int sp1, int sp2, int sp3);
     void setMap16(const QString& mapdata);
     QString to_text();
-    void to_file(const QString& name = "");
+    void to_file(QString name = "");
     QString& name();
     J1656 t1656;
     J1662 t1662;
