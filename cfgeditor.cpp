@@ -11,12 +11,13 @@ CFGEditor::CFGEditor(QWidget *parent)
     , displays()
 {
     ui->setupUi(this);
-    this->setFixedSize(this->size());
+    setFixedSize(size());
     setSizePolicy(QSizePolicy());
-    this->statusBar()->setSizeGripEnabled(false);
+    statusBar()->setSizeGripEnabled(false);
     setUpImages();
     view8x8 = new EightByEightView(new QGraphicsScene);
     viewPalette = new PaletteView(new QGraphicsScene);
+    ui->labelDisplayTilesGrid->attachMap16View(ui->map16GraphicsView);
     loadFullbitmap();
     ui->map16GraphicsView->setControllingLabel(ui->labelTileNo);
     QMenuBar* mb = menuBar();
@@ -40,13 +41,6 @@ void CFGEditor::closeEvent(QCloseEvent *event) {
     QMainWindow::closeEvent(event);
 }
 
-DefaultAlertImpl::DefaultAlertImpl(QWidget* parent, const QString& impl_name) : QMessageBox(parent) {
-    setText(impl_name);
-}
-
-void DefaultAlertImpl::operator()() {
-    exec();
-};
 
 void CFGEditor::initCompleter() {
     for (int i = 0; i <= 0xFF; i++) {
@@ -140,14 +134,18 @@ void CFGEditor::setUpMenuBar(QMenuBar* mb) {
     }, Qt::CTRL | Qt::ALT | Qt::Key_S);
 
     display->addAction("&Load Custom Map16", qApp, [&]() {
-        QString name = QFileDialog::getOpenFileName(this, tr("Open file"), "", tr("JSON (*.json)"));
+        QString name = QFileDialog::getOpenFileName(this, tr("Open file"), "", tr("M16 (*.m16);;Map16 (*.map16)"));
         if (name.length() == 0)
+            return;
+        if (name.endsWith(".m16") && !assert_filesize(name, kb(8)))
             return;
         ui->map16GraphicsView->readExternalMap16File(name);
     });
     display->addAction("&Load Custom GFX33", qApp, [&]() {
-        QString name = QFileDialog::getOpenFileName(this, tr("Open file"), "", tr("JSON (*.json"));
+        QString name = QFileDialog::getOpenFileName(this, tr("Open file"), "", tr("BIN (*.bin"));
         if (name.length() == 0)
+            return;
+        if (!assert_filesize(name, kb(12)))
             return;
         SnesGFXConverter::setCustomExanimation(name);
         ui->map16GraphicsView->drawInternalMap16File();
@@ -157,10 +155,14 @@ void CFGEditor::setUpMenuBar(QMenuBar* mb) {
         viewPalette->updateForChange(SpritePaletteCreator::MakeFullPalette());
         viewPalette->open();
     });
-    display->addAction("&8x8 Tile Selector", qApp, [&]() {
+    display->addAction("&8x8 Tile Viewer", qApp, [&]() {
         qDebug() << "Opening 8x8 tile selector";
         view8x8->updateForChange(full8x8Bitmap);
         view8x8->open();
+    });
+    display->addAction("&Load External GFX Files", qApp, [&]() {
+        qDebug() << "Opening external gfx file loader";
+        ui->map16GraphicsView->loadExternalGraphics();
     });
 
     mb->addMenu(file);
@@ -353,7 +355,7 @@ void CFGEditor::addLunarMagicIcons() {
     ui->toolButtonPalette->setIcon(QIcon(QPixmap::fromImage(QImage::fromData(fifth.readAll()))));
     ui->toolButtonPalette->setIconSize(QSize(32, 32));
     ui->toolButton8x8Edit->setToolTip("Switch to 8x8 mode");
-    ui->toolButton8x8Mode->setToolTip("Open 8x8 Selector");
+    ui->toolButton8x8Mode->setToolTip("Open 8x8 Viewer");
     ui->toolButtonGrid->setToolTip("Show grid");
     ui->toolButtonBorders->setToolTip("Show page borders");
     ui->toolButtonPalette->setToolTip("Open Palette Viewer");
@@ -408,6 +410,9 @@ void CFGEditor::bindGFXSelector() {
         QString filename = QFileDialog::getOpenFileName(this, "Open GFX File", "", tr("GFX Files (*.bin)"));
         if (filename.length() == 0)
             return;
+        if (!assert_filesize(filename, kb(4))) {
+            return;
+        }
         ui->lineEditGFXSp0->setText(filename);
         loadFullbitmap();
     });
@@ -415,6 +420,8 @@ void CFGEditor::bindGFXSelector() {
     QObject::connect(ui->toolButtonGFXSp1, &QToolButton::clicked, this, [&]() {
         QString filename = QFileDialog::getOpenFileName(this, "Open GFX File", "", tr("GFX Files (*.bin)"));
         if (filename.length() == 0)
+            return;
+        if (!assert_filesize(filename, kb(4)))
             return;
         ui->lineEditGFXSp1->setText(filename);
         loadFullbitmap();
@@ -424,6 +431,8 @@ void CFGEditor::bindGFXSelector() {
         QString filename = QFileDialog::getOpenFileName(this, "Open GFX File", "", tr("GFX Files (*.bin)"));
         if (filename.length() == 0)
             return;
+        if (!assert_filesize(filename, kb(4)))
+            return;
         ui->lineEditGFXSp2->setText(filename);
         loadFullbitmap();
     });
@@ -431,6 +440,8 @@ void CFGEditor::bindGFXSelector() {
     QObject::connect(ui->toolButtonGFXSp3, &QToolButton::clicked, this, [&]() {
         QString filename = QFileDialog::getOpenFileName(this, "Open GFX File", "", tr("GFX Files (*.bin)"));
         if (filename.length() == 0)
+            return;
+        if (!assert_filesize(filename, kb(4)))
             return;
         ui->lineEditGFXSp3->setText(filename);
         loadFullbitmap();
@@ -738,6 +749,12 @@ void CFGEditor::bindDisplayButtons() {
 
     connect(ui->comboBoxTilePalette, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [&](int index){
         qDebug() << "palette for tile changed";
+        if (index == 8) {
+            DefaultAlertImpl(this, "This palette is not supposed to be selected by the user")();
+            QSignalBlocker block{ui->comboBoxTilePalette};
+            ui->comboBoxTilePalette->setCurrentIndex(7);
+            return;
+        }
         ui->map16GraphicsView->tileChanged(ui->comboBoxTilePalette, TileChangeAction::Palette, ui->map16GraphicsView->getChangeType(), index);
     });
 
@@ -795,6 +812,10 @@ void CFGEditor::setTilePropGroupState(FullTile tileInfo) {
     ui->map16GraphicsView->noSignals = true;
     ui->map16GraphicsView->changePaletteIndex(ui->comboBoxTilePalette, tileInfo);
     qDebug() << QString::asprintf("%d %d %d %d", tileInfo.bottomleft.pal, tileInfo.bottomright.pal, tileInfo.topleft.pal, tileInfo.topright.pal);
+    QSignalBlocker bl{ui->lineEditTileBL};
+    QSignalBlocker br{ui->lineEditTileBR};
+    QSignalBlocker tr{ui->lineEditTileTR};
+    QSignalBlocker tl{ui->lineEditTileTL};
     ui->lineEditTileBL->setText(QString::asprintf("%03X", tileInfo.bottomleft.tilenum));
     ui->lineEditTileBR->setText(QString::asprintf("%03X", tileInfo.bottomright.tilenum));
     ui->lineEditTileTR->setText(QString::asprintf("%03X", tileInfo.topright.tilenum));

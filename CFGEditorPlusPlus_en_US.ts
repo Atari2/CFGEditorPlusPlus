@@ -640,65 +640,6 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="cfgeditor.ui" line="1555"/>
-        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Act Like:&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="cfgeditor.ui" line="1619"/>
-        <source>Normal</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="cfgeditor.ui" line="1624"/>
-        <source>Custom</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="cfgeditor.ui" line="1629"/>
-        <source>Generator/Shooter</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="cfgeditor.ui" line="1669"/>
-        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;ASM File:&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="cfgeditor.ui" line="1701"/>
-        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;right&quot;&gt;Extra bit clear:&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <oldsource>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Extra bit clear:&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</oldsource>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="cfgeditor.ui" line="1714"/>
-        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;right&quot;&gt;Extra bit set:&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <oldsource>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Extra bit set:&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</oldsource>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="cfgeditor.ui" line="1753"/>
-        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Extra Byte Counts&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="cfgeditor.ui" line="1782"/>
-        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Extra Property Byte values&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="cfgeditor.ui" line="1795"/>
-        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;right&quot;&gt;Byte 2:&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <oldsource>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Byte 2:&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</oldsource>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="cfgeditor.ui" line="1846"/>
-        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;right&quot;&gt;Byte 1:&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <oldsource>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Byte 1:&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</oldsource>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <location filename="cfgeditor.ui" line="1092"/>
         <source>Tweaks</source>
         <translation type="unfinished"></translation>
@@ -736,6 +677,61 @@
     <message>
         <location filename="cfgeditor.ui" line="1457"/>
         <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;190F:&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="cfgeditor.ui" line="1555"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Act Like:&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="cfgeditor.ui" line="1619"/>
+        <source>Normal</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="cfgeditor.ui" line="1624"/>
+        <source>Custom</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="cfgeditor.ui" line="1629"/>
+        <source>Generator/Shooter</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="cfgeditor.ui" line="1669"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;ASM File:&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="cfgeditor.ui" line="1701"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;right&quot;&gt;Extra bit clear:&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="cfgeditor.ui" line="1714"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;right&quot;&gt;Extra bit set:&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="cfgeditor.ui" line="1753"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Extra Byte Counts&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="cfgeditor.ui" line="1782"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Extra Property Byte values&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="cfgeditor.ui" line="1795"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;right&quot;&gt;Byte 2:&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="cfgeditor.ui" line="1846"/>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;right&quot;&gt;Byte 1:&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -948,6 +944,11 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <location filename="cfgeditor.ui" line="2570"/>
+        <source>GFX Files</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <location filename="cfgeditor.ui" line="2606"/>
         <location filename="cfgeditor.ui" line="2694"/>
         <location filename="cfgeditor.ui" line="3199"/>
@@ -966,11 +967,6 @@
         <location filename="cfgeditor.ui" line="2681"/>
         <location filename="cfgeditor.ui" line="3225"/>
         <source>Delete</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="cfgeditor.ui" line="2570"/>
-        <source>GFX Files</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -1059,43 +1055,56 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="cfgeditor.cpp" line="95"/>
-        <location filename="cfgeditor.cpp" line="114"/>
-        <location filename="cfgeditor.cpp" line="139"/>
+        <location filename="cfgeditor.cpp" line="89"/>
+        <location filename="cfgeditor.cpp" line="108"/>
+        <location filename="cfgeditor.cpp" line="133"/>
         <source>Save file</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="cfgeditor.cpp" line="95"/>
-        <location filename="cfgeditor.cpp" line="114"/>
-        <location filename="cfgeditor.cpp" line="139"/>
-        <location filename="cfgeditor.cpp" line="143"/>
+        <location filename="cfgeditor.cpp" line="89"/>
+        <location filename="cfgeditor.cpp" line="108"/>
+        <location filename="cfgeditor.cpp" line="133"/>
         <source>JSON (*.json)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="cfgeditor.cpp" line="120"/>
+        <location filename="cfgeditor.cpp" line="114"/>
+        <location filename="cfgeditor.cpp" line="137"/>
+        <location filename="cfgeditor.cpp" line="145"/>
+        <source>Open file</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="cfgeditor.cpp" line="114"/>
         <source>JSON (*.json);;CFG (*.cfg)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="cfgeditor.cpp" line="149"/>
-        <source>JSON (*.json</source>
+        <location filename="cfgeditor.cpp" line="137"/>
+        <source>M16 (*.m16);;Map16 (*.map16)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="cfgeditor.cpp" line="408"/>
-        <location filename="cfgeditor.cpp" line="416"/>
-        <location filename="cfgeditor.cpp" line="424"/>
-        <location filename="cfgeditor.cpp" line="432"/>
+        <location filename="cfgeditor.cpp" line="145"/>
+        <source>BIN (*.bin</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="cfgeditor.cpp" line="410"/>
+        <location filename="cfgeditor.cpp" line="421"/>
+        <location filename="cfgeditor.cpp" line="431"/>
+        <location filename="cfgeditor.cpp" line="441"/>
         <source>GFX Files (*.bin)</source>
         <translation type="unfinished"></translation>
     </message>
+</context>
+<context>
+    <name>PaletteView</name>
     <message>
-        <location filename="cfgeditor.cpp" line="120"/>
-        <location filename="cfgeditor.cpp" line="143"/>
-        <location filename="cfgeditor.cpp" line="149"/>
-        <source>Open file</source>
+        <location filename="paletteview.cpp" line="11"/>
+        <location filename="paletteview.cpp" line="21"/>
+        <source>Palette Files (*.pal)</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

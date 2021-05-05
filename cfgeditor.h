@@ -12,6 +12,7 @@
 #include <QStandardItemModel>
 #include <QDir>
 #include <QMap>
+#include "utils.h"
 #include "jsonsprite.h"
 #include "snesgfxconverter.h"
 #include "eightbyeightview.h"
@@ -94,12 +95,5 @@ private:
     int currentGFXFileIndex = -1;
 };
 
-class DefaultAlertImpl : QMessageBox {
-    Q_OBJECT
-private:
-public:
-    DefaultAlertImpl(QWidget* parent, const QString& message);
-    void operator()();
-};
 
 #endif // CFGEDITOR_H

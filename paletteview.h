@@ -13,6 +13,7 @@
 #include <QListView>
 #include <QMenu>
 #include "spritepalettecreator.h"
+#include "utils.h"
 
 class PaletteView : public QGraphicsView
 {

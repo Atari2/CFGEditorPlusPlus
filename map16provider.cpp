@@ -19,6 +19,18 @@ Map16Provider::Map16Provider(QWidget* parent) : QLabel(parent)  {
     }
 }
 
+void Map16Provider::attachMap16View(Map16GraphicsView* view) {
+    this->view = view;
+    QObject::connect(this->view, QOverload<const FullTile&, int>::of(&Map16GraphicsView::signalTileUpdatedForDisplay), this, [&](const FullTile& t, int tileno) {
+        for (auto& tile : m_tiles[currentIndex]) {
+            if (tile.map16tileno == tileno) {
+                tile.tile = t;
+            }
+        }
+        redrawNoSort();
+    });
+}
+
 int Map16Provider::mouseCoordinatesToTile(QPoint position) {
     return ((position.y() / 16) * 16) + (position.x() / 16);
 }

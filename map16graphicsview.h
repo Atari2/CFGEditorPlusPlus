@@ -13,6 +13,7 @@
 #include <QScrollBar>
 #include <QSignalBlocker>
 #include <QComboBox>
+#include <QFileDialog>
 #include <functional>
 #include "clipboardtile.h"
 
@@ -41,12 +42,14 @@ private:
     QPixmap currentWithNoHighlight;
     QPixmap currentWithNoSelection;
     ClipboardTile* copiedTile = nullptr;
+    QString mapName;
 public:
     int imageWidth = 0;
     int imageHeight = 0;
     bool noSignals = false;
     bool useGrid = false;
     bool usePageSep = false;
+    bool usingExGfx = false;
     int currentTile = -1;
     int currentClickedTile = -1;
     QPoint currentTopLeftClicked;
@@ -55,23 +58,25 @@ public:
     int CellSize();
     std::function<void(FullTile, int, SelectorType)> clickCallback;
     QVector<QVector<FullTile>> tiles;
+    QVector<ExternalGfxInfo> exgfx;
     Map16GraphicsView(QWidget* parent = nullptr);
     void setControllingLabel(QLabel *tileNoLabel);
     void changePaletteIndex(QComboBox* box, FullTile tile);
     void mouseMoveEvent(QMouseEvent *event);
     void keyPressEvent(QKeyEvent *event);
     void focusOutEvent(QFocusEvent *event);
-    void readInternalMap16File(const QString& name = ":/Resources/spriteMapData.map16");
+    void readInternalMap16File();
     void readExternalMap16File(const QString& name);
     void drawInternalMap16File();
     int mouseCoordinatesToTile(QPoint position);
     QPoint translateToRect(QPoint position);
-    FullTile& tileNumToTile();
+    FullTile& tileNumToTile(int tilenum);
     void drawCurrentSelectedTile(QPixmap& map);
     void tileChanged(QObject* toBlock, TileChangeAction action, TileChangeType type = TileChangeType::All, int value = -1);
     void mousePressEvent(QMouseEvent* event);
     void registerMouseClickCallback(const std::function<void(FullTile, int, SelectorType)>& callback);
     void copyTileToClipboard(const FullTile& tile);
+    int getExternalOffset(int tileIndex);
     TileChangeType getChangeType();
     ~Map16GraphicsView();
     void useGridChanged();
@@ -85,6 +90,9 @@ public:
     QString getMap16();
     const ClipboardTile& getCopiedTile();
     void switchCurrSelectionType();
+    void loadExternalGraphics();
+signals:
+    void signalTileUpdatedForDisplay(const FullTile& tile, int tileno);
 };
 
 #endif // MAP16GRAPHICSVIEW_H

@@ -3,7 +3,7 @@
 EightByEightView::EightByEightView(QGraphicsScene* ogscene) : QGraphicsView(ogscene) {
     setMouseTracking(true);
     viewport()->setMouseTracking(true);
-    setWindowTitle("8x8 Tile Selector");
+    setWindowTitle("8x8 Tile Viewer");
     verticalScrollBar()->setRange(0, 16);
     QObject::connect(verticalScrollBar(), QOverload<int>::of(&QScrollBar::valueChanged), [&](int value) {
         const int step = 16;

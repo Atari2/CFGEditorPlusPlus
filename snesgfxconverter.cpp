@@ -31,6 +31,27 @@ void SnesGFXConverter::populateFullMap16Data(const QVector<QString>& names) {
     fullmap16data.append(file.readAll());
 }
 
+void SnesGFXConverter::populateExternalMap16Data(const QVector<QString>& names) {
+    auto ret = std::find_if_not(names.cbegin(), names.cend(), [](const auto& name) {
+            return assert_filesize<LessThanOrEqual>(name, kb(32));
+        });
+    if (ret != names.cend())
+        return;
+    exgfxmap16data.clear();
+    for (auto& name : names) {
+        QFile file{name};
+        file.open(QFile::OpenModeFlag::ReadOnly);
+        auto data = file.readAll();
+        if (data.length() < kb(32))
+            data = data.leftJustified(kb(32), 0);
+        exgfxmap16data.append(data);
+    }
+}
+
+void SnesGFXConverter::clearnExternalMap16Data() {
+    exgfxmap16data.clear();
+}
+
 QImage SnesGFXConverter::get8x8TileFromVect(int index, const QVector<QColor>& colors) {
     int offset = index * 8 * 4;
     QImage image(8, 8, QImage::Format::Format_ARGB32);
@@ -42,9 +63,41 @@ QImage SnesGFXConverter::get8x8TileFromVect(int index, const QVector<QColor>& co
          rgbColors.append(col.rgba());
     });
     for (int row = 0; row < 8; row++) {
-        uint8_t bytes[4];
+        uint8_t bytes[4] = { 0 };
         for (int i = 0; i < 4; i++) {
-            bytes[i] = fullmap16data[row * 0x2 + offset + (i & 1) + ((i & 0xFE) << 3)];
+            qsizetype val = row * 0x2 + offset + (i & 1) + ((i & 0xFE) << 3);
+            if (val >= fullmap16data.length()) {
+                DefaultAlertImpl(nullptr, QString::asprintf("8x8 Tile number %03X was out of bounds. Maybe missing an external file?", index))();
+                return image;
+            }
+            bytes[i] = fullmap16data[val];
+        }
+        for (int bit = 7; bit >= 0; bit--) {
+            uint8_t pixel = 0;
+            for (int i = 0; i < 4; i++)
+                pixel |= ((bytes[i] & (1 << bit)) >> bit) << i;
+            if (pixel != 0)
+                image.setPixelColor(7 - bit, row, rgbColors[pixel - 1]);
+        }
+    }
+    return image;
+}
+
+QImage SnesGFXConverter::get8x8TileFromExternal(int index, const QVector<QColor>& colors, int extra_offset) {
+    int offset = index * 8 * 4 + (extra_offset * 8 * 4);
+    QImage image(8, 8, QImage::Format::Format_ARGB32);
+    image.fill(qRgba(0, 0, 0, 0));
+    QVector<QRgb> rgbColors;
+    rgbColors.reserve(15);
+    // we skip the first color to make it transparent
+    std::for_each(colors.cbegin() + 1, colors.cend(), [&](const QColor& col) {
+         rgbColors.append(col.rgba());
+    });
+    for (int row = 0; row < 8; row++) {
+        uint8_t bytes[4] = { 0 };
+        for (int i = 0; i < 4; i++) {
+            qsizetype val = row * 0x2 + offset + (i & 1) + ((i & 0xFE) << 3);
+            bytes[i] = exgfxmap16data[val];
         }
         for (int bit = 7; bit >= 0; bit--) {
             uint8_t pixel = 0;

@@ -34,6 +34,10 @@ void FullTile::SetPalette(int pal) {
     bottomright.pal = pal;
 }
 
+void FullTile::SetOffset(int off) {
+    offset = off;
+}
+
 void FullTile::FlipX() {
     auto temp1 = topleft;
     auto temp2 = bottomleft;
@@ -60,15 +64,20 @@ void FullTile::FlipY() {
     bottomright.vflip = !bottomright.vflip;
 }
 
-QImage TileInfo::get8x8Tile() {
-    auto ig = SnesGFXConverter::get8x8TileFromVect(tilenum, SpritePaletteCreator::getPalette(pal + 8));
+QImage TileInfo::get8x8Tile(int offset) {
+    QImage ig;
+    if (offset == -1)
+        ig = SnesGFXConverter::get8x8TileFromVect(tilenum, SpritePaletteCreator::getPalette(pal + 8));
+    else
+        ig = SnesGFXConverter::get8x8TileFromExternal(tilenum, SpritePaletteCreator::getPalette(pal + 8), offset);
     ig.mirror(hflip, vflip);
     return ig;
 }
 
-QImage TileInfo::get8x8Scaled(int width) {
-    return get8x8Tile().scaledToWidth(width, Qt::SmoothTransformation);
+QImage TileInfo::get8x8Scaled(int width, int offset) {
+    return get8x8Tile(offset).scaledToWidth(width, Qt::SmoothTransformation);
 }
+
 
 bool TileInfo::isEmpty() {
     quint16 val = 0;
@@ -95,10 +104,10 @@ QImage FullTile::getFullTile() {
     img.fill(Qt::transparent);
     QPainter p{&img};
     p.setCompositionMode(QPainter::CompositionMode_SourceOver);
-    p.drawImage(QRect{0, 0, 8, 8}, topleft.get8x8Tile());
-    p.drawImage(QRect{0, 8, 8, 8}, bottomleft.get8x8Tile());
-    p.drawImage(QRect{8, 0, 8, 8}, topright.get8x8Tile());
-    p.drawImage(QRect{8, 8, 8, 8}, bottomright.get8x8Tile());
+    p.drawImage(QRect{0, 0, 8, 8}, topleft.get8x8Tile(offset));
+    p.drawImage(QRect{0, 8, 8, 8}, bottomleft.get8x8Tile(offset));
+    p.drawImage(QRect{8, 0, 8, 8}, topright.get8x8Tile(offset));
+    p.drawImage(QRect{8, 8, 8, 8}, bottomright.get8x8Tile(offset));
     p.end();
     return img;
 }
@@ -140,7 +149,7 @@ void ClipboardTile::update(const ClipboardTile& other) {
 
 QImage ClipboardTile::draw() {
     if (type != TileChangeType::All) {
-        return quarter.get8x8Tile();
+        return quarter.get8x8Tile(tile.offset);
     } else {
         return tile.getFullTile();
     }

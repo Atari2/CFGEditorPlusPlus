@@ -3,6 +3,7 @@
 
 Map16GraphicsView::Map16GraphicsView(QWidget* parent) : QGraphicsView(parent)
 {
+    mapName = ":/Resources/spriteMapData.map16";
     currScene = new QGraphicsScene(this);
     setMouseTracking(true);
     verticalScrollBar()->setFixedWidth(16);
@@ -27,7 +28,7 @@ void Map16GraphicsView::setControllingLabel(QLabel *tileNoLabel) {
     tileNumLabel = tileNoLabel;
 }
 
-void Map16GraphicsView::readInternalMap16File(const QString& name) {
+void Map16GraphicsView::readInternalMap16File() {
     struct {
         quint32 offset;
         quint32 size;
@@ -38,39 +39,47 @@ void Map16GraphicsView::readInternalMap16File(const QString& name) {
         quint32 sizeX;
         quint32 sizeY;
     } tableInformation;
-    QFile file{name};
+    QFile file{mapName};
     file.open(QFile::OpenModeFlag::ReadOnly);
     QDataStream byteStream{file.readAll()};
     byteStream.setByteOrder(QDataStream::LittleEndian);
-    byteStream.skipRawData(16);     // skip metadata
-    byteStream >> tableInformation.tableOffset;
-    byteStream >> tableInformation.tableSize;
-    byteStream >> tableInformation.sizeX;
-    byteStream >> tableInformation.sizeY;
-    tiles.reserve(tableInformation.sizeY);
-    qDebug() << "length before: " << tiles.length();
-    qDebug() << "Table offset = " << tableInformation.tableOffset << " Table size: " << tableInformation.tableSize;
-    qDebug() << "Size X = " << tableInformation.sizeX << " Size Y = " << tableInformation.sizeY;
-    byteStream.skipRawData(12 + 0x14);     // skip base coords, and "various flags" and 0x14 unused bytes
-    // should have read 0x40 bytes at this point
-    byteStream.skipRawData(tableInformation.tableOffset - 0x40);       // skip directly to the data, we don't care about the comment field
-    byteStream >> map16DataIndex.offset;
-    byteStream >> map16DataIndex.size;
-    qDebug() << "Map16 Data offset = " << map16DataIndex.offset << " Map16 Data size: " << map16DataIndex.size;
-    byteStream.skipRawData(tableInformation.tableSize - 8);
+    if (mapName.endsWith(".map16")) {
+        byteStream.skipRawData(16);     // skip metadata
+        byteStream >> tableInformation.tableOffset;
+        byteStream >> tableInformation.tableSize;
+        byteStream >> tableInformation.sizeX;
+        byteStream >> tableInformation.sizeY;
+        tiles.reserve(tableInformation.sizeY);
+        qDebug() << "length before: " << tiles.length();
+        qDebug() << "Table offset = " << tableInformation.tableOffset << " Table size: " << tableInformation.tableSize;
+        qDebug() << "Size X = " << tableInformation.sizeX << " Size Y = " << tableInformation.sizeY;
+        byteStream.skipRawData(12 + 0x14);     // skip base coords, and "various flags" and 0x14 unused bytes
+        // should have read 0x40 bytes at this point
+        byteStream.skipRawData(tableInformation.tableOffset - 0x40);       // skip directly to the data, we don't care about the comment field
+        byteStream >> map16DataIndex.offset;
+        byteStream >> map16DataIndex.size;
+        qDebug() << "Map16 Data offset = " << map16DataIndex.offset << " Map16 Data size: " << map16DataIndex.size;
+        byteStream.skipRawData(tableInformation.tableSize - 8);
+    } else {
+        tableInformation.sizeY = 16 * 3;
+        tableInformation.sizeX = 16;
+        map16DataIndex.size = 16 * 16 * 3 * 4 * 2;
+        tiles.reserve(tableInformation.sizeY);
+    }
     // we're at the data now, hopefully
     Q_ASSERT(map16DataIndex.size == (tableInformation.sizeX * tableInformation.sizeY * 4 * 2));
-    byteStream.setByteOrder(QDataStream::LittleEndian);
     for (quint32 i = 0; i < tableInformation.sizeY; i++) {
         QVector<FullTile> subVector{};
-        subVector.reserve(tableInformation.sizeY);
+        subVector.reserve(tableInformation.sizeX);
         for (quint32 j = 0; j < tableInformation.sizeX; j++) {
             quint16 tl, bl, tr, br;
             byteStream >> tl;
             byteStream >> bl;
             byteStream >> tr;
             byteStream >> br;
+            int tileIndex = i * tableInformation.sizeX + j;
             subVector.append({tl, bl, tr, br});
+            subVector.last().offset = getExternalOffset(tileIndex);
         }
         if (tiles.length() <= i)
             tiles.append(subVector);
@@ -83,20 +92,31 @@ void Map16GraphicsView::readInternalMap16File(const QString& name) {
         for (quint32 i = 0; i < tableInformation.sizeX; i++) {
             QVector<FullTile> subVector{};
             subVector.reserve(16);
-            for (quint32 j = 0; j < 16; j++)
+            for (quint32 j = 0; j < 16; j++) {
                 subVector.append({0x00, 0x00, 0x00, 0x00});
+            }
             tiles.append(subVector);
         }
     }
     qDebug() << "length at end: " << tiles.length();
     imageWidth = (int)tableInformation.sizeX * 16;
-    imageHeight = ((int)tableInformation.sizeY + 16) * 16;
+    imageHeight = ((int)tableInformation.sizeY + (tableInformation.sizeY == 16 * 4 ? 0 : 16)) * 16;
     // we don't really care about the rest of the file, now we can draw
     drawInternalMap16File();
 }
 
+int Map16GraphicsView::getExternalOffset(int tileIndex) {
+    auto res = std::find_if(exgfx.begin(), exgfx.end(), [tileIndex](auto& ex) {
+            return (tileIndex >= ex.start && tileIndex <= ex.end);
+        });
+    if (res == exgfx.end())
+        return -1;
+    return (*res).basetile;
+}
+
 void Map16GraphicsView::readExternalMap16File(const QString &name) {
-    readInternalMap16File(name);
+    mapName = name;
+    readInternalMap16File();
 }
 
 void Map16GraphicsView::drawInternalMap16File() {
@@ -234,13 +254,13 @@ QPoint Map16GraphicsView::translateToRect(QPoint position) {
                 );
 }
 
-FullTile& Map16GraphicsView::tileNumToTile() {
+FullTile& Map16GraphicsView::tileNumToTile(int tilenum) {
     int realClickedTile;
     if (currType == SelectorType::Sixteen) {
-        realClickedTile = currentClickedTile;
+        realClickedTile = tilenum;
     } else {
-        int r = (currentClickedTile / 32) / 2;
-        int c = (currentClickedTile % 32) / 2;
+        int r = (tilenum / 32) / 2;
+        int c = (tilenum % 32) / 2;
         realClickedTile = r * 16 + c;
     }
     int row = realClickedTile / (imageWidth / 22);
@@ -271,7 +291,9 @@ void Map16GraphicsView::mousePressEvent(QMouseEvent *event) {
     if (event->button() == Qt::RightButton) {
         if (currentClickedTile == -1 || (currType == SelectorType::Sixteen && currentTile < 0x300) || (currType == SelectorType::Eight && currentTile < 0xC00))
             return;
-        auto& tile = tileNumToTile();
+        auto& tile = tileNumToTile(currentClickedTile);
+        auto& newTile = tileNumToTile(currentTile);
+        newTile = tile;
         QPainter og{&TileMap};
         QPainter high{&currentWithNoHighlight};
         QPainter sel{&currentWithNoSelection};
@@ -288,6 +310,7 @@ void Map16GraphicsView::mousePressEvent(QMouseEvent *event) {
         og.end();
         drawCurrentSelectedTile(currentWithNoHighlight);
         currentMap16->setPixmap(currentWithNoHighlight);
+        emit signalTileUpdatedForDisplay(newTile, currentTile);
         return;
     }
     grabKeyboard();
@@ -295,9 +318,9 @@ void Map16GraphicsView::mousePressEvent(QMouseEvent *event) {
         return;
     currentClickedTile = currentTile;
     currentTopLeftClicked = translateToRect(event->position().toPoint());
-    copyTileToClipboard(tileNumToTile());
+    copyTileToClipboard(tileNumToTile(currentClickedTile));
     copiedTile->setTileNum(mouseCoordinatesToTile(event->position().toPoint()));
-    clickCallback(tileNumToTile(), currentTile, currType);
+    clickCallback(tileNumToTile(currentClickedTile), currentTile, currType);
     QPixmap selected = currentWithNoSelection;
     drawCurrentSelectedTile(selected);
     currentMap16->setPixmap(selected);
@@ -308,12 +331,16 @@ void Map16GraphicsView::mousePressEvent(QMouseEvent *event) {
 void Map16GraphicsView::keyPressEvent(QKeyEvent *event) {
     if (event->key() == Qt::Key::Key_Delete && event->keyCombination().keyboardModifiers().testFlag(Qt::KeyboardModifier::ControlModifier)) {
         qDebug() << "Delete + Ctrl pressed";
+        mapName = ":/Resources/spriteMapData.map16";
+        exgfx.clear();
+        SnesGFXConverter::clearnExternalMap16Data();
+        for (int i = 0; i < 16 * 3; i++)
+            for (int j = 0; j < tiles[i].length(); j++)
+                tiles[i][j].offset = -1;
         for (int i = 16  * 3; i < tiles.length(); i++)
             for (int j = 0; j < tiles[i].length(); j++)
                 tiles[i][j] = FullTile{0, 0, 0, 0};
-        imageWidth = tiles.first().length() * 16;
-        imageHeight = tiles.length() * 16;
-        drawInternalMap16File();
+        readInternalMap16File();
     } else if (event->key() == Qt::Key::Key_Delete || event->key() == Qt::Key::Key_Backspace) {
         qDebug() << "Delete or backspace pressed";
         if (currentClickedTile == -1 || (currType == SelectorType::Sixteen && currentTile < 0x300) || (currType == SelectorType::Eight && currentTile < 0xC00))
@@ -325,7 +352,7 @@ void Map16GraphicsView::keyPressEvent(QKeyEvent *event) {
         high.setCompositionMode(QPainter::CompositionMode_Source);
         sel.setCompositionMode(QPainter::CompositionMode_Source);
         auto size = CellSize();
-        auto& tile = tileNumToTile();
+        auto& tile = tileNumToTile(currentClickedTile);
         tile = FullTile{0, 0, 0, 0};
         auto img = tile.getFullTile();
         high.drawImage(QRect{(currentTile % 16) * size, (currentTile / 16) * size, size, size}, img);
@@ -394,6 +421,7 @@ TileChangeType Map16GraphicsView::getChangeType() {
 }
 
 void Map16GraphicsView::changePaletteIndex(QComboBox* box, FullTile tileInfo) {
+    QSignalBlocker block{box};
     if (currType == SelectorType::Sixteen) {
         if ((tileInfo.bottomleft.pal == tileInfo.bottomright.pal)
                 && (tileInfo.bottomleft.pal == tileInfo.topleft.pal)
@@ -434,7 +462,7 @@ void Map16GraphicsView::tileChanged(QObject* toBlock, TileChangeAction action, T
         )
         return;
     QSignalBlocker block{toBlock};
-    FullTile& tile = tileNumToTile();
+    FullTile& tile = tileNumToTile(currentClickedTile);
     TileInfo* partial = nullptr;
     switch (type) {
     case TileChangeType::BottomLeft:
@@ -499,7 +527,7 @@ void Map16GraphicsView::tileChanged(QObject* toBlock, TileChangeAction action, T
         og.drawImage(rect, img);
     }
     else {
-        auto img = partial->get8x8Tile();
+        auto img = partial->get8x8Tile(tile.offset);
         QRect rect{(currentClickedTile % 32) * size, (currentClickedTile / 32) * size, size, size};
         high.drawImage(rect, img);
         sel.drawImage(rect, img);
@@ -510,6 +538,7 @@ void Map16GraphicsView::tileChanged(QObject* toBlock, TileChangeAction action, T
     og.end();
     drawCurrentSelectedTile(currentWithNoHighlight);
     currentMap16->setPixmap(currentWithNoHighlight);
+    emit signalTileUpdatedForDisplay(tile, currentClickedTile);
 }
 
 void Map16GraphicsView::setCopiedTile(ClipboardTile& tile) {
@@ -593,8 +622,50 @@ QString Map16GraphicsView::getMap16() {
     return QString{data.toBase64()};
 }
 
+void Map16GraphicsView::loadExternalGraphics() {
+    QFileInfo name{QFileDialog::getOpenFileName(this, "Select ROM", QDir::current().path(), "ROM Files (*.smc);;ROM Files (*.sfc)")};
+    QDir romdir{name.dir()};
+    QString extDir;
+    QString sscName;
+    for (auto& fdir : romdir.entryInfoList()) {
+        if (fdir.isDir() && fdir.baseName() == "ExternalGraphics")
+            extDir = fdir.absoluteFilePath();
+        else if (fdir.isFile() && fdir.fileName() == name.baseName() + ".ssc")
+            sscName = fdir.absoluteFilePath();
+    }
+    QStringList exgfxfiles;
+    for (auto& fdir : QDir(extDir).entryInfoList()) {
+        if (fdir.suffix() == "bin" && fdir.baseName().startsWith("ExSpriteGFX"))
+            exgfxfiles.append(fdir.absoluteFilePath());
+    }
+    qDebug() << sscName;
+    QFile ssc{sscName};
+    ssc.open(QFile::ReadOnly);
+    while (!ssc.atEnd()) {
+        QString line{ssc.readLine().trimmed()};
+        if (line.startsWith("10000")) {
+            auto entries = line.split(" ");
+            entries.remove(0, 2);
+            for (auto& entry : entries) {
+                qDebug() << entry;
+                auto values = entry.split(QRegularExpression(R"([,-])"), Qt::SkipEmptyParts);
+                exgfx.append({values[0].toInt(nullptr, 16), values[1].toInt(nullptr, 16), values[2].toInt(nullptr, 16)});
+            }
+        }
+    }
+    std::sort(exgfx.begin(), exgfx.end(), [](auto& a, auto& b) {
+        return a.start < b.start;
+    });
+    SnesGFXConverter::populateExternalMap16Data(exgfxfiles);
+    imageWidth = tiles.first().length() * 16;
+    imageHeight = tiles.length() * 16;
+    drawInternalMap16File();
+}
+
 Map16GraphicsView::~Map16GraphicsView() {
     qDebug() << "Map16 GraphicsView Destructor called";
     if (currScene)
         delete currScene;
 }
+
+

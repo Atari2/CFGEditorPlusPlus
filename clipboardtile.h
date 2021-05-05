@@ -4,6 +4,12 @@
 #include "snesgfxconverter.h"
 #include "spritepalettecreator.h"
 
+struct ExternalGfxInfo {
+    qsizetype start;
+    qsizetype end;
+    int basetile;
+};
+
 struct TileInfo {
     TileInfo(quint16 tile);
     TileInfo() = default;
@@ -12,8 +18,8 @@ struct TileInfo {
     bool prio;
     quint8 pal;
     quint16 tilenum;
-    QImage get8x8Tile();
-    QImage get8x8Scaled(int width);
+    QImage get8x8Tile(int offset);
+    QImage get8x8Scaled(int width, int offset);
     bool isEmpty();
     quint16 TileValue();
 };
@@ -22,6 +28,7 @@ struct FullTile {
     FullTile(quint16 tl, quint16 bl, quint16 tr, quint16 br);
     FullTile(TileInfo tl, TileInfo bl, TileInfo tr, TileInfo br);
     FullTile() = default;
+    int offset = -1;
     TileInfo topleft;
     TileInfo bottomleft;
     TileInfo topright;
@@ -29,6 +36,7 @@ struct FullTile {
     QImage getFullTile();
     QImage getScaled(int width);
     void SetPalette(int pal);
+    void SetOffset(int off);
     void FlipX();
     void FlipY();
     bool isEmpty();

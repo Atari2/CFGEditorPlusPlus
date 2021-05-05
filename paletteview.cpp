@@ -8,15 +8,17 @@ PaletteView::PaletteView(QGraphicsScene* ogscene) : QGraphicsView(ogscene) {
     QObject::connect(this, &QListView::customContextMenuRequested, this, [&](QPoint pos) {
         QMenu* menu = new QMenu(this);
         menu->addAction("&Load Palette from file", this, [&]() {
-            QString filename = QFileDialog::getOpenFileName();
+            QString filename = QFileDialog::getOpenFileName(this, "Open Pal File", "", tr("Palette Files (*.pal)"));
             if (filename.length() == 0)
+                return;
+            if (!assert_filesize(filename, 768))
                 return;
             SpritePaletteCreator::ReadPaletteFile(0, 16, 16, filename);
             updateForChange(SpritePaletteCreator::MakeFullPalette());
             emit paletteChanged();
         });
         menu->addAction("&Save Palette to file", this, [&]() {
-            QString filename = QFileDialog::getSaveFileName();
+            QString filename = QFileDialog::getSaveFileName(this, "Save Pal/Palmask File", "", tr("Palette Files (*.pal)"));
             if (filename.length() == 0)
                 return;
             SpritePaletteCreator::PaletteToFile(currentItem->pixmap().toImage(), filename);

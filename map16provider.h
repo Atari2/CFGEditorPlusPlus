@@ -37,6 +37,7 @@ class Map16Provider : public QLabel
 public:
     using DisplayTiles = QVector<TiledPosition>;
     Map16Provider(QWidget* parent = nullptr);
+    void attachMap16View(Map16GraphicsView* view);
     void focusOutEvent(QFocusEvent* event);
     void mouseMoveEvent(QMouseEvent *event);
     void mousePressEvent(QMouseEvent *event);
@@ -81,6 +82,7 @@ private:
     QVector<bool> usesText;
     QVector<DisplayTiles> m_tiles;
     ClipboardTile* copiedTile = nullptr;
+    Map16GraphicsView* view = nullptr;
     QVector<QPixmap> m_displays;
 signals:
 };
