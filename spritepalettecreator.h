@@ -13,7 +13,7 @@ class SpritePaletteCreator
     static inline QVector<QVector<QColor>> paletteData;
 public:
     static const QVector<QColor>& getPalette(int index);
-    static void ReadPaletteFile(int offset = 0, int rows = 8, int columns = 16, const QString& filename = ":/palettedata/Resources/sprites_palettes.pal");
+    static void ReadPaletteFile(int offset = 0, int rows = 8, int columns = 16, const QString& filename = ":/Resources/sprites_palettes.pal");
     constexpr static int nSpritePalettes() { return 8; }
     static QPixmap MakePalette(int index);
     static QPixmap MakeFullPalette();

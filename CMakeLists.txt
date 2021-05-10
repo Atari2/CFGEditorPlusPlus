@@ -24,10 +24,8 @@ else()
     message(STATUS "Unix build")
 endif()
 
-find_package(QT NAMES Qt6 Qt5 COMPONENTS Widgets LinguistTools REQUIRED)
-find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Widgets LinguistTools REQUIRED)
-
-set(TS_FILES CFGEditorPlusPlus_en_US.ts)
+find_package(QT NAMES Qt6 Qt5 COMPONENTS Widgets REQUIRED)
+find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Widgets REQUIRED)
 
 set(PROJECT_SOURCES
         main.cpp
@@ -55,11 +53,11 @@ set(PROJECT_SOURCES
         clipboardtile.cpp
         clipboardtile.h
         utils.h
-        ${TS_FILES}
+        VioletEgg.rc
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
-    qt_add_resources(srcs_for_exe palettes.qrc)
+    qt_add_resources(srcs_for_exe resources.qrc)
     qt_add_executable(CFGEditorPlusPlus
         ${PROJECT_SOURCES}
         ${srcs_for_exe}
@@ -74,21 +72,17 @@ if (WIN32)
             COMMAND "${CMAKE_COMMAND}" -E
                 env PATH="${_qt_bin_dir}" "${WINDEPLOYQT_EXE}"
                     --release
+                    --no-compiler-runtime
+                    --no-translations
                     "$<TARGET_FILE:CFGEditorPlusPlus>"
             COMMENT "Running windeployqt..."
         )
     endif()
 endif()
 else()
-    if(ANDROID)
-        add_library(CFGEditorPlusPlus SHARED
+    add_executable(CFGEditorPlusPlus
             ${PROJECT_SOURCES}
-        )
-    else()
-        add_executable(CFGEditorPlusPlus
-            ${PROJECT_SOURCES}
-        )
-    endif()
+    )
 endif()
 
 if (CMAKE_BUILD_TYPE STREQUAL "Release" OR CMAKE_CONFIGURATION_TYPES STREQUAL "Release")
