@@ -11,19 +11,6 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# QtCreator supports the following variables for Android, which are identical to qmake Android variables.
-# Check https://doc.qt.io/qt/deployment-android.html for more information.
-# They need to be set before the find_package( ...) calls below.
-
-#if(ANDROID)
-#    set(ANDROID_PACKAGE_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/android")
-#    if (ANDROID_ABI STREQUAL "armeabi-v7a")
-#        set(ANDROID_EXTRA_LIBS
-#            ${CMAKE_CURRENT_SOURCE_DIR}/path/to/libcrypto.so
-#            ${CMAKE_CURRENT_SOURCE_DIR}/path/to/libssl.so)
-#    endif()
-#endif()
-
 if (WIN32)
     set(ON_WINDOWS "True")
     if (CMAKE_CURRENT_SOURCE_DIR MATCHES ".*[\//]aless[\//].*")
@@ -35,7 +22,6 @@ if (WIN32)
     endif()
 else()
     message(STATUS "Unix build")
-    set(CMAKE_PREFIX_PATH "")
 endif()
 
 find_package(QT NAMES Qt6 Qt5 COMPONENTS Widgets LinguistTools REQUIRED)
@@ -81,16 +67,18 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     get_target_property(_qmake_executable Qt6::qmake IMPORTED_LOCATION)
     get_filename_component(_qt_bin_dir "${_qmake_executable}" DIRECTORY)
     find_program(WINDEPLOYQT_EXE windeployqt HINTS "${_qt_bin_dir}")
-
-    add_custom_command(TARGET CFGEditorPlusPlus POST_BUILD
-        COMMAND "${CMAKE_COMMAND}" -E
-            env PATH="${_qt_bin_dir}" "${WINDEPLOYQT_EXE}"
-                --release
-                --compiler-runtime
-                "$<TARGET_FILE:CFGEditorPlusPlus>"
-        COMMENT "Running windeployqt..."
-    )
-    qt_create_translation(QM_FILES ${CMAKE_SOURCE_DIR} ${TS_FILES})
+if (WIN32)
+    if (CMAKE_BUILD_TYPE STREQUAL "Release" OR CMAKE_CONFIGURATION_TYPES STREQUAL "Release")
+        message(STATUS "Building release windeploy")
+        add_custom_command(TARGET CFGEditorPlusPlus POST_BUILD
+            COMMAND "${CMAKE_COMMAND}" -E
+                env PATH="${_qt_bin_dir}" "${WINDEPLOYQT_EXE}"
+                    --release
+                    "$<TARGET_FILE:CFGEditorPlusPlus>"
+            COMMENT "Running windeployqt..."
+        )
+    endif()
+endif()
 else()
     if(ANDROID)
         add_library(CFGEditorPlusPlus SHARED
@@ -101,12 +89,10 @@ else()
             ${PROJECT_SOURCES}
         )
     endif()
-
-    qt5_create_translation(QM_FILES ${CMAKE_SOURCE_DIR} ${TS_FILES})
 endif()
 
-if (CMAKE_BUILD_TYPE STREQUAL "Release")
-    message("Building Release, removing qDebug()")
+if (CMAKE_BUILD_TYPE STREQUAL "Release" OR CMAKE_CONFIGURATION_TYPES STREQUAL "Release")
+    message(STATUS "Building Release, removing qDebug()")
     target_compile_definitions(CFGEditorPlusPlus PRIVATE QT_NO_DEBUG_OUTPUT)
     target_link_options(CFGEditorPlusPlus PRIVATE /SUBSYSTEM:windows /ENTRY:mainCRTStartup)
 endif()
