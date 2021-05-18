@@ -3,3 +3,4 @@ cmake.exe -S . -B build -GNinja "-DCMAKE_BUILD_TYPE:String=Release" "-DQT_QMAKE_
 cd build
 cmake.exe --build . --target all
 cd ..
+exit
