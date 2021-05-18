@@ -1,19 +1,21 @@
-from zipfile import ZipFile
+from zipfile import ZipFile, ZIP_DEFLATED
 import glob
 from pathlib import Path
 
-executable_path = 'build/CFGEditorPlusPlus.exe'
-core_dlls = glob.glob('build/Qt6*.dll')
-imageformats = glob.glob('build/imageformats/*.dll')
-platforms = glob.glob('build/platforms/*.dll')
-styles = glob.glob('build/styles/*.dll')
+executable_path = 'build\\CFGEditorPlusPlus.exe'
+core_dlls = glob.glob('build\\Qt6*.dll')
+imageformats = glob.glob('build\\imageformats\\*.dll')
+platforms = glob.glob('build\\platforms\\*.dll')
+styles = glob.glob('build\\styles\\*.dll')
 
 all_dlls = [*core_dlls, *imageformats, *platforms, *styles]
 
 print(all_dlls)
 
-with ZipFile('CFGEditor.zip', 'w') as zpf:
+with ZipFile('CFGEditor.zip', 'w', ZIP_DEFLATED) as zpf:
 	for dll in all_dlls:
-		zipname = dll.split('/', 1)[-1]
+		zipname = dll.split('\\', 1)[-1]
 		zpf.write(dll, arcname=zipname)
 	zpf.write(executable_path, arcname='CFGEditorPlusPlus.exe')
+
+print('Zip created')
