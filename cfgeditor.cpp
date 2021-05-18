@@ -33,6 +33,15 @@ CFGEditor::CFGEditor(QWidget *parent)
     ui->Default->setAutoFillBackground(true);
     mb->show();
     setMenuBar(mb);
+    deleteInstaller();
+}
+
+void CFGEditor::deleteInstaller() {
+    if (QFile::exists(QDir::currentPath() + "/ICFGEditor.exe")) {
+        // if cfg editor has been just installed, just remove the installer, since it's a waste of space
+        QFile file(QDir::currentPath() + "/ICFGEditor.exe");
+        file.remove();
+    }
 }
 
 void CFGEditor::closeEvent(QCloseEvent *event) {

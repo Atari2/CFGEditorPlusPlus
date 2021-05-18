@@ -30,6 +30,7 @@ class CFGEditor : public QMainWindow
 public:
     CFGEditor(QWidget *parent = nullptr);
     ~CFGEditor();
+    void deleteInstaller();
     void setUpMenuBar(QMenuBar*);
     void bindSpriteProp();
     void setUpImages();
