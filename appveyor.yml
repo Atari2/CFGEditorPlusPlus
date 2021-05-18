@@ -1,5 +1,5 @@
 build_script:
-  - ps: .\build_script.ps1
+  - cmd: .\build_script.ps1
   
 after_build:
   - ps: py .\zip_script.py
