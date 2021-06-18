@@ -55,6 +55,7 @@ public:
     QPixmap overlay();
     void redraw();
     void redrawNoSort();
+    void redrawFirstIndex();
     ClipboardTile* getCopiedTile();
     void reset();
     QPixmap tileGrid;

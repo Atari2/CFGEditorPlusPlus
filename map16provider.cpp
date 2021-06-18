@@ -22,6 +22,8 @@ Map16Provider::Map16Provider(QWidget* parent) : QLabel(parent)  {
 void Map16Provider::attachMap16View(Map16GraphicsView* view) {
     this->view = view;
     QObject::connect(this->view, QOverload<const FullTile&, int>::of(&Map16GraphicsView::signalTileUpdatedForDisplay), this, [&](const FullTile& t, int tileno) {
+        if (currentIndex == -1)
+            return;
         for (auto& tile : m_tiles[currentIndex]) {
             if (tile.map16tileno == tileno) {
                 tile.tile = t;
@@ -140,7 +142,27 @@ void Map16Provider::redrawNoSort() {
     setPixmap(drawSelectedTile());
 }
 
+void Map16Provider::redrawFirstIndex() {
+    if (m_tiles.empty())
+        return;
+    if (m_tiles.first().empty())
+        return;
+    m_displays.first().fill(Qt::transparent);
+    QPainter p{&m_displays.first()};
+    std::sort(m_tiles.first().begin(), m_tiles.first().end(), [](TiledPosition& lhs, TiledPosition& rhs) {
+        return lhs.zpos < rhs.zpos;
+    });
+    for (auto& t : m_tiles.first()) {
+        p.drawImage(QRect{t.pos.x(), t.pos.y(), 16, 16}, t.tile.getFullTile());
+    }
+    setPixmap(drawSelectedTile());
+}
+
 void Map16Provider::redraw() {
+    if (currentIndex == -1) {
+        redrawFirstIndex();
+        return;
+    }
     m_displays[currentIndex].fill(Qt::transparent);
     QPainter p{&m_displays[currentIndex]};
     std::sort(m_tiles[currentIndex].begin(), m_tiles[currentIndex].end(), [](TiledPosition& lhs, TiledPosition& rhs) {
@@ -188,8 +210,15 @@ QPixmap Map16Provider::overlay() {
     QPainter p{&pix};
     p.fillRect(pix.rect(), QBrush(QGradient(QGradient::AmourAmour)));
     p.drawImage(pix.rect(), tileGrid.toImage());
-    if (currentIndex == -1) {
+    if (currentIndex == -1 && m_tiles.empty()) {
         p.drawImage(pix.rect(), base.toImage());
+    } else if (currentIndex == -1) {
+        currentIndex = 0;
+        if (usesText[currentIndex]) {
+            drawLetters(p);
+        } else {
+            p.drawImage(pix.rect(), m_displays[currentIndex].toImage());
+        }
     } else {
         if (usesText[currentIndex]) {
             drawLetters(p);

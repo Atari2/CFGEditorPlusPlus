@@ -245,7 +245,10 @@ void JsonSprite::deserialize() {
     addbcountclear = obj["Additional Byte Count (extra bit clear)"].toInt();
     addbcountset = obj["Additional Byte Count (extra bit set)"].toInt();
     map16 = obj["Map16"].toString();
-    dispType = obj["DisplayType"].toString() == "XY" ? DisplayType::XY : DisplayType::ExtraByte;
+    if (obj.find("DisplayType") != obj.end())
+        dispType = obj["DisplayType"].toString() == "XY" ? DisplayType::XY : DisplayType::ExtraByte;
+    else
+        dispType = DisplayType::XY;
     auto dispArr = obj["Displays"].toArray();
     auto collArr = obj["Collection"].toArray();
     auto gfiles = obj["GFXInfo"].toArray();

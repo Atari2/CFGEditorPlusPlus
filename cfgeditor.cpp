@@ -83,6 +83,7 @@ void CFGEditor::loadFullbitmap(int index) {
     }
     ui->map16GraphicsView->readInternalMap16File();
     view8x8->updateForChange(full8x8Bitmap);
+    ui->labelDisplayTilesGrid->redraw();
 }
 
 void CFGEditor::setUpMenuBar(QMenuBar* mb) {
