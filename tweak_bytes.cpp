@@ -5,7 +5,7 @@ void J1656::from_json(const QJsonObject& byte) {
     canbejumped = byte["Can be jumped on"].toBool();
     diesjumped = byte["Dies when jumped on"].toBool();
     hopin = byte["Hop in/kick shell"].toBool();
-    disapp = byte["Disappears in a cloud of smoke"].toBool();
+    disapp = byte["Disappears in cloud of smoke"].toBool();
 }
 
 void J1656::from_byte(uint8_t byte) {
@@ -186,7 +186,7 @@ QJsonObject J1656::to_json() const {
     obj["Can be jumped on"] = canbejumped;
     obj["Dies when jumped on"] = diesjumped;
     obj["Hop in/kick shell"] = hopin;
-    obj["Disappears in a cloud of smoke"] = disapp;
+    obj["Disappears in cloud of smoke"] = disapp;
     return obj;
 }
 
