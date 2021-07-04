@@ -4,6 +4,14 @@
 #include "snesgfxconverter.h"
 #include "spritepalettecreator.h"
 
+enum class TileChangeType {
+    All,
+    BottomLeft,
+    BottomRight,
+    TopLeft,
+    TopRight
+};
+
 struct ExternalGfxInfo {
     qsizetype start;
     qsizetype end;
@@ -13,6 +21,7 @@ struct ExternalGfxInfo {
 struct TileInfo {
     TileInfo(quint16 tile);
     TileInfo() = default;
+    bool is_this_tile = true;
     bool vflip;
     bool hflip;
     bool prio;
@@ -21,12 +30,13 @@ struct TileInfo {
     QImage get8x8Tile(int offset);
     QImage get8x8Scaled(int width, int offset);
     bool isEmpty();
+    bool isThisTile();
     quint16 TileValue();
 };
 
 struct FullTile {
-    FullTile(quint16 tl, quint16 bl, quint16 tr, quint16 br);
-    FullTile(TileInfo tl, TileInfo bl, TileInfo tr, TileInfo br);
+    FullTile(quint16 tl, quint16 bl, quint16 tr, quint16 br, TileChangeType type = TileChangeType::All);
+    FullTile(TileInfo tl, TileInfo bl, TileInfo tr, TileInfo br, TileChangeType type = TileChangeType::All);
     FullTile() = default;
     int offset = -1;
     TileInfo topleft;
@@ -40,14 +50,6 @@ struct FullTile {
     void FlipX();
     void FlipY();
     bool isEmpty();
-};
-
-enum class TileChangeType {
-    All,
-    BottomLeft,
-    BottomRight,
-    TopLeft,
-    TopRight
 };
 
 class ClipboardTile

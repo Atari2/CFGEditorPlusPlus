@@ -9,22 +9,68 @@ TileInfo::TileInfo(quint16 info) {
     tilenum = (info & 0x3FF);
 }
 
-FullTile::FullTile(quint16 tl, quint16 bl, quint16 tr, quint16 br) :
+FullTile::FullTile(quint16 tl, quint16 bl, quint16 tr, quint16 br, TileChangeType type) :
     topleft(tl),
     bottomleft(bl),
     topright(tr),
     bottomright(br)
 {
-
+    switch (type) {
+    case TileChangeType::BottomLeft:
+        topleft.is_this_tile = false;
+        topright.is_this_tile = false;
+        bottomright.is_this_tile = false;
+        break;
+    case TileChangeType::TopLeft:
+        bottomleft.is_this_tile = false;
+        topright.is_this_tile = false;
+        bottomright.is_this_tile = false;
+        break;
+    case TileChangeType::BottomRight:
+        topleft.is_this_tile = false;
+        topright.is_this_tile = false;
+        bottomleft.is_this_tile = false;
+        break;
+    case TileChangeType::TopRight:
+        topleft.is_this_tile = false;
+        bottomleft.is_this_tile = false;
+        bottomright.is_this_tile = false;
+        break;
+    default:
+        break;
+    }
 }
 
-FullTile::FullTile(TileInfo tl, TileInfo bl, TileInfo tr, TileInfo br) :
+FullTile::FullTile(TileInfo tl, TileInfo bl, TileInfo tr, TileInfo br, TileChangeType type) :
     topleft(tl),
     bottomleft(bl),
     topright(tr),
     bottomright(br)
 {
-
+    switch (type) {
+    case TileChangeType::BottomLeft:
+        topleft.is_this_tile = false;
+        topright.is_this_tile = false;
+        bottomright.is_this_tile = false;
+        break;
+    case TileChangeType::TopLeft:
+        bottomleft.is_this_tile = false;
+        topright.is_this_tile = false;
+        bottomright.is_this_tile = false;
+        break;
+    case TileChangeType::BottomRight:
+        topleft.is_this_tile = false;
+        topright.is_this_tile = false;
+        bottomleft.is_this_tile = false;
+        break;
+    case TileChangeType::TopRight:
+        topleft.is_this_tile = false;
+        bottomleft.is_this_tile = false;
+        bottomright.is_this_tile = false;
+        break;
+    default:
+        break;
+    }
 }
 
 void FullTile::SetPalette(int pal) {
@@ -65,6 +111,11 @@ void FullTile::FlipY() {
 }
 
 QImage TileInfo::get8x8Tile(int offset) {
+    if (!isThisTile()) {
+        QImage tile(8, 8, QImage::Format::Format_ARGB32);
+        tile.fill(Qt::transparent);
+        return tile;
+    }
     QImage ig;
     if (offset == -1)
         ig = SnesGFXConverter::get8x8TileFromVect(tilenum, SpritePaletteCreator::getPalette(pal + 8));
@@ -87,6 +138,10 @@ bool TileInfo::isEmpty() {
     val |= ((pal & 7)  << 10);
     val |= (tilenum & 0x3FF);
     return val == 0;
+}
+
+bool TileInfo::isThisTile() {
+    return is_this_tile;
 }
 
 quint16 TileInfo::TileValue() {
@@ -168,13 +223,13 @@ FullTile ClipboardTile::getTile() {
     case TileChangeType::All:
         return tile;
     case TileChangeType::BottomLeft:
-        return FullTile{0, quarter, 0, 0};
+        return FullTile{0, quarter, 0, 0, type};
     case TileChangeType::BottomRight:
-        return FullTile{0, 0, 0, quarter};
+        return FullTile{0, 0, 0, quarter, type};
     case TileChangeType::TopLeft:
-        return FullTile{quarter, 0, 0, 0};
+        return FullTile{quarter, 0, 0, 0, type};
     case TileChangeType::TopRight:
-        return FullTile{0, 0, quarter, 0};
+        return FullTile{0, 0, quarter, 0, type};
     default:
         Q_ASSERT(false);
     }
