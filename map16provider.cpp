@@ -372,8 +372,12 @@ void Map16Provider::keyPressEvent(QKeyEvent *event) {
         return;
     qDebug() << "Key press event received";
     if (event->key() == Qt::Key_Backspace || event->key() == Qt::Key_Delete) {
-        auto index = m_tiles[currentIndex].indexOf(currentSelected);
-        m_tiles[currentIndex].removeAt(index);
+        if (event->keyCombination().keyboardModifiers().testFlag(Qt::KeyboardModifier::ControlModifier)) {
+           m_tiles[currentIndex].clear();
+        } else {
+            auto index = m_tiles[currentIndex].indexOf(currentSelected);
+            m_tiles[currentIndex].removeAt(index);
+        }
         currentSelected = SIZE_MAX;
         redrawNoSort();
     } else if (event->key() == Qt::Key_Escape) {
