@@ -384,6 +384,7 @@ void Map16Provider::keyPressEvent(QKeyEvent *event) {
         currentSelected = SIZE_MAX;
         redrawNoSort();
     }
+
     releaseKeyboard();
     event->accept();
 }
