@@ -17,12 +17,21 @@ enum SizeSelector : int {
 
 struct TiledPosition {
     static inline size_t unique_index = 0;
-    TileChangeType type = TileChangeType::All;
     FullTile tile;
     QPoint pos;
     int zpos;
     size_t tid;
     int map16tileno;
+    static TiledPosition getInvalid() {
+        TiledPosition pos;
+        pos.tile = {0, 0, 0, 0};
+        pos.pos = QPoint{0, 0};
+        pos.zpos = 0;
+        pos.tid = SIZE_MAX;
+        pos.map16tileno = -1;
+        return pos;
+    }
+
     bool operator==(const TiledPosition& other) const {
         return tid == other.tid;
     }
@@ -72,7 +81,7 @@ public:
     void serializeDisplays(QVector<DisplayData>& data);
     void deserializeDisplays(const QVector<Display>& display, Map16GraphicsView* view);
 private:
-    TiledPosition invalid {TileChangeType::All, {0, 0, 0, 0}, {0, 0}, 0, SIZE_MAX, -1};
+    TiledPosition invalid = TiledPosition::getInvalid();
     TiledPosition& findIndex(size_t index);
     size_t currentSelected = SIZE_MAX;
     int currentIndex = -1;

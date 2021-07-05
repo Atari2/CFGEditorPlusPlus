@@ -155,16 +155,34 @@ quint16 TileInfo::TileValue() {
 }
 
 QImage FullTile::getFullTile() {
-    QImage img{16, 16, QImage::Format::Format_ARGB32};
-    img.fill(Qt::transparent);
-    QPainter p{&img};
-    p.setCompositionMode(QPainter::CompositionMode_SourceOver);
-    p.drawImage(QRect{0, 0, 8, 8}, topleft.get8x8Tile(offset));
-    p.drawImage(QRect{0, 8, 8, 8}, bottomleft.get8x8Tile(offset));
-    p.drawImage(QRect{8, 0, 8, 8}, topright.get8x8Tile(offset));
-    p.drawImage(QRect{8, 8, 8, 8}, bottomright.get8x8Tile(offset));
-    p.end();
-    return img;
+    if (isFullTile()) {
+        QImage img{16, 16, QImage::Format::Format_ARGB32};
+        img.fill(Qt::transparent);
+        QPainter p{&img};
+        p.setCompositionMode(QPainter::CompositionMode_SourceOver);
+        p.drawImage(QRect{0, 0, 8, 8}, topleft.get8x8Tile(offset));
+        p.drawImage(QRect{0, 8, 8, 8}, bottomleft.get8x8Tile(offset));
+        p.drawImage(QRect{8, 0, 8, 8}, topright.get8x8Tile(offset));
+        p.drawImage(QRect{8, 8, 8, 8}, bottomright.get8x8Tile(offset));
+        p.end();
+        return img;
+    } else {
+        QImage img{8, 8, QImage::Format::Format_ARGB32};
+        img.fill(Qt::transparent);
+        QPainter p{&img};
+        QRect area{0, 0, 8, 8};
+        if (topleft.isThisTile()) {
+            p.drawImage(area, topleft.get8x8Tile(offset));
+        } else if (topright.isThisTile()) {
+            p.drawImage(area, topright.get8x8Tile(offset));
+        } else if (bottomleft.isThisTile()) {
+            p.drawImage(area, bottomleft.get8x8Tile(offset));
+        } else if (bottomright.isThisTile()) {
+            p.drawImage(area, bottomright.get8x8Tile(offset));
+        }
+        p.end();
+        return img;
+    }
 }
 
 QImage FullTile::getScaled(int width) {
@@ -175,65 +193,38 @@ bool FullTile::isEmpty() {
     return topleft.isEmpty() && topright.isEmpty() && bottomleft.isEmpty() && topleft.isEmpty();
 }
 
+bool FullTile::isFullTile() {
+    return topleft.isThisTile() && topright.isThisTile() && bottomleft.isThisTile() && bottomright.isThisTile();
+}
+
 ClipboardTile::ClipboardTile() :
     valid(false)
-  , type(TileChangeType::All)
   , tile(0, 0, 0, 0)
-  , quarter(0)
 {
 
 }
 
 void ClipboardTile::update(const FullTile& tile) {
     valid = true;
-    type = TileChangeType::All;
     this->tile = tile;
-}
-void ClipboardTile::update(const TileInfo& quarter, TileChangeType type) {
-    valid = true;
-    this->type = type;
-    this->quarter = quarter;
 }
 
 void ClipboardTile::update(const ClipboardTile& other) {
-    valid = true;
-    type = other.type;
+    valid = other.valid;
+    map16tile = other.map16tile;
     tile = other.tile;
-    quarter = other.quarter;
 }
 
 QImage ClipboardTile::draw() {
-    if (type != TileChangeType::All) {
-        return quarter.get8x8Tile(tile.offset);
-    } else {
-        return tile.getFullTile();
-    }
+    return tile.getFullTile();
 }
 
 int ClipboardTile::size() {
-    return type == TileChangeType::All ? 16 : 8;
-}
-
-TileChangeType ClipboardTile::getType() {
-    return type;
+    return 16;
 }
 
 FullTile ClipboardTile::getTile() {
-    switch (type) {
-    case TileChangeType::All:
-        return tile;
-    case TileChangeType::BottomLeft:
-        return FullTile{0, quarter, 0, 0, type};
-    case TileChangeType::BottomRight:
-        return FullTile{0, 0, 0, quarter, type};
-    case TileChangeType::TopLeft:
-        return FullTile{quarter, 0, 0, 0, type};
-    case TileChangeType::TopRight:
-        return FullTile{0, 0, quarter, 0, type};
-    default:
-        Q_ASSERT(false);
-    }
-    return {0, 0, 0, 0};
+    return tile;
 }
 
 bool ClipboardTile::isValid() {
@@ -246,4 +237,56 @@ void ClipboardTile::setTileNum(int num) {
 
 int ClipboardTile::TileNum() {
     return map16tile;
+}
+
+
+void FullTile::setTileInfoByType(TileInfo info, TileChangeType type) {
+    switch (type) {
+    case TileChangeType::BottomLeft:
+        bottomleft = info;
+        break;
+    case TileChangeType::TopLeft:
+        topleft = info;
+        break;
+    case TileChangeType::BottomRight:
+        bottomright = info;
+        break;
+    case TileChangeType::TopRight:
+        topright = info;
+        break;
+    default:
+        break;
+    }
+}
+
+TileInfo FullTile::getTileInfoByType(TileChangeType type) {
+    switch (type) {
+    case TileChangeType::BottomLeft:
+        return bottomleft;
+    case TileChangeType::TopLeft:
+        return topleft;
+    case TileChangeType::BottomRight:
+        return bottomright;
+    case TileChangeType::TopRight:
+        return topright;
+    default:
+        break;
+    }
+    return 0;
+}
+
+QImage FullTile::getPartialTile(TileChangeType type) {
+    switch (type) {
+    case TileChangeType::BottomLeft:
+        return bottomleft.get8x8Tile(offset);
+    case TileChangeType::TopLeft:
+        return topleft.get8x8Tile(offset);
+    case TileChangeType::BottomRight:
+        return bottomright.get8x8Tile(offset);
+    case TileChangeType::TopRight:
+        return topright.get8x8Tile(offset);
+    default:
+        break;
+    }
+    return QImage{};
 }

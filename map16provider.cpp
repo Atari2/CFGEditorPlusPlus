@@ -58,7 +58,8 @@ QPixmap Map16Provider::drawSelectedTile() {
     QPen pen{Qt::white, 1, Qt::DotLine, Qt::SquareCap, Qt::BevelJoin};
     p.setPen(pen);
     auto& t = findIndex(currentSelected);
-    p.drawRect(QRect{t.pos.x(), t.pos.y(), 16, 16});
+    auto size = 16;
+    p.drawRect(QRect{t.pos.x(), t.pos.y(), size, size});
     p.end();
     return curr;
 }
@@ -76,7 +77,8 @@ void Map16Provider::mousePressEvent(QMouseEvent *event) {
         grabKeyboard();
         qDebug() << "Left mouse button pressed";
         auto ret = std::find_if(m_tiles[currentIndex].rbegin(), m_tiles[currentIndex].rend(), [&](TiledPosition& pos) {
-                return QRect{pos.pos.x(), pos.pos.y(), 16, 16}.contains(event->position().toPoint(), true);
+                int size = pos.tile.isFullTile() ? 16 : 8;
+                return QRect{pos.pos.x(), pos.pos.y(), size, size}.contains(event->position().toPoint(), true);
             });
         if (ret == m_tiles[currentIndex].rend())
             return;
@@ -90,9 +92,9 @@ void Map16Provider::mousePressEvent(QMouseEvent *event) {
         qDebug() << "Right mouse button pressed";
         if (!copiedTile->isValid())
             return;
-        int size = static_cast<int>(selectorSize);
+        int size = 16;
         QPoint aligned = alignToGrid(event->position().toPoint(), size);
-        m_tiles[currentIndex].append({copiedTile->getType(), copiedTile->getTile(), aligned, 0, TiledPosition::unique_index++, copiedTile->TileNum()});
+        m_tiles[currentIndex].append({copiedTile->getTile(), aligned, 0, TiledPosition::unique_index++, copiedTile->TileNum()});
         p.setCompositionMode(QPainter::CompositionMode_SourceOver);
         p.drawImage(QRect{aligned.x(), aligned.y(), copiedTile->size(), copiedTile->size()}, copiedTile->draw());
     }
@@ -108,9 +110,8 @@ void Map16Provider::mouseReleaseEvent(QMouseEvent *event) {
 
 void Map16Provider::mouseMoveEvent(QMouseEvent *event) {
     if (currentlyPressed) {
-        int size = static_cast<int>(selectorSize);
-        QPoint aligned = alignToGrid(event->position().toPoint(), size);
         auto& tile = findIndex(currentSelected);
+        QPoint aligned = alignToGrid(event->position().toPoint(), static_cast<int>(selectorSize));
         tile.pos = aligned;
         redrawNoSort();
     }
@@ -136,7 +137,8 @@ void Map16Provider::redrawNoSort() {
     m_displays[currentIndex].fill(Qt::transparent);
     QPainter p{&m_displays[currentIndex]};
     for (auto& t : m_tiles[currentIndex]) {
-        p.drawImage(QRect{t.pos.x(), t.pos.y(), 16, 16}, t.tile.getFullTile());
+        int size = t.tile.isFullTile() ? 16 : 8;
+        p.drawImage(QRect{t.pos.x(), t.pos.y(), size, size}, t.tile.getFullTile());
     }
     p.end();
     setPixmap(drawSelectedTile());
@@ -153,7 +155,8 @@ void Map16Provider::redrawFirstIndex() {
         return lhs.zpos < rhs.zpos;
     });
     for (auto& t : m_tiles.first()) {
-        p.drawImage(QRect{t.pos.x(), t.pos.y(), 16, 16}, t.tile.getFullTile());
+        int size = t.tile.isFullTile() ? 16 : 8;
+        p.drawImage(QRect{t.pos.x(), t.pos.y(), size, size}, t.tile.getFullTile());
     }
     setPixmap(drawSelectedTile());
 }
@@ -169,7 +172,8 @@ void Map16Provider::redraw() {
         return lhs.zpos < rhs.zpos;
     });
     for (auto& t : m_tiles[currentIndex]) {
-        p.drawImage(QRect{t.pos.x(), t.pos.y(), 16, 16}, t.tile.getFullTile());
+        int size = t.tile.isFullTile() ? 16 : 8;
+        p.drawImage(QRect{t.pos.x(), t.pos.y(), size, size}, t.tile.getFullTile());
     }
     setPixmap(drawSelectedTile());
 }
@@ -406,7 +410,7 @@ void Map16Provider::deserializeDisplays(const QVector<Display>& displays, Map16G
             QPoint align = QPoint(t.xoff, t.yoff) + QPoint(96, 96);
             int i = t.tilenumber / 16;
             int j = t.tilenumber % 16;
-            tiles.append({TileChangeType::All, view->tiles[i][j], align, 0, TiledPosition::unique_index++, t.tilenumber});
+            tiles.append({view->tiles[i][j], align, 0, TiledPosition::unique_index++, t.tilenumber});
         }
         m_tiles.append(tiles);
         m_displays.append(createBase());

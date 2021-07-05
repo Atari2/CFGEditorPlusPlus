@@ -77,6 +77,7 @@ public:
     void registerMouseClickCallback(const std::function<void(FullTile, int, SelectorType)>& callback);
     void copyTileToClipboard(const FullTile& tile);
     int getExternalOffset(int tileIndex);
+    TileChangeType getTypeForPartial(int tileno);
     TileChangeType getChangeType();
     ~Map16GraphicsView();
     void useGridChanged();

@@ -286,6 +286,22 @@ void Map16GraphicsView::mouseMoveEvent(QMouseEvent *event) {
     event->accept();
 }
 
+TileChangeType Map16GraphicsView::getTypeForPartial(int tileno) {
+    if (currType == SelectorType::Sixteen)
+        return TileChangeType::All;
+    int row = tileno / 32;
+    int col = tileno % 32;
+    if (row % 2 == 0 && col % 2 == 0) {
+        return TileChangeType::TopLeft;
+    } else if (row % 2 == 0) {
+        return TileChangeType::TopRight;
+    } else if (col % 2 == 0) {
+        return TileChangeType::BottomLeft;
+    } else {
+        return TileChangeType::BottomRight;
+    }
+}
+
 void Map16GraphicsView::mousePressEvent(QMouseEvent *event) {
     qDebug() << "Mouse" << (event->button() == Qt::LeftButton ? "left click" : "right click") << "was pressed";
     if (event->button() == Qt::RightButton) {
@@ -293,7 +309,14 @@ void Map16GraphicsView::mousePressEvent(QMouseEvent *event) {
             return;
         auto& tile = tileNumToTile(currentClickedTile);
         auto& newTile = tileNumToTile(currentTile);
-        newTile = tile;
+        auto currentClickedType = getTypeForPartial(currentClickedTile);
+        auto currentType = getTypeForPartial(currentTile);
+        if (currentClickedType == currentType && currentClickedType == TileChangeType::All) {
+            newTile = tile;
+        } else {
+            newTile.setTileInfoByType(tile.getTileInfoByType(currentClickedType), currentType);
+        }
+
         QPainter og{&TileMap};
         QPainter high{&currentWithNoHighlight};
         QPainter sel{&currentWithNoSelection};
@@ -301,10 +324,16 @@ void Map16GraphicsView::mousePressEvent(QMouseEvent *event) {
         high.setCompositionMode(QPainter::CompositionMode_Source);
         sel.setCompositionMode(QPainter::CompositionMode_Source);
         auto size = CellSize();
-        auto img = tile.getFullTile();
-        high.drawImage(QRect{(currentTile % 16) * size, (currentTile / 16) * size, size, size}, img);
-        sel.drawImage(QRect{(currentTile % 16) * size, (currentTile / 16) * size, size, size}, img);
-        og.drawImage(QRect{(currentTile % 16) * size, (currentTile / 16) * size, size, size}, img);
+        QImage img;
+        if (currentType == TileChangeType::All)
+            img = newTile.getScaled(size);
+        else {
+            img = newTile.getPartialTile(currentType);
+        }
+        auto n_per_row = currentType == TileChangeType::All ? 16 : 32;
+        high.drawImage(QRect{(currentTile % n_per_row) * size, (currentTile / n_per_row) * size, size, size}, img);
+        sel.drawImage(QRect{(currentTile % n_per_row) * size, (currentTile / n_per_row) * size, size, size}, img);
+        og.drawImage(QRect{(currentTile % n_per_row) * size, (currentTile / n_per_row) * size, size, size}, img);
         sel.end();
         high.end();
         og.end();
@@ -374,24 +403,7 @@ void Map16GraphicsView::focusOutEvent(QFocusEvent *event) {
 }
 
 void Map16GraphicsView::copyTileToClipboard(const FullTile& tile) {
-    auto t = getChangeType();
-    switch (t) {
-    case TileChangeType::All:
-        copiedTile->update(tile);
-        break;
-    case TileChangeType::BottomLeft:
-        copiedTile->update(tile.bottomleft, t);
-        break;
-    case TileChangeType::BottomRight:
-        copiedTile->update(tile.bottomright, t);
-        break;
-    case TileChangeType::TopLeft:
-        copiedTile->update(tile.topleft, t);
-        break;
-    case TileChangeType::TopRight:
-        copiedTile->update(tile.topright, t);
-        break;
-    }
+    copiedTile->update(tile);
 }
 
 void Map16GraphicsView::registerMouseClickCallback(const std::function<void(FullTile, int, SelectorType)>& callback) {

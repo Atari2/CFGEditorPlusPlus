@@ -50,25 +50,26 @@ struct FullTile {
     void FlipX();
     void FlipY();
     bool isEmpty();
+    bool isFullTile();
+
+    void setTileInfoByType(TileInfo info, TileChangeType type);
+    TileInfo getTileInfoByType(TileChangeType type);
+    QImage getPartialTile(TileChangeType type);
 };
 
 class ClipboardTile
 {
 private:
     bool valid;
-    TileChangeType type;
     FullTile tile;
-    TileInfo quarter;
     int map16tile;
 public:
     ClipboardTile();
     void update(const FullTile& tile);
-    void update(const TileInfo& quarter, TileChangeType type);
     void update(const ClipboardTile& other);
     QImage draw();
     FullTile getTile();
     int size();
-    TileChangeType getType();
     bool isValid();
     void setTileNum(int num);
     int TileNum();
