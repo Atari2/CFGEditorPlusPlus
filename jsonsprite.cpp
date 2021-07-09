@@ -52,6 +52,7 @@ QJsonObject Display::toJson(DisplayType type) const {
         obj["DisplayText"] = displaytext;
         tilesArr.append(tiles[0].toJson());
     } else {
+        obj["DisplayText"] = "";
         std::for_each(tiles.cbegin(), tiles.cend(), [&](auto& t) {
             tilesArr.append(t.toJson());
         });
@@ -246,7 +247,7 @@ void JsonSprite::deserialize() {
     addbcountset = obj["Additional Byte Count (extra bit set)"].toInt();
     map16 = obj["Map16"].toString();
     if (obj.find("DisplayType") != obj.end())
-        dispType = obj["DisplayType"].toString() == "XY" ? DisplayType::XY : DisplayType::ExtraByte;
+        dispType = obj["DisplayType"].toString() == "ExByte" ? DisplayType::ExtraByte : DisplayType::XY;
     else
         dispType = DisplayType::XY;
     auto dispArr = obj["Displays"].toArray();
@@ -267,7 +268,7 @@ void JsonSprite::deserialize() {
 }
 
 void JsonSprite::serialize() {
-    obj["AsmFile"] = asmfile;
+    obj["AsmFile"] = asmfile.trimmed();
     obj["ActLike"] = actlike;
     obj["Type"] = type;
     obj["Additional Byte Count (extra bit clear)"] = addbcountclear;
