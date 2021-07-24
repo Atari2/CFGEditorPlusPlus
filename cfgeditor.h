@@ -28,7 +28,7 @@ class CFGEditor : public QMainWindow
     Q_OBJECT
 
 public:
-    CFGEditor(QWidget *parent = nullptr);
+    CFGEditor(const QStringList& argv, QWidget *parent = nullptr);
     ~CFGEditor();
     void deleteInstaller();
     void setUpMenuBar(QMenuBar*);

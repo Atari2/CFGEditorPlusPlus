@@ -190,6 +190,18 @@ void JsonSprite::deserialize_cfg(QFile& file) {
     }
 }
 
+QByteArray JsonSprite::serialize_cfg() {
+    QByteArray text{};
+    QTextStream stream{&text};
+    stream << QString::asprintf("%02X\n%02X\n", type, actlike);
+    stream << QString::asprintf("%02X %02X %02X %02X %02X %02X\n", t1656.to_byte(), t1662.to_byte(), t166e.to_byte(), t167a.to_byte(), t1686.to_byte(), t190f.to_byte());
+    stream << QString::asprintf("%02X %02X\n", extraProp1, extraProp2);
+    stream << asmfile.trimmed() << '\n';
+    stream << QString::asprintf("%02X:%02X", addbcountclear, addbcountset);
+    stream.flush();
+    return text;
+}
+
 JsonSprite::JsonSprite() {
     t1656 = J1656();
     t1662 = J1662();
@@ -300,10 +312,14 @@ void JsonSprite::serialize() {
     obj["$190F"] = t190f.to_json();
 }
 
-QString JsonSprite::to_text() {
-    serialize();
-    QJsonDocument doc{obj};
-    return QString(doc.toJson().toStdString().c_str());
+QByteArray JsonSprite::to_text(const QString& filename) {
+    if (filename.endsWith(".cfg")) {
+        return serialize_cfg();
+    } else {
+        serialize();
+        QJsonDocument doc{obj};
+        return doc.toJson();
+    }
 }
 
 QString& JsonSprite::name() {
@@ -313,18 +329,18 @@ QString& JsonSprite::name() {
 void JsonSprite::to_file(QString name) {
     if (name.length() == 0) {
         if (m_name.length() == 0)
-            name = QFileDialog::getSaveFileName(nullptr, "Save file", "", "JSON (*.json)");
+            name = QFileDialog::getSaveFileName(nullptr, "Save file", "", "JSON (*.json);;CFG (*.cfg)");
         else
             name = m_name;
         if (name.length() == 0)
             return;
         QFile outFile{name};
         outFile.open(QFile::OpenModeFlag::Truncate | QFile::OpenModeFlag::Text | QFile::OpenModeFlag::WriteOnly);
-        outFile.write(to_text().toStdString().c_str());
+        outFile.write(to_text(name));
     } else {
         QFile outFile{name};
         outFile.open(QFile::OpenModeFlag::Truncate | QFile::OpenModeFlag::Text | QFile::OpenModeFlag::WriteOnly);
-        outFile.write(to_text().toStdString().c_str());
+        outFile.write(to_text(name));
     }
 }
 
