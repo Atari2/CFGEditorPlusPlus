@@ -15,8 +15,8 @@
 #include "utils.h"
 #include "jsonsprite.h"
 #include "snesgfxconverter.h"
-#include "eightbyeightview.h"
-#include "paletteview.h"
+#include "eightbyeightviewcontainer.h"
+#include "palettecontainer.h"
 #include "map16provider.h"
 
 QT_BEGIN_NAMESPACE
@@ -66,7 +66,7 @@ public:
     void changeAllCheckBoxState(bool state);
     void setupForNormal();
     void setupForCustom();
-    void setupForGenShoot();
+	void setupForGenShootOther();
 
     template <typename J>
     void connectCheckBox(QLineEdit* edit, QCheckBox* box, J* tweak, bool& tochange) {
@@ -88,8 +88,8 @@ private:
     QStandardItemModel* collectionModel = nullptr;
     QStandardItemModel* displayModel = nullptr;
     QImage* full8x8Bitmap = nullptr;
-    EightByEightView* view8x8 = nullptr;
-    PaletteView* viewPalette = nullptr;
+	EightByEightViewContainer* view8x8Container = nullptr;
+	PaletteContainer* paletteContainer = nullptr;
     ClipboardTile copiedTile;
     QVector<DisplayData> displays;
     QAtomicInteger<int> currentDisplayIndex = -1;

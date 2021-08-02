@@ -52,6 +52,10 @@ set(PROJECT_SOURCES
         map16graphicsview.h
         clipboardtile.cpp
         clipboardtile.h
+		palettecontainer.cpp
+		palettecontainer.h
+		eightbyeightviewcontainer.cpp
+		eightbyeightviewcontainer.h
         utils.h
         VioletEgg.rc
 )

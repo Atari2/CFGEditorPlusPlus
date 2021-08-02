@@ -1629,6 +1629,11 @@
          <string>Generator/Shooter</string>
         </property>
        </item>
+       <item>
+        <property name="text">
+         <string>Other</string>
+        </property>
+       </item>
       </widget>
      </widget>
      <widget class="QGroupBox" name="groupBox_11">

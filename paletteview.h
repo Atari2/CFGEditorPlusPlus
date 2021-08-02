@@ -24,6 +24,8 @@ public:
     void mousePressEvent(QMouseEvent *event);
     ~PaletteView();
     void open();
+	void close(QCloseEvent* event);
+	QGraphicsPixmapItem* getCurrentItem();
 signals:
     void paletteChanged();
 private:

@@ -1,5 +1,6 @@
 #include "cfgeditor.h"
 #include "./ui_cfgeditor.h"
+#include "eightbyeightview.h"
 
 CFGEditor::CFGEditor(QWidget *parent)
     : QMainWindow(parent)
@@ -10,13 +11,14 @@ CFGEditor::CFGEditor(QWidget *parent)
     , copiedTile()
     , displays()
 {
+	setWindowIcon(QIcon{":/VioletEgg.ico"});
     ui->setupUi(this);
     setFixedSize(size());
     setSizePolicy(QSizePolicy());
     statusBar()->setSizeGripEnabled(false);
     setUpImages();
-    view8x8 = new EightByEightView(new QGraphicsScene);
-    viewPalette = new PaletteView(new QGraphicsScene);
+	view8x8Container = new EightByEightViewContainer(new EightByEightView(new QGraphicsScene));
+	paletteContainer = new PaletteContainer(new PaletteView(new QGraphicsScene));
     ui->labelDisplayTilesGrid->attachMap16View(ui->map16GraphicsView);
     loadFullbitmap();
     ui->map16GraphicsView->setControllingLabel(ui->labelTileNo);
@@ -45,8 +47,8 @@ void CFGEditor::deleteInstaller() {
 }
 
 void CFGEditor::closeEvent(QCloseEvent *event) {
-    view8x8->close();
-    viewPalette->close();
+	view8x8Container->close();
+	paletteContainer->close();
     QMainWindow::closeEvent(event);
 }
 
@@ -82,7 +84,7 @@ void CFGEditor::loadFullbitmap(int index) {
         i += 64;
     }
     ui->map16GraphicsView->readInternalMap16File();
-    view8x8->updateForChange(full8x8Bitmap);
+	view8x8Container->updateForChange(full8x8Bitmap, true);
     ui->labelDisplayTilesGrid->redraw();
 }
 
@@ -162,13 +164,11 @@ void CFGEditor::setUpMenuBar(QMenuBar* mb) {
     });
     display->addAction("&Palette", qApp, [&]() {
         qDebug() << "Opening palette viewer";
-        viewPalette->updateForChange(SpritePaletteCreator::MakeFullPalette());
-        viewPalette->open();
+		paletteContainer->updateContainer(SpritePaletteCreator::MakeFullPalette());
     });
     display->addAction("&8x8 Tile Viewer", qApp, [&]() {
         qDebug() << "Opening 8x8 tile selector";
-        view8x8->updateForChange(full8x8Bitmap);
-        view8x8->open();
+		view8x8Container->updateForChange(full8x8Bitmap);
     });
     display->addAction("&Load External GFX Files", qApp, [&]() {
         qDebug() << "Opening external gfx file loader";
@@ -390,16 +390,14 @@ void CFGEditor::bindGFXSelector() {
     });
     QObject::connect(ui->toolButton8x8Mode, &QToolButton::clicked, this, [&]() {
         qDebug() << "Map8x8 button clicked";
-        view8x8->updateForChange(full8x8Bitmap);
-        view8x8->open();
+		view8x8Container->updateForChange(full8x8Bitmap);
     });
     QObject::connect(ui->toolButtonPalette, &QToolButton::clicked, this, [&]() {
         qDebug() << "Palette button clicked";
-        viewPalette->updateForChange(SpritePaletteCreator::MakeFullPalette());
-        viewPalette->open();
+		paletteContainer->updateContainer(SpritePaletteCreator::MakeFullPalette());
     });
     splitSetGFx();
-    QObject::connect(ui->comboBoxGFXSet, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [&, splitSetGFx](int _) {
+	QObject::connect(ui->comboBoxGFXSet, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [&, splitSetGFx](int) {
         qDebug() << "Index of GFX set changed";
         splitSetGFx();
         loadFullbitmap();
@@ -407,7 +405,7 @@ void CFGEditor::bindGFXSelector() {
             ui->labelDisplayTilesGrid->redrawNoSort();
     });
     changeTilePropGroupState(true);
-    QObject::connect(viewPalette, &PaletteView::paletteChanged, this, [&](){
+	QObject::connect(paletteContainer, &PaletteContainer::paletteChanged, this, [&](){
         qDebug() << "Custom signal change palette received";
         loadFullbitmap();
         for (int i = 0; i < SpritePaletteCreator::nSpritePalettes(); i++) {
@@ -932,7 +930,7 @@ void CFGEditor::setupForCustom() {
 
 }
 
-void CFGEditor::setupForGenShoot() {
+void CFGEditor::setupForGenShootOther() {
     changeAllCheckBoxState(true);
 
     ui->lineEditAsmFile->setEnabled(true);
@@ -1019,9 +1017,10 @@ void CFGEditor::bindSpriteProp() {
         case 1:
             setupForCustom();
             break;
-        case 2:
-            setupForGenShoot();
-            break;
+		case 2:
+		case 3:
+			setupForGenShootOther();
+			break;
         default:
             Q_ASSERT(false);
         }
@@ -1219,8 +1218,8 @@ CFGEditor::~CFGEditor()
     delete collectionModel;
     delete displayModel;
     delete full8x8Bitmap;
-    delete view8x8;
-    delete viewPalette;
+	delete view8x8Container;
+	delete paletteContainer;
     delete hexValidator;
     delete hexCompleter;
     delete hexNumberList;

@@ -1,5 +1,4 @@
 <RCC>
-    <qresource prefix="/palettedata"/>
     <qresource prefix="/">
         <file>Resources/ObjClipping/00.png</file>
         <file>Resources/ObjClipping/01.png</file>
@@ -106,5 +105,6 @@
         <file>Resources/spriteMapData.map16</file>
         <file>Resources/Text/Letters.png</file>
         <file>Resources/sprites_palettes.pal</file>
+        <file>VioletEgg.ico</file>
     </qresource>
 </RCC>

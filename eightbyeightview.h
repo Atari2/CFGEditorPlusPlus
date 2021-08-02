@@ -16,6 +16,7 @@ public:
     void mouseMoveEvent(QMouseEvent *event);
     ~EightByEightView();
     void open();
+	void close(QCloseEvent* event);
 private:
     QGraphicsPixmapItem* currentItem = nullptr;
     bool m_open = false;

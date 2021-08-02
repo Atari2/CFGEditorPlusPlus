@@ -4,27 +4,6 @@ PaletteView::PaletteView(QGraphicsScene* ogscene) : QGraphicsView(ogscene) {
     setWindowTitle("Palette");
     setHorizontalScrollBarPolicy(Qt::ScrollBarPolicy::ScrollBarAlwaysOff);
     setVerticalScrollBarPolicy(Qt::ScrollBarPolicy::ScrollBarAlwaysOff);
-    setContextMenuPolicy(Qt::CustomContextMenu);
-    QObject::connect(this, &QListView::customContextMenuRequested, this, [&](QPoint pos) {
-        QMenu* menu = new QMenu(this);
-        menu->addAction("&Load Palette from file", this, [&]() {
-            QString filename = QFileDialog::getOpenFileName(this, "Open Pal File", "", tr("Palette Files (*.pal)"));
-            if (filename.length() == 0)
-                return;
-            if (!assert_filesize(filename, 768))
-                return;
-            SpritePaletteCreator::ReadPaletteFile(0, 16, 16, filename);
-            updateForChange(SpritePaletteCreator::MakeFullPalette());
-            emit paletteChanged();
-        });
-        menu->addAction("&Save Palette to file", this, [&]() {
-            QString filename = QFileDialog::getSaveFileName(this, "Save Pal/Palmask File", "", tr("Palette Files (*.pal)"));
-            if (filename.length() == 0)
-                return;
-            SpritePaletteCreator::PaletteToFile(currentItem->pixmap().toImage(), filename);
-        });
-        menu->popup(viewport()->mapToGlobal(pos));
-    });
 }
 
 QPoint PaletteView::convertPointToTile(const QPointF& point) {
@@ -38,7 +17,6 @@ QPoint PaletteView::convertPointToTile(const QPointF& point) {
 
 void PaletteView::mousePressEvent(QMouseEvent *event) {
     if (event->button() == Qt::RightButton) {
-        emit customContextMenuRequested(event->position().toPoint());
         return;
     }
     QImage m = currentItem->pixmap().toImage();
@@ -72,6 +50,15 @@ void PaletteView::updateForChange(const QPixmap& image) {
     scene()->addItem(currentItem);
     setFixedSize(256, 128);
 }
+
+void PaletteView::close(QCloseEvent* event) {
+	closeEvent(event);
+}
+
+QGraphicsPixmapItem* PaletteView::getCurrentItem() {
+	return currentItem;
+}
+
 void PaletteView::closeEvent(QCloseEvent* event) {
     m_open = false;
     event->accept();

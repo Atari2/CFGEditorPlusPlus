@@ -1,4 +1,5 @@
 #include "eightbyeightview.h"
+#include "eightbyeightviewcontainer.h"
 
 EightByEightView::EightByEightView(QGraphicsScene* ogscene) : QGraphicsView(ogscene) {
     setMouseTracking(true);
@@ -11,6 +12,7 @@ EightByEightView::EightByEightView(QGraphicsScene* ogscene) : QGraphicsView(ogsc
         if (offset != 0)
             verticalScrollBar()->setValue(value - offset);
     });
+	setFixedSize(275, 256);
 }
 
 int EightByEightView::convertPointToTile(const QPointF& point) {
@@ -27,8 +29,7 @@ void EightByEightView::mouseMoveEvent(QMouseEvent *event) {
         event->ignore();
         return;
     }
-    // this is probably a bad idea but it's the only idea I have
-    QToolTip::showText(event->globalPosition().toPoint(), QString::asprintf("Tile: %03X", convertPointToTile(event->position())), this, rect());
+	static_cast<EightByEightViewContainer*>(parent())->updateTileLabel(QString::asprintf("Tile: %03X", convertPointToTile(event->position())));
 }
 
 void EightByEightView::open() {
@@ -36,10 +37,15 @@ void EightByEightView::open() {
     show();
     raise();
 }
+
+void EightByEightView::close(QCloseEvent *event) {
+	closeEvent(event);
+}
+
 void EightByEightView::updateForChange(QImage* image) {
     if (currentItem) {
         scene()->removeItem(currentItem);
-        currentItem->~QGraphicsPixmapItem();
+		delete currentItem;
     }
     currentItem = new QGraphicsPixmapItem(QPixmap::fromImage(*image).scaled(image->size() * 2));
     currentItem->setAcceptHoverEvents(true);
