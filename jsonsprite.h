@@ -63,11 +63,12 @@ public:
     void deserialize();
     void deserialize_cfg(QFile& file);
     void serialize();
+    QByteArray serialize_cfg();
     void addCollections(QTableView* view);
     void addDisplay(const Display& display);
     void addGfxList(bool sep, int sp0, int sp1, int sp2, int sp3);
     void setMap16(const QString& mapdata);
-    QString to_text();
+    QByteArray to_text(const QString& filename);
     void to_file(QString name = "");
     QString& name();
     J1656 t1656;

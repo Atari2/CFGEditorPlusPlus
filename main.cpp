@@ -5,7 +5,11 @@
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
-    CFGEditor w;
+    QStringList list;
+    // skip the path of the executable
+    for (auto i = 1; i < argc; ++i)
+        list.append(argv[i]);
+    CFGEditor w{list};
     w.show();
     return a.exec();
 }

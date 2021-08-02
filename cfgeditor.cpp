@@ -2,7 +2,7 @@
 #include "./ui_cfgeditor.h"
 #include "eightbyeightview.h"
 
-CFGEditor::CFGEditor(QWidget *parent)
+CFGEditor::CFGEditor(const QStringList& argv, QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::CFGEditor)
     , sprite(new JsonSprite)
@@ -36,6 +36,17 @@ CFGEditor::CFGEditor(QWidget *parent)
     mb->show();
     setMenuBar(mb);
     deleteInstaller();
+    if (argv.size() > 0) {
+        sprite->from_file(argv[0]);
+        resetTweaks();
+        std::for_each(sprite->collections.cbegin(), sprite->collections.cend(), [&](auto& coll) {
+            collectionModel->appendRow(CollectionDataModel::fromCollection(coll));
+        });
+        ui->map16GraphicsView->setMap16(sprite->map16);
+        ui->labelDisplayTilesGrid->deserializeDisplays(sprite->displays, ui->map16GraphicsView);
+        populateDisplays();
+        populateGFXFiles();
+    }
 }
 
 void CFGEditor::deleteInstaller() {
@@ -66,7 +77,6 @@ void CFGEditor::loadFullbitmap(int index) {
         index = ui->paletteComboBox->currentIndex();
     QVector<QString> gfxFiles{ui->lineEditGFXSp0->text(), ui->lineEditGFXSp1->text(), ui->lineEditGFXSp2->text(), ui->lineEditGFXSp3->text()};
     if (full8x8Bitmap) {
-        full8x8Bitmap->~QImage();
         delete full8x8Bitmap;
     }
     full8x8Bitmap = new QImage{128, 256, QImage::Format_RGB32};
@@ -142,7 +152,7 @@ void CFGEditor::setUpMenuBar(QMenuBar* mb) {
 
     file->addAction("&Save As", qApp, [&]() {
         saveSprite();
-        sprite->to_file(QFileDialog::getSaveFileName(this, tr("Save file"), sprite->name(), tr("JSON (*.json)")));
+        sprite->to_file(QFileDialog::getSaveFileName(this, tr("Save file"), sprite->name(), tr("JSON (*.json);;CFG (*.cfg)")));
     }, Qt::CTRL | Qt::ALT | Qt::Key_S);
 
     display->addAction("&Load Custom Map16", qApp, [&]() {
