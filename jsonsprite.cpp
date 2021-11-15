@@ -220,6 +220,7 @@ JsonSprite::JsonSprite() {
     displays = QVector<Display>();
     collections = QVector<Collection>();
     gfxfiles = QVector<GFXFiles>();
+	dispType = DisplayType::XY;
 }
 
 void JsonSprite::reset() {
@@ -241,6 +242,7 @@ void JsonSprite::reset() {
     displays.clear();
     collections.clear();
     gfxfiles.clear();
+	dispType = DisplayType::XY;
 }
 
 void JsonSprite::deserialize() {
