@@ -200,12 +200,21 @@ QPixmap Map16Provider::createGrid() {
     p.setPen(pen);
     img.fill(qRgba(0, 0, 0, 0));
     int size = static_cast<int>(selectorSize);
-    if (size != 8 && size != 16)
+	if (size != 8 && size != 16) {
         return QPixmap::fromImage(img);
+	}
+	int centerBox = ((208 / size) / 2) * size;
     for (int i = size; i < 208; i += size) {
-        p.drawLine(0, i, 208, i);
-        p.drawLine(i, 0, i, 208);
+		p.drawLine(0, i, 208, i);
+		p.drawLine(i, 0, i, 208);
     }
+
+	if (size == 16) {
+		pen.setColor(Qt::blue);
+		p.setPen(pen);
+		QRect box_rect{centerBox, centerBox, size, size};
+		p.drawRect(box_rect);
+	}
     return QPixmap::fromImage(img);
 }
 

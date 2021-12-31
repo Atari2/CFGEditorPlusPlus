@@ -762,7 +762,7 @@
            <rect>
             <x>10</x>
             <y>20</y>
-            <width>241</width>
+            <width>244</width>
             <height>221</height>
            </rect>
           </property>
@@ -2579,7 +2579,7 @@
         <rect>
          <x>10</x>
          <y>120</y>
-         <width>161</width>
+         <width>168</width>
          <height>41</height>
         </rect>
        </property>
@@ -2745,7 +2745,7 @@
         <rect>
          <x>10</x>
          <y>35</y>
-         <width>861</width>
+         <width>877</width>
          <height>101</height>
         </rect>
        </property>
@@ -3239,7 +3239,7 @@
      <x>0</x>
      <y>0</y>
      <width>933</width>
-     <height>20</height>
+     <height>21</height>
     </rect>
    </property>
    <property name="defaultUp">

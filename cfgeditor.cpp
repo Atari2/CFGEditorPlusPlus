@@ -139,6 +139,7 @@ void CFGEditor::setUpMenuBar(QMenuBar* mb) {
         std::for_each(sprite->collections.cbegin(), sprite->collections.cend(), [&](auto& coll) {
             collectionModel->appendRow(CollectionDataModel::fromCollection(coll));
         });
+		ui->checkBoxDisplayExtraByte->setChecked(sprite->dispType == DisplayType::ExtraByte);
         ui->map16GraphicsView->setMap16(sprite->map16);
         ui->labelDisplayTilesGrid->deserializeDisplays(sprite->displays, ui->map16GraphicsView);
         populateDisplays();
