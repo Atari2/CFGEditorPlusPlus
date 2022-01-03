@@ -274,7 +274,7 @@ void Map16Provider::drawLetters(QPainter& p) {
     int vmargin = (208 - (lines * 8)) / 2;
     for (int row = 0; row < lines; row++) {
         auto str = slines[row].toStdString();
-        int hmargin = (208 - (str.length() * 8)) / 2;
+		int hmargin = static_cast<int>((208 - (str.length() * 8)) / 2);
         for (int col = 0; col < (int)str.length(); col++) {
             char c = str[col];
             if (table.find(c) == table.cend()) {
