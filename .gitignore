@@ -72,3 +72,5 @@ Thumbs.db
 build/
 CMakeLists.txt.user
 CFGEditor.zip
+.vs
+CMakeSettings.json

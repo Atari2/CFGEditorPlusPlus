@@ -11,14 +11,36 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-if (WIN32)
-    set(ON_WINDOWS "True")
-    if (CMAKE_CURRENT_SOURCE_DIR MATCHES ".*[\//]aless[\//].*")
-        message(STATUS "In aless PC")
-		set(CMAKE_PREFIX_PATH "C:/Qt/6.2.2/msvc2019_64")
+if (CMAKE_BUILD_TYPE STREQUAL "Release" OR CMAKE_CONFIGURATION_TYPES STREQUAL "Release")
+    set(RELEASE_BUILD true)
+else()
+    set(RELEASE_BUILD false)
+endif()
+
+if (CFGEDITOR_BUILD_STATIC)
+    if (NOT RELEASE_BUILD)
+        message(FATAL_ERROR "CFGEDITOR_BUILD_STATIC was specified but the build is not of type Release")
+    endif()
+    if (NOT STATIC_QT_DIR)
+        message(FATAL_ERROR "CFGEDITOR_BUILD_STATIC was specified but STATIC_QT_DIR was not passed")
     else()
-        message(STATUS "Extraneous Build")
-        set(CMAKE_PREFIX_PATH "C:/Qt/6.0.4/msvc2019_64")
+        set(STATIC_BUILD true)
+        set(CMAKE_PREFIX_PATH ${STATIC_QT_DIR})
+    endif()
+else()
+    set(STATIC_BUILD false)
+endif()
+
+if (WIN32)
+    set(ON_WINDOWS true)
+    if (NOT STATIC_BUILD)
+        if (CMAKE_CURRENT_SOURCE_DIR MATCHES ".*[\//]aless[\//].*")
+            message(STATUS "In aless PC")
+		    set(CMAKE_PREFIX_PATH "C:/Qt/6.2.2/msvc2019_64")
+        else()
+            message(STATUS "Extraneous Build")
+            set(CMAKE_PREFIX_PATH "C:/Qt/6.2.2/msvc2019_64")
+        endif()
     endif()
 else()
     message(STATUS "Unix build")
@@ -66,30 +88,36 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         ${PROJECT_SOURCES}
         ${srcs_for_exe}
     )
-    get_target_property(_qmake_executable Qt6::qmake IMPORTED_LOCATION)
-    get_filename_component(_qt_bin_dir "${_qmake_executable}" DIRECTORY)
-    find_program(WINDEPLOYQT_EXE windeployqt HINTS "${_qt_bin_dir}")
-if (WIN32)
-    if (CMAKE_BUILD_TYPE STREQUAL "Release" OR CMAKE_CONFIGURATION_TYPES STREQUAL "Release")
-        message(STATUS "Building release windeploy")
-        add_custom_command(TARGET CFGEditorPlusPlus POST_BUILD
-            COMMAND "${CMAKE_COMMAND}" -E
-                env PATH="${_qt_bin_dir}" "${WINDEPLOYQT_EXE}"
-                    --release
-                    --no-compiler-runtime
-                    --no-translations
-                    "$<TARGET_FILE:CFGEditorPlusPlus>"
-            COMMENT "Running windeployqt..."
-        )
+    if (WIN32 AND NOT STATIC_BUILD)
+        get_target_property(_qmake_executable Qt6::qmake IMPORTED_LOCATION)
+        get_filename_component(_qt_bin_dir "${_qmake_executable}" DIRECTORY)
+        find_program(WINDEPLOYQT_EXE windeployqt HINTS "${_qt_bin_dir}")
+        if (CMAKE_BUILD_TYPE STREQUAL "Release" OR CMAKE_CONFIGURATION_TYPES STREQUAL "Release")
+            set(WINDEPLOY_CFG "release")
+        else()
+            set(WINDEPLOY_CFG "debug")
+        endif()
+
+        if (NOT STATIC_BUILD)
+            message(STATUS "Building ${WINDEPLOY_CFG} windeploy")
+            add_custom_command(TARGET CFGEditorPlusPlus POST_BUILD
+                COMMAND "${CMAKE_COMMAND}" -E
+                    env PATH="${_qt_bin_dir}" "${WINDEPLOYQT_EXE}"
+                        --${WINDEPLOY_CFG}
+                        --no-compiler-runtime
+                        --no-translations
+                        "$<TARGET_FILE:CFGEditorPlusPlus>"
+                COMMENT "Running windeployqt..."
+            )
+        endif()
     endif()
-endif()
 else()
     add_executable(CFGEditorPlusPlus
             ${PROJECT_SOURCES}
     )
 endif()
 
-if (CMAKE_BUILD_TYPE STREQUAL "Release" OR CMAKE_CONFIGURATION_TYPES STREQUAL "Release")
+if (RELEASE_BUILD AND ON_WINDOWS)
     message(STATUS "Building Release, removing qDebug()")
     target_compile_definitions(CFGEditorPlusPlus PRIVATE QT_NO_DEBUG_OUTPUT)
     target_link_options(CFGEditorPlusPlus PRIVATE /SUBSYSTEM:windows /ENTRY:mainCRTStartup)
