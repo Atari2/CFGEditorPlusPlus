@@ -11,11 +11,22 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-if (CMAKE_BUILD_TYPE STREQUAL "Release" OR CMAKE_CONFIGURATION_TYPES STREQUAL "Release")
-    set(RELEASE_BUILD true)
-else()
-    set(RELEASE_BUILD false)
-endif()
+set(POSSIBLE_RELEASE_STRINGS "")
+list(
+    APPEND POSSIBLE_RELEASE_STRINGS
+    "Release"
+    "RelWithDebInfo"
+    "MinSizeRel"
+)
+
+set(RELEASE_BUILD false)
+foreach(POSSIBLE_STRING ${POSSIBLE_RELEASE_STRINGS})
+    if (CMAKE_BUILD_TYPE STREQUAL ${POSSIBLE_STRING} OR CMAKE_CONFIGURATION_TYPES STREQUAL ${POSSIBLE_STRING})
+        message(STATUS "Matched with ${POSSIBLE_STRING}")
+        set(RELEASE_BUILD true)
+        break()
+    endif()
+endforeach()
 
 if (CFGEDITOR_BUILD_STATIC)
     if (NOT RELEASE_BUILD)
@@ -92,7 +103,7 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         get_target_property(_qmake_executable Qt6::qmake IMPORTED_LOCATION)
         get_filename_component(_qt_bin_dir "${_qmake_executable}" DIRECTORY)
         find_program(WINDEPLOYQT_EXE windeployqt HINTS "${_qt_bin_dir}")
-        if (CMAKE_BUILD_TYPE STREQUAL "Release" OR CMAKE_CONFIGURATION_TYPES STREQUAL "Release")
+        if (RELEASE_BUILD)
             set(WINDEPLOY_CFG "release")
         else()
             set(WINDEPLOY_CFG "debug")
@@ -122,5 +133,4 @@ if (RELEASE_BUILD AND ON_WINDOWS)
     target_compile_definitions(CFGEditorPlusPlus PRIVATE QT_NO_DEBUG_OUTPUT)
     target_link_options(CFGEditorPlusPlus PRIVATE /SUBSYSTEM:windows /ENTRY:mainCRTStartup)
 endif()
-
 target_link_libraries(CFGEditorPlusPlus PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
