@@ -42,17 +42,13 @@ else()
     set(STATIC_BUILD false)
 endif()
 
+if (NOT DEFINED CMAKE_PREFIX_PATH)
+    message(FATAL_ERROR "CMAKE_PREFIX_PATH is not set")
+endif()
+
 if (WIN32)
     set(ON_WINDOWS true)
-    if (NOT STATIC_BUILD)
-        if (CMAKE_CURRENT_SOURCE_DIR MATCHES ".*[\//]aless[\//].*")
-            message(STATUS "In aless PC")
-		    set(CMAKE_PREFIX_PATH "C:/Qt/6.2.2/msvc2019_64")
-        else()
-            message(STATUS "Extraneous Build")
-            set(CMAKE_PREFIX_PATH "C:/Qt/6.3.0/msvc2019_64")
-        endif()
-    endif()
+    message(STATUS "Windows build")
 else()
     message(STATUS "Unix build")
 endif()
@@ -85,10 +81,10 @@ set(PROJECT_SOURCES
         map16graphicsview.h
         clipboardtile.cpp
         clipboardtile.h
-		palettecontainer.cpp
-		palettecontainer.h
-		eightbyeightviewcontainer.cpp
-		eightbyeightviewcontainer.h
+        palettecontainer.cpp
+        palettecontainer.h
+        eightbyeightviewcontainer.cpp
+        eightbyeightviewcontainer.h
         utils.h
         VioletEgg.rc
 )

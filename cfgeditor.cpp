@@ -101,7 +101,7 @@ void CFGEditor::loadFullbitmap(int index) {
 void CFGEditor::setUpMenuBar(QMenuBar* mb) {
     QMenu* file = new QMenu("&File");
     QMenu* display = new QMenu("&Display");
-    file->addAction("&New", qApp, [&]() {
+    file->addAction("&New", Qt::CTRL | Qt::Key_N, qApp, [&]() {
         if (sprite->name().length() != 0) {
             auto res = QMessageBox::question(this,
                                              "One file is already open",
@@ -115,11 +115,11 @@ void CFGEditor::setUpMenuBar(QMenuBar* mb) {
         }
         resetAll();
         resetTweaks();
-    }, Qt::CTRL | Qt::Key_N);
+    });
 
     file->addSeparator();
 
-    file->addAction("&Open File", qApp, [&]() {
+    file->addAction("&Open File", Qt::CTRL | Qt::Key_O, qApp, [&]() {
         if (sprite->name().length() != 0) {
             auto res = QMessageBox::question(this,
                                   "One file is already open",
@@ -144,17 +144,17 @@ void CFGEditor::setUpMenuBar(QMenuBar* mb) {
         ui->labelDisplayTilesGrid->deserializeDisplays(sprite->displays, ui->map16GraphicsView);
         populateDisplays();
         populateGFXFiles();
-    }, Qt::CTRL | Qt::Key_O);
+    });
 
-    file->addAction("&Save", qApp, [&]() {
+    file->addAction("&Save", Qt::CTRL | Qt::Key_S, qApp, [&]() {
         saveSprite();
         sprite->to_file();
-    }, Qt::CTRL | Qt::Key_S);
+    });
 
-    file->addAction("&Save As", qApp, [&]() {
+    file->addAction("&Save As", Qt::CTRL | Qt::ALT | Qt::Key_S, qApp, [&]() {
         saveSprite();
         sprite->to_file(QFileDialog::getSaveFileName(this, tr("Save file"), sprite->name(), tr("JSON (*.json);;CFG (*.cfg)")));
-    }, Qt::CTRL | Qt::ALT | Qt::Key_S);
+    });
 
     display->addAction("&Load Custom Map16", qApp, [&]() {
         QString name = QFileDialog::getOpenFileName(this, tr("Open file"), "", tr("M16 (*.m16);;Map16 (*.map16)"));
