@@ -156,7 +156,8 @@ void Map16GraphicsView::drawInternalMap16File() {
         pageSepPainter.drawRect(QRect{0, i, imageWidth, CellSize() * 16});
     }
     currentMap16 = scene()->addPixmap(QPixmap::fromImage(TileMap));
-    setFixedWidth(currentMap16->pixmap().width() + 19);
+    setFixedWidth(currentMap16->pixmap().width() + 18);
+    setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     currentWithNoHighlight = currentMap16->pixmap();
     currentWithNoSelection = currentMap16->pixmap();
     if (usePageSep) {
@@ -635,6 +636,7 @@ QString Map16GraphicsView::getMap16() {
 }
 
 void Map16GraphicsView::loadExternalGraphics() {
+    static const auto commaReg{R"([,-])"};
     QFileInfo name{QFileDialog::getOpenFileName(this, "Select ROM", QDir::current().path(), "ROM Files (*.smc);;ROM Files (*.sfc)")};
     QDir romdir{name.dir()};
     QString extDir;
@@ -660,7 +662,7 @@ void Map16GraphicsView::loadExternalGraphics() {
             entries.remove(0, 2);
             for (auto& entry : entries) {
                 qDebug() << entry;
-                auto values = entry.split(QRegularExpression(R"([,-])"), Qt::SkipEmptyParts);
+                auto values = entry.split(commaReg, Qt::SkipEmptyParts);
                 exgfx.append({values[0].toInt(nullptr, 16), values[1].toInt(nullptr, 16), values[2].toInt(nullptr, 16)});
             }
         }

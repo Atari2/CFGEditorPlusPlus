@@ -3,6 +3,9 @@
 Display::Display(const QJsonObject& d, DisplayType type) {
     description = d["Description"].toString();
     extrabit = d["ExtraBit"].toBool();
+    if (auto it = d.find("GFXInfo"); it != d.constEnd()) {
+        gfxinfo = GFXInfo{it->toObject()};
+    }
     if (type == DisplayType::XY) {
         x_or_index = d["X"].toInt();
         y_or_value = d["Y"].toInt();
@@ -24,13 +27,14 @@ Display::Display(const QJsonObject& d, DisplayType type) {
     }
 }
 
-Display::Display(const QString& d, const QVector<Tile>& ts, bool bit, int xx, int yy, bool text, const QString& disp) :
+Display::Display(const QString& d, const QVector<Tile>& ts, bool bit, int xx, int yy, bool text, const QString& disp, const GFXInfo& info) :
     description(d),
     extrabit(bit),
     x_or_index(xx),
     y_or_value(yy),
     useText(text),
-    displaytext(disp)
+    displaytext(disp),
+    gfxinfo(info)
 {
    tiles.append(ts);
 }
@@ -58,12 +62,25 @@ QJsonObject Display::toJson(DisplayType type) const {
         });
     }
     obj["Tiles"] = tilesArr;
+    obj["GFXInfo"] = gfxinfo.toJson();
     return obj;
 }
 
+SingleGFXFile::SingleGFXFile(bool separate, int value) : separate{separate}, value{value} {
 
-GFXFiles::GFXFiles(bool sep, int s0, int s1, int s2, int s3) :
-    separate(sep),
+}
+SingleGFXFile::SingleGFXFile(const QJsonObject& g) {
+    separate = g["Separate"].toBool();
+    value = g["Value"].toInt();
+}
+QJsonObject SingleGFXFile::toJson() const {
+    QJsonObject obj{};
+    obj["Separate"] = separate;
+    obj["Value"] = value;
+    return obj;
+}
+
+GFXInfo::GFXInfo(SingleGFXFile s0, SingleGFXFile s1, SingleGFXFile s2, SingleGFXFile s3) :
     sp0(s0),
     sp1(s1),
     sp2(s2),
@@ -72,25 +89,31 @@ GFXFiles::GFXFiles(bool sep, int s0, int s1, int s2, int s3) :
 
 }
 
-GFXFiles::GFXFiles(const QJsonObject& g) {
-    separate = g["Separate"].toBool();
-    sp0 = g.find("0") == g.constEnd() ? 0x7F : g["0"].toInt();
-    sp1 = g.find("1") == g.constEnd() ? 0x7F : g["1"].toInt();
-    sp2 = g.find("2") == g.constEnd() ? 0x7F : g["2"].toInt();
-    sp3 = g.find("3") == g.constEnd() ? 0x7F : g["3"].toInt();
+GFXInfo::GFXInfo(const QJsonObject& g) : sp0{false, 0x7F}, sp1{false, 0x7F}, sp2{false, 0x7F}, sp3{false, 0x7F}  {
+    if (auto it = g.find("0"); it != g.constEnd()) {
+        sp0 = SingleGFXFile{it->toObject()};
+    }
+    if (auto it = g.find("1"); it != g.constEnd()) {
+        sp1 = SingleGFXFile{it->toObject()};
+    }
+    if (auto it = g.find("2"); it != g.constEnd()) {
+        sp2 = SingleGFXFile{it->toObject()};
+    }
+    if (auto it = g.find("3"); it != g.constEnd()) {
+        sp3 = SingleGFXFile{it->toObject()};
+    }
 }
 
-QJsonObject GFXFiles::toJson() const {
+QJsonObject GFXInfo::toJson() const {
     QJsonObject obj{};
-    obj["Separate"] = separate;
-    if (sp0 != 0x7F)
-        obj["0"] = sp0;
-    if (sp1 != 0x7F)
-        obj["1"] = sp1;
-    if (sp2 != 0x7F)
-        obj["2"] = sp2;
-    if (sp3 != 0x7F)
-        obj["3"] = sp3;
+    if (sp0.value != 0x7F)
+        obj["0"] = sp0.toJson();
+    if (sp1.value != 0x7F)
+        obj["1"] = sp1.toJson();
+    if (sp2.value != 0x7F)
+        obj["2"] = sp2.toJson();
+    if (sp3.value != 0x7F)
+        obj["3"] = sp3.toJson();
     return obj;
 }
 
@@ -219,7 +242,6 @@ JsonSprite::JsonSprite() {
     map16 = QString();
     displays = QVector<Display>();
     collections = QVector<Collection>();
-    gfxfiles = QVector<GFXFiles>();
 	dispType = DisplayType::XY;
 }
 
@@ -241,7 +263,6 @@ void JsonSprite::reset() {
     map16.clear();
     displays.clear();
     collections.clear();
-    gfxfiles.clear();
 	dispType = DisplayType::XY;
 }
 
@@ -266,18 +287,13 @@ void JsonSprite::deserialize() {
         dispType = DisplayType::XY;
     auto dispArr = obj["Displays"].toArray();
     auto collArr = obj["Collection"].toArray();
-    auto gfiles = obj["GFXInfo"].toArray();
     displays.reserve(dispArr.size());
     collections.reserve(collArr.size());
-    gfxfiles.reserve(gfiles.size());
     std::for_each(dispArr.cbegin(), dispArr.cend(), [&](auto& d) {
         displays.push_back(Display(d.toObject(), dispType));
     });
     std::for_each(collArr.cbegin(), collArr.cend(), [&](auto& c) {
         collections.push_back(Collection(c.toObject()));
-    });
-    std::for_each(gfiles.cbegin(), gfiles.cend(), [&](auto& g) {
-        gfxfiles.push_back(GFXFiles(g.toObject()));
     });
 }
 
@@ -292,7 +308,6 @@ void JsonSprite::serialize() {
     obj["Map16"] = map16;
     QJsonArray dispArr{};
     QJsonArray collArr{};
-    QJsonArray gfiles{};
     obj["DisplayType"] = dispType == DisplayType::XY ? "XY" : "ExByte";
     std::for_each(displays.cbegin(), displays.cend(), [&](auto& d) {
         dispArr.append(d.toJson(dispType));
@@ -300,12 +315,8 @@ void JsonSprite::serialize() {
     std::for_each(collections.cbegin(), collections.cend(), [&](auto& c) {
         collArr.append(c.toJson());
     });
-    std::for_each(gfxfiles.cbegin(), gfxfiles.cend(), [&](auto& g) {
-        gfiles.append(g.toJson());
-    });
     obj["Displays"] = dispArr;
     obj["Collection"] = collArr;
-    obj["GFXInfo"] = gfiles;
     obj["$1656"] = t1656.to_json();
     obj["$1662"] = t1662.to_json();
     obj["$166E"] = t166e.to_json();
@@ -357,10 +368,6 @@ void JsonSprite::addCollections(QTableView* view) {
         }
         collections.append(Collection{obj});
     }
-}
-
-void JsonSprite::addGfxList(bool sep, int sp0, int sp1, int sp2, int sp3) {
-    gfxfiles.append({sep, sp0, sp1, sp2, sp3});
 }
 
 void JsonSprite::addDisplay(const Display& display) {

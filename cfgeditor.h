@@ -45,10 +45,10 @@ public:
     void saveSprite();
     void setCollectionModel();
     void setDisplayModel();
+    void setGFXInfoModel();
     void bindCollectionButtons();
     void bindDisplayButtons();
     void bindGFXSelector();
-    void bindGFXFilesButtons();
     void initCompleter();
     void loadFullbitmap(int index = -1);
     void addLunarMagicIcons();
@@ -67,6 +67,10 @@ public:
     void setupForNormal();
     void setupForCustom();
 	void setupForGenShootOther();
+
+    QStandardItemModel* getGfxInfoModel() {
+        return gfxinfoModel;
+    }
 
     template <typename J>
     void connectCheckBox(QLineEdit* edit, QCheckBox* box, J* tweak, bool& tochange) {
@@ -87,6 +91,7 @@ private:
     QVector<QPixmap> sprClipImages;
     QStandardItemModel* collectionModel = nullptr;
     QStandardItemModel* displayModel = nullptr;
+    QStandardItemModel* gfxinfoModel = nullptr;
     QImage* full8x8Bitmap = nullptr;
 	EightByEightViewContainer* view8x8Container = nullptr;
 	PaletteContainer* paletteContainer = nullptr;

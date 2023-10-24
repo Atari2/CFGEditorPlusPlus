@@ -6,7 +6,7 @@ EightByEightView::EightByEightView(QGraphicsScene* ogscene) : QGraphicsView(ogsc
     viewport()->setMouseTracking(true);
     setWindowTitle("8x8 Tile Viewer");
     verticalScrollBar()->setRange(0, 16);
-    QObject::connect(verticalScrollBar(), QOverload<int>::of(&QScrollBar::valueChanged), [&](int value) {
+    QObject::connect(verticalScrollBar(), QOverload<int>::of(&QScrollBar::valueChanged), this, [&](int value) {
         const int step = 16;
         int offset = value % step;
         if (offset != 0)
@@ -50,7 +50,8 @@ void EightByEightView::updateForChange(QImage* image) {
     currentItem = new QGraphicsPixmapItem(QPixmap::fromImage(*image).scaled(image->size() * 2));
     currentItem->setAcceptHoverEvents(true);
     scene()->addItem(currentItem);
-    setFixedSize(275, 256);
+    setFixedSize(256 + 18, 256);
+    setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 }
 void EightByEightView::closeEvent(QCloseEvent* event) {
     m_open = false;

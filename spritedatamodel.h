@@ -48,6 +48,52 @@ public:
 signals:
 };
 
+class SingleGFXFileData : QObject {
+    Q_OBJECT
+
+private:
+    int m_value{0x7f};
+    bool m_separate{false};
+
+public:
+    SingleGFXFileData() = default;
+    SingleGFXFileData(bool separate, int value);
+    SingleGFXFileData(const SingleGFXFileData&);
+    SingleGFXFileData& operator=(const SingleGFXFileData&);
+    SingleGFXFileData& operator=(const SingleGFXFile& data);
+    int Value() const;
+    bool Separate() const;
+    void setValue(int value);
+    void setSeparate(bool separate);
+    QStandardItem* separateItem() const;
+    QStandardItem* valueItem() const;
+};
+
+class GFXInfoData : QObject {
+    Q_OBJECT
+
+private:
+    SingleGFXFileData m_sp0{};
+    SingleGFXFileData m_sp1{};
+    SingleGFXFileData m_sp2{};
+    SingleGFXFileData m_sp3{};
+public:
+    GFXInfoData() = default;
+    GFXInfoData(const GFXInfoData&);
+    GFXInfoData& operator=(const GFXInfoData&);
+    GFXInfoData& operator=(const GFXInfo&);
+    const SingleGFXFileData& sp0() const;
+    const SingleGFXFileData& sp1() const;
+    const SingleGFXFileData& sp2() const;
+    const SingleGFXFileData& sp3() const;
+    void setSp0(SingleGFXFileData gfxdata);
+    void setSp1(SingleGFXFileData gfxdata);
+    void setSp2(SingleGFXFileData gfxdata);
+    void setSp3(SingleGFXFileData gfxdata);
+    QVector<QStandardItem*> itemsFromGFXInfo() const;
+    static GFXInfoData fromModel(QStandardItemModel* model, int row);
+};
+
 class DisplayData : QObject {
     Q_OBJECT
 
@@ -59,6 +105,7 @@ private:
     QString m_display_text;
     int m_x_or_index;
     int m_y_or_value;
+    GFXInfoData m_gfxinfo;
     DisplayData();
 public:
     DisplayData& operator=(const DisplayData& other);
@@ -72,12 +119,16 @@ public:
     void setPosOrExtra(QPoint point);
     void setPosOrExtra(int x, int y);
     void setDisplayText(const QString& displayText);
+    void setGFXInfo(const GFXInfoData& gfxInfo);
+    void setSeparate(bool separate, int spnum);
+    void setGfxInfoValue(int value, int spnum);
     void addTile(const TileData& data);
     void clearTiles();
 
     bool UseText() const;
     bool ExtraBit() const;
     const QVector<TileData>& Tiles() const;
+    const GFXInfoData& GFXInfo() const;
     const QString& Description() const;
     const QString& DisplayText() const;
     int XOrIndex() const;
@@ -85,7 +136,7 @@ public:
     QPoint PosOrExtra() const;
 
     static DisplayData blankData();
-    static DisplayData cloneData(QStandardItemModel* model, const QString& description, int row, const QString& display_text);
+    static DisplayData cloneData(QStandardItemModel* model, QStandardItemModel* gfxModel, const QString& description, int row, const QString& display_text);
     QVector<QStandardItem*> itemsFromDisplay();
 signals:
 

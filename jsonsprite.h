@@ -14,14 +14,23 @@ enum DisplayType {
     ExtraByte
 };
 
-struct GFXFiles {
-    bool separate;
-    int sp0;
-    int sp1;
-    int sp2;
-    int sp3;
-    GFXFiles(bool sep, int s0, int s1, int s2, int s3);
-    GFXFiles(const QJsonObject& g);
+struct SingleGFXFile {
+    bool separate{false};
+    int value{0x7f};
+    SingleGFXFile() = default;
+    SingleGFXFile(bool separate, int value);
+    SingleGFXFile(const QJsonObject& g);
+    QJsonObject toJson() const;
+};
+
+struct GFXInfo {
+    SingleGFXFile sp0{};
+    SingleGFXFile sp1{};
+    SingleGFXFile sp2{};
+    SingleGFXFile sp3{};
+    GFXInfo() = default;
+    GFXInfo(SingleGFXFile s0, SingleGFXFile s1, SingleGFXFile s2, SingleGFXFile s3);
+    GFXInfo(const QJsonObject& g);
     QJsonObject toJson() const;
 };
 
@@ -42,8 +51,9 @@ struct Display {
     int y_or_value;
     bool useText;
     QString displaytext;
+    GFXInfo gfxinfo{};
     Display(const QJsonObject& t, DisplayType type);
-    Display(const QString& d, const QVector<Tile>& ts, bool bit, int xx, int yy, bool text, const QString& disp);
+    Display(const QString& d, const QVector<Tile>& ts, bool bit, int xx, int yy, bool text, const QString& disp, const GFXInfo& info);
     QJsonObject toJson(DisplayType type) const;
 };
 
@@ -66,7 +76,6 @@ public:
     QByteArray serialize_cfg();
     void addCollections(QTableView* view);
     void addDisplay(const Display& display);
-    void addGfxList(bool sep, int sp0, int sp1, int sp2, int sp3);
     void setMap16(const QString& mapdata);
     QByteArray to_text(const QString& filename);
     void to_file(QString name = "");
@@ -87,7 +96,6 @@ public:
     QString map16;
     QVector<Display> displays;
     QVector<Collection> collections;
-    QVector<GFXFiles> gfxfiles;
     QString m_name;
     QJsonObject obj;
     DisplayType dispType;
