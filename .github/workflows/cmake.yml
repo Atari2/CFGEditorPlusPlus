@@ -1,0 +1,62 @@
+name: CMake
+
+permissions:
+  contents: write
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+env:
+  BUILD_TYPE: Release
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Setup zlib
+      shell: pwsh
+      run: |
+        vcpkg install zlib:x64-windows zlib:x64-windows-static
+
+    - name: Cache qt static build
+      id: cache-qt-static-build
+      uses: actions/cache@v3
+      with:
+        path: Qt6Static
+        key: ${{ runner.os }}-Qt6Static
+    
+    - name: Download and unzip qt static build
+      shell: pwsh
+      if: steps.cache-qt-static-build.outputs.cache-hit != 'true'
+      run: |
+        Invoke-WebRequest -Uri www.atarismwc.com/Qt6Static.7z -OutFile Qt6Static.7z
+        7z x -oQt6Static Qt6Static.7z -y
+    
+    - name: Configure CMake
+      env:
+        CMAKE_TOOLCHAIN_FILE: C:/vcpkg/scripts/buildsystems/vcpkg.cmake
+      run: cmake -S ${{github.workspace}} -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DSTATIC_QT_DIR=${{github.workspace}}/Qt6Static -DCFGEDITOR_BUILD_STATIC=ON
+    
+    - name: Build
+      run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
+    
+    - name: Upload
+      uses: actions/upload-artifact@v3
+      with:
+        name: CFGEditorPlusPlus
+        path: ${{github.workspace}}/build/Release/CFGEditorPlusPlus.exe
+    
+    - name: Release
+      uses: softprops/action-gh-release@v1
+      if: startsWith(github.ref, 'refs/tags')
+      with:
+        generate_release_notes: true
+        prerelease: true
+        files: ${{github.workspace}}/build/Release/CFGEditorPlusPlus.exe
+    
