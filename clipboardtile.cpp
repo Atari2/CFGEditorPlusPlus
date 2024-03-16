@@ -1,4 +1,5 @@
 #include "clipboardtile.h"
+#include <QFileSystemWatcher>
 
 
 TileInfo::TileInfo(quint16 info) {

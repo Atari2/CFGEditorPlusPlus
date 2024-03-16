@@ -1,6 +1,38 @@
 #include "eightbyeightview.h"
 #include "eightbyeightviewcontainer.h"
 
+PgUpDownEventFilter::PgUpDownEventFilter(QObject* parent) : QObject{parent} {
+
+}
+
+bool PgUpDownEventFilter::eventFilter(QObject* obj, QEvent* event) {
+    if (event->type() == QEvent::KeyPress) {
+        QKeyEvent* keyEvent = static_cast<QKeyEvent*>(event);
+        if (keyEvent->key() == Qt::Key_PageDown || keyEvent->key() == Qt::Key_PageUp) {
+            return true;
+        }
+        return false;
+    } else {
+        return QObject::eventFilter(obj, event);
+    }
+}
+
+void EightByEightView::keyPressEvent(QKeyEvent* event) {
+    if (event->key() == Qt::Key_PageDown) {
+        auto new_index = m_paletteComboBox->currentIndex() + 1;
+        if (new_index < m_paletteComboBox->count()) {
+            m_paletteComboBox->setCurrentIndex(new_index);
+        }
+        event->accept();
+    } else if (event->key() == Qt::Key_PageUp) {
+        auto new_index = m_paletteComboBox->currentIndex() - 1;
+        if (new_index > 0) {
+            m_paletteComboBox->setCurrentIndex(new_index);
+        }
+        event->accept();
+    }
+}
+
 EightByEightView::EightByEightView(QGraphicsScene* ogscene) : QGraphicsView(ogscene) {
     setMouseTracking(true);
     viewport()->setMouseTracking(true);
@@ -12,6 +44,7 @@ EightByEightView::EightByEightView(QGraphicsScene* ogscene) : QGraphicsView(ogsc
         if (offset != 0)
             verticalScrollBar()->setValue(value - offset);
     });
+    verticalScrollBar()->installEventFilter(new PgUpDownEventFilter(this));
 	setFixedSize(275, 256);
 }
 
@@ -22,6 +55,10 @@ int EightByEightView::convertPointToTile(const QPointF& point) {
     // this might *seem* like a useless calculation but in reality without this it doesn't work properly
     // yay for rounding
     return  (((inty / 16) * 16) + ((scrollbary / 16) * 16)) + (intx / 16);
+}
+
+void EightByEightView::setComboBox(QComboBox* comboBox) {
+    m_paletteComboBox = comboBox;
 }
 
 void EightByEightView::mouseMoveEvent(QMouseEvent *event) {
@@ -36,6 +73,7 @@ void EightByEightView::open() {
     m_open = true;
     show();
     raise();
+    verticalScrollBar()->setFocusPolicy(Qt::NoFocus);
 }
 
 void EightByEightView::close(QCloseEvent *event) {

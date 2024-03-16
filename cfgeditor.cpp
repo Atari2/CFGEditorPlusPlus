@@ -18,7 +18,7 @@ CFGEditor::CFGEditor(const QStringList& argv, QWidget *parent)
     setSizePolicy(QSizePolicy());
     statusBar()->setSizeGripEnabled(false);
     setUpImages();
-	view8x8Container = new EightByEightViewContainer(new EightByEightView(new QGraphicsScene));
+    view8x8Container = new EightByEightViewContainer(new EightByEightView(new QGraphicsScene), this->ui->paletteComboBox);
 	paletteContainer = new PaletteContainer(new PaletteView(new QGraphicsScene));
     ui->labelDisplayTilesGrid->attachMap16View(ui->map16GraphicsView);
     loadFullbitmap();
@@ -72,7 +72,7 @@ void CFGEditor::initCompleter() {
     hexCompleter->setCaseSensitivity(Qt::CaseSensitivity::CaseInsensitive);
 }
 
-void CFGEditor::loadFullbitmap(int index) {
+void CFGEditor::loadFullbitmap(int index, bool justPalette) {
     if (index == -1)
         index = ui->paletteComboBox->currentIndex();
     QVector<QString> gfxFiles{ui->lineEditGFXSp0->text(), ui->lineEditGFXSp1->text(), ui->lineEditGFXSp2->text(), ui->lineEditGFXSp3->text()};
@@ -93,9 +93,13 @@ void CFGEditor::loadFullbitmap(int index) {
         p.drawImage(QRect{0, i, 128, 64}, img, QRect{0, 0, img.width(), img.height()});
         i += 64;
     }
-    ui->map16GraphicsView->readInternalMap16File();
+    if (!justPalette) {
+        ui->map16GraphicsView->readInternalMap16File();
+    }
 	view8x8Container->updateForChange(full8x8Bitmap, true);
-    ui->labelDisplayTilesGrid->redraw();
+    if (!justPalette) {
+        ui->labelDisplayTilesGrid->redraw();
+    }
 }
 
 void CFGEditor::setUpMenuBar(QMenuBar* mb) {
@@ -950,6 +954,9 @@ void CFGEditor::setupForNormal() {
     ui->lineEditExtraProp2->setEnabled(false);
     ui->spinBoxextraBitClear->setEnabled(false);
     ui->spinBoxextraBitSet->setEnabled(false);
+
+    ui->extraPropByte2Bit6CheckBox->setEnabled(false);
+    ui->extraPropByte2Bit7CheckBox->setEnabled(false);
 }
 
 void CFGEditor::setupForCustom() {
@@ -961,6 +968,9 @@ void CFGEditor::setupForCustom() {
     ui->spinBoxextraBitClear->setEnabled(true);
     ui->spinBoxextraBitSet->setEnabled(true);
 
+    ui->extraPropByte2Bit6CheckBox->setEnabled(true);
+    ui->extraPropByte2Bit7CheckBox->setEnabled(true);
+
 }
 
 void CFGEditor::setupForGenShootOther() {
@@ -971,6 +981,9 @@ void CFGEditor::setupForGenShootOther() {
     ui->lineEditExtraProp2->setEnabled(true);
     ui->spinBoxextraBitClear->setEnabled(true);
     ui->spinBoxextraBitSet->setEnabled(true);
+
+    ui->extraPropByte2Bit6CheckBox->setEnabled(false);
+    ui->extraPropByte2Bit7CheckBox->setEnabled(false);
 }
 
 void CFGEditor::changeAllCheckBoxState(bool state) {
@@ -1038,6 +1051,12 @@ void CFGEditor::bindSpriteProp() {
     });
     QObject::connect(ui->lineEditExtraProp2, &QLineEdit::editingFinished, this, [&]() {
         sprite->extraProp2 = (uint8_t)ui->lineEditExtraProp2->text().toUInt(nullptr, 16);
+        {
+            QSignalBlocker blocker1{ui->extraPropByte2Bit6CheckBox};
+            QSignalBlocker blocker2{ui->extraPropByte2Bit7CheckBox};
+            ui->extraPropByte2Bit6CheckBox->setCheckState(sprite->extraProp2 & 0x40 ? Qt::Checked : Qt::Unchecked);
+            ui->extraPropByte2Bit7CheckBox->setCheckState(sprite->extraProp2 & 0x80 ? Qt::Checked : Qt::Unchecked);
+        }
     });
     // Type
     QObject::connect(ui->comboBoxType, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [&](int index) {
@@ -1091,6 +1110,24 @@ void CFGEditor::bindSpriteProp() {
     bindTweak1686();
     // 190F
     bindTweak190F();
+
+    QObject::connect(ui->extraPropByte2Bit6CheckBox, &QCheckBox::stateChanged, this, [&](int state) {
+        if (state == Qt::Checked) {
+            sprite->extraProp2 |= 0x40;
+        } else {
+            sprite->extraProp2 &= ~0x40;
+        }
+        ui->lineEditExtraProp2->setText(QString::asprintf("%02X", sprite->extraProp2));
+    });
+
+    QObject::connect(ui->extraPropByte2Bit7CheckBox, &QCheckBox::stateChanged, this, [&](int state) {
+        if (state == Qt::Checked) {
+            sprite->extraProp2 |= 0x80;
+        } else {
+            sprite->extraProp2 &= ~0x80;
+        }
+        ui->lineEditExtraProp2->setText(QString::asprintf("%02X", sprite->extraProp2));
+    });
 }
 
 void CFGEditor::bindTweak1656() {
@@ -1167,6 +1204,7 @@ void CFGEditor::bindTweak166E() {
         ui->label->setPixmap(paletteImages[index].scaled(ui->label->size(), Qt::AspectRatioMode::KeepAspectRatio));
         sprite->t166e.palette = index;
         ui->lineEdit166E->setText(QString::asprintf("%02X", sprite->t166e.to_byte()));
+        loadFullbitmap(-1, true);
     });
 }
 void CFGEditor::bindTweak167A() {

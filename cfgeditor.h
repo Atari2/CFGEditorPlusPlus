@@ -50,7 +50,7 @@ public:
     void bindDisplayButtons();
     void bindGFXSelector();
     void initCompleter();
-    void loadFullbitmap(int index = -1);
+    void loadFullbitmap(int index = -1, bool justPalette = false);
     void addLunarMagicIcons();
     void closeEvent(QCloseEvent *event);
     void advanceDisplayIndex();

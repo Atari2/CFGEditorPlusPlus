@@ -9,7 +9,7 @@ class PaletteContainer : public QWidget
 	Q_OBJECT
 public:
 	explicit PaletteContainer(PaletteView* view, QWidget *parent = nullptr);
-	void updateContainer(const QPixmap& image);
+    void updateContainer(const QPixmap& image);
 signals:
 	void paletteChanged();
 private:

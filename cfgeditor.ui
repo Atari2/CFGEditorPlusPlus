@@ -1779,7 +1779,7 @@
         <rect>
          <x>10</x>
          <y>10</y>
-         <width>161</width>
+         <width>141</width>
          <height>21</height>
         </rect>
        </property>
@@ -1790,20 +1790,20 @@
       <widget class="QLabel" name="asmFileLabel_3">
        <property name="geometry">
         <rect>
-         <x>340</x>
+         <x>210</x>
          <y>10</y>
-         <width>61</width>
+         <width>20</width>
          <height>21</height>
         </rect>
        </property>
        <property name="text">
-        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;right&quot;&gt;Byte 2:&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;right&quot;&gt;2:&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
        </property>
       </widget>
       <widget class="QLineEdit" name="lineEditExtraProp1">
        <property name="geometry">
         <rect>
-         <x>270</x>
+         <x>170</x>
          <y>10</y>
          <width>41</width>
          <height>21</height>
@@ -1822,7 +1822,7 @@
       <widget class="QLineEdit" name="lineEditExtraProp2">
        <property name="geometry">
         <rect>
-         <x>410</x>
+         <x>240</x>
          <y>10</y>
          <width>41</width>
          <height>21</height>
@@ -1841,14 +1841,40 @@
       <widget class="QLabel" name="asmFileLabel_4">
        <property name="geometry">
         <rect>
-         <x>200</x>
+         <x>140</x>
          <y>10</y>
-         <width>61</width>
+         <width>20</width>
          <height>21</height>
         </rect>
        </property>
        <property name="text">
-        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;right&quot;&gt;Byte 1:&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;right&quot;&gt;1:&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       </property>
+      </widget>
+      <widget class="QCheckBox" name="extraPropByte2Bit7CheckBox">
+       <property name="geometry">
+        <rect>
+         <x>290</x>
+         <y>0</y>
+         <width>181</width>
+         <height>22</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Run MAIN code in any state</string>
+       </property>
+      </widget>
+      <widget class="QCheckBox" name="extraPropByte2Bit6CheckBox">
+       <property name="geometry">
+        <rect>
+         <x>290</x>
+         <y>20</y>
+         <width>221</width>
+         <height>22</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Run both MAIN + vanilla code always</string>
        </property>
       </widget>
      </widget>
