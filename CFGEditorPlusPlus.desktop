@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=CFGEditorPlusPlus
+Comment=A Pixi config editor
+Exec=CFGEditorPlusPlus
+Icon=VioletEgg
+GenericName=CFGEditorPlusPlus
+Categories=Development
+Terminal=false

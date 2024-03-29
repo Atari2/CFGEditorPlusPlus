@@ -110,7 +110,7 @@ private:
 public:
     DisplayData& operator=(const DisplayData& other);
     DisplayData(const DisplayData& other);
-    DisplayData(const Display& other);
+    DisplayData(const JSONDisplay& other);
     void setUseText(bool enabled);
     void setExtraBit(bool enabled);
     void setDescription(const QString& description);

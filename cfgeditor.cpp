@@ -231,7 +231,7 @@ void CFGEditor::populateDisplays() {
     }
 }
 
-Display CFGEditor::createDisplay(const DisplayData& data) {
+JSONDisplay CFGEditor::createDisplay(const DisplayData& data) {
     QVector<Tile> tiles;
     tiles.reserve(data.Tiles().length());
     for (auto& t : data.Tiles()) {

@@ -79,7 +79,7 @@ public:
     void changeDisplay(int newindex);
     void cloneDisplay(int index = -1);
     void serializeDisplays(QVector<DisplayData>& data);
-    void deserializeDisplays(const QVector<Display>& display, Map16GraphicsView* view);
+    void deserializeDisplays(const QVector<JSONDisplay>& display, Map16GraphicsView* view);
 private:
     TiledPosition invalid = TiledPosition::getInvalid();
     TiledPosition& findIndex(size_t index);

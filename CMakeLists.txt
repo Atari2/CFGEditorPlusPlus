@@ -117,6 +117,17 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
                 COMMENT "Running windeployqt..."
             )
         endif()
+    elseif(UNIX)
+        install(TARGETS CFGEditorPlusPlus
+            BUNDLE  DESTINATION .
+            RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+        )
+        qt_generate_deploy_app_script(
+            TARGET CFGEditorPlusPlus
+            OUTPUT_SCRIPT deploy_script
+            NO_UNSUPPORTED_PLATFORM_ERROR
+        )
+        install(SCRIPT ${deploy_script})
     endif()
 else()
     add_executable(CFGEditorPlusPlus
@@ -124,9 +135,11 @@ else()
     )
 endif()
 
-if (RELEASE_BUILD AND ON_WINDOWS)
+if (RELEASE_BUILD)
     message(STATUS "Building Release, removing qDebug()")
     target_compile_definitions(CFGEditorPlusPlus PRIVATE QT_NO_DEBUG_OUTPUT)
-    target_link_options(CFGEditorPlusPlus PRIVATE /SUBSYSTEM:windows /ENTRY:mainCRTStartup)
+    if (ON_WINDOWS)
+        target_link_options(CFGEditorPlusPlus PRIVATE /SUBSYSTEM:windows /ENTRY:mainCRTStartup)
+    endif()
 endif()
 target_link_libraries(CFGEditorPlusPlus PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)

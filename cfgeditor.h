@@ -59,7 +59,7 @@ public:
     void removeExistingRow();
     void changeTilePropGroupState(bool, TileChangeType type = TileChangeType::All);
     void setTilePropGroupState(FullTile tileInfo);
-    Display createDisplay(const DisplayData& data);
+    JSONDisplay createDisplay(const DisplayData& data);
     void populateDisplays();
     void populateGFXFiles();
 

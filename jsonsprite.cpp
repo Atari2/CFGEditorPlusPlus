@@ -1,6 +1,6 @@
 #include "jsonsprite.h"
 
-Display::Display(const QJsonObject& d, DisplayType type) {
+JSONDisplay::JSONDisplay(const QJsonObject& d, DisplayType type) {
     description = d["Description"].toString();
     extrabit = d["ExtraBit"].toBool();
     if (auto it = d.find("GFXInfo"); it != d.constEnd()) {
@@ -27,7 +27,7 @@ Display::Display(const QJsonObject& d, DisplayType type) {
     }
 }
 
-Display::Display(const QString& d, const QVector<Tile>& ts, bool bit, int xx, int yy, bool text, const QString& disp, const GFXInfo& info) :
+JSONDisplay::JSONDisplay(const QString& d, const QVector<Tile>& ts, bool bit, int xx, int yy, bool text, const QString& disp, const GFXInfo& info) :
     description(d),
     extrabit(bit),
     x_or_index(xx),
@@ -39,7 +39,7 @@ Display::Display(const QString& d, const QVector<Tile>& ts, bool bit, int xx, in
    tiles.append(ts);
 }
 
-QJsonObject Display::toJson(DisplayType type) const {
+QJsonObject JSONDisplay::toJson(DisplayType type) const {
     QJsonObject obj{};
     obj["Description"] = description;
     obj["ExtraBit"] = extrabit;
@@ -240,7 +240,7 @@ JsonSprite::JsonSprite() {
     addbcountclear = 0;
     addbcountset = 0;
     map16 = QString();
-    displays = QVector<Display>();
+    displays = QVector<JSONDisplay>();
     collections = QVector<Collection>();
 	dispType = DisplayType::XY;
 }
@@ -290,7 +290,7 @@ void JsonSprite::deserialize() {
     displays.reserve(dispArr.size());
     collections.reserve(collArr.size());
     std::for_each(dispArr.cbegin(), dispArr.cend(), [&](auto& d) {
-        displays.push_back(Display(d.toObject(), dispType));
+        displays.push_back(JSONDisplay(d.toObject(), dispType));
     });
     std::for_each(collArr.cbegin(), collArr.cend(), [&](auto& c) {
         collections.push_back(Collection(c.toObject()));
@@ -370,7 +370,7 @@ void JsonSprite::addCollections(QTableView* view) {
     }
 }
 
-void JsonSprite::addDisplay(const Display& display) {
+void JsonSprite::addDisplay(const JSONDisplay& display) {
     displays.append(display);
 }
 

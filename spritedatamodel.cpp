@@ -343,7 +343,7 @@ DisplayData::DisplayData(const DisplayData& other) {
     this->operator=(other);
 }
 
-DisplayData::DisplayData(const Display& other) {
+DisplayData::DisplayData(const JSONDisplay& other) {
     m_extra_bit = other.extrabit;
     m_x_or_index = other.x_or_index;
     m_y_or_value = other.y_or_value;

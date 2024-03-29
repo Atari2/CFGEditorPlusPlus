@@ -397,7 +397,7 @@ void Map16Provider::keyPressEvent(QKeyEvent *event) {
     event->accept();
 }
 
-void Map16Provider::deserializeDisplays(const QVector<Display>& displays, Map16GraphicsView* view) {
+void Map16Provider::deserializeDisplays(const QVector<JSONDisplay>& displays, Map16GraphicsView* view) {
 
     // clear all to prepare for new displays
     m_displays.clear();

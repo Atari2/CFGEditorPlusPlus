@@ -25,7 +25,7 @@ public:
     EightByEightView(QGraphicsScene* scene);
     void updateForChange(QImage* image);
     void setComboBox(QComboBox* comboBox);
-    void mouseMoveEvent(QMouseEvent *event);
+    void mouseMoveEvent(QMouseEvent *event) override;
     void keyPressEvent(QKeyEvent* event) override;
     ~EightByEightView();
     void open();
@@ -34,7 +34,7 @@ private:
     QGraphicsPixmapItem* currentItem = nullptr;
     QComboBox* m_paletteComboBox = nullptr;
     bool m_open = false;
-    void closeEvent(QCloseEvent* event);
+    void closeEvent(QCloseEvent* event) override;
     int convertPointToTile(const QPointF& point);
 };
 

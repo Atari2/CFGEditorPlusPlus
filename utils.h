@@ -34,37 +34,37 @@ bool assert_filesize(S name, qsizetype size) {
         if constexpr (std::is_same_v<T, Equal>) {
             result = file.size() == size;
             if (!result) {
-                DefaultAlertImpl(nullptr, QString::asprintf("This type of file must be exactly %d bytes in size", size))();
+                DefaultAlertImpl(nullptr, QString::asprintf("This type of file must be exactly %lld bytes in size", size))();
             }
         }
         else if constexpr (std::is_same_v<T, Different>) {
             result = file.size() != size;
             if (!result) {
-                DefaultAlertImpl(nullptr, QString::asprintf("This type of file must not be exactly %d bytes in size", size))();
+                DefaultAlertImpl(nullptr, QString::asprintf("This type of file must not be exactly %lld bytes in size", size))();
             }
         }
         else if constexpr (std::is_same_v<T, LessThan>) {
             result = file.size() < size;
             if (!result) {
-                DefaultAlertImpl(nullptr, QString::asprintf("This type of file must be less than %d bytes in size", size))();
+                DefaultAlertImpl(nullptr, QString::asprintf("This type of file must be less than %lld bytes in size", size))();
             }
         }
         else if constexpr (std::is_same_v<T, MoreThan>) {
             result = file.size() > size;
             if (!result) {
-                DefaultAlertImpl(nullptr, QString::asprintf("This type of file must be more than %d bytes in size", size))();
+                DefaultAlertImpl(nullptr, QString::asprintf("This type of file must be more than %lld bytes in size", size))();
             }
         }
         else if constexpr (std::is_same_v<T, LessThanOrEqual>) {
             result = file.size() <= size;
             if (!result) {
-                DefaultAlertImpl(nullptr, QString::asprintf("This type of file must be less than or equal to %d bytes in size", size))();
+                DefaultAlertImpl(nullptr, QString::asprintf("This type of file must be less than or equal to %lld bytes in size", size))();
             }
         }
         else if constexpr (std::is_same_v<T, MoreThanOrEqual>) {
             result = file.size() == size;
             if (!result) {
-                DefaultAlertImpl(nullptr, QString::asprintf("This type of file must be more than or equal to %d bytes in size", size))();
+                DefaultAlertImpl(nullptr, QString::asprintf("This type of file must be more than or equal to %lld bytes in size", size))();
             }
         } else {
             Q_ASSERT(false);

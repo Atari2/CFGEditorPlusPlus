@@ -43,7 +43,7 @@ struct Tile {
     QJsonObject toJson() const;
 };
 
-struct Display {
+struct JSONDisplay {
     QString description;
     QVector<Tile> tiles;
     bool extrabit;
@@ -52,8 +52,8 @@ struct Display {
     bool useText;
     QString displaytext;
     GFXInfo gfxinfo{};
-    Display(const QJsonObject& t, DisplayType type);
-    Display(const QString& d, const QVector<Tile>& ts, bool bit, int xx, int yy, bool text, const QString& disp, const GFXInfo& info);
+    JSONDisplay(const QJsonObject& t, DisplayType type);
+    JSONDisplay(const QString& d, const QVector<Tile>& ts, bool bit, int xx, int yy, bool text, const QString& disp, const GFXInfo& info);
     QJsonObject toJson(DisplayType type) const;
 };
 
@@ -75,7 +75,7 @@ public:
     void serialize();
     QByteArray serialize_cfg();
     void addCollections(QTableView* view);
-    void addDisplay(const Display& display);
+    void addDisplay(const JSONDisplay& display);
     void setMap16(const QString& mapdata);
     QByteArray to_text(const QString& filename);
     void to_file(QString name = "");
@@ -94,7 +94,7 @@ public:
     int addbcountclear;
     int addbcountset;
     QString map16;
-    QVector<Display> displays;
+    QVector<JSONDisplay> displays;
     QVector<Collection> collections;
     QString m_name;
     QJsonObject obj;
