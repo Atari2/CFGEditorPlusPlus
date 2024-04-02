@@ -112,7 +112,10 @@ void CFGEditor::setUpMenuBar(QMenuBar* mb) {
                                              "Do you want to save it before opening a new one?",
                                              QMessageBox::Yes | QMessageBox::No | QMessageBox::Abort );
             if (res == QMessageBox::Yes) {
-                sprite->to_file(QFileDialog::getSaveFileName(this, tr("Save file"), sprite->name(), tr("JSON (*.json)")));
+                auto filename = QFileDialog::getSaveFileName(this, tr("Save file"), sprite->name(), tr("JSON (*.json)"));
+                if (filename.size() == 0)
+                    return;
+                sprite->to_file(filename);
             } else if (res == QMessageBox::Abort) {
                 return;
             }
@@ -131,7 +134,10 @@ void CFGEditor::setUpMenuBar(QMenuBar* mb) {
                                   QMessageBox::Yes | QMessageBox::No | QMessageBox::Abort );
             if (res == QMessageBox::Yes) {
                 saveSprite();
-                sprite->to_file(QFileDialog::getSaveFileName(this, tr("Save file"), sprite->name(), tr("JSON (*.json)")));
+                auto filename = QFileDialog::getSaveFileName(this, tr("Save file"), sprite->name(), tr("JSON (*.json)"));
+                if (filename.size() == 0)
+                    return;
+                sprite->to_file(filename);
             } else if (res == QMessageBox::Abort) {
                 return;
             }
@@ -156,7 +162,10 @@ void CFGEditor::setUpMenuBar(QMenuBar* mb) {
 
     file->addAction("&Save As", Qt::CTRL | Qt::ALT | Qt::Key_S, qApp, [&]() {
         saveSprite();
-        sprite->to_file(QFileDialog::getSaveFileName(this, tr("Save file"), sprite->name(), tr("JSON (*.json);;CFG (*.cfg)")));
+        auto filename = QFileDialog::getSaveFileName(this, tr("Save file"), sprite->name(), tr("JSON (*.json);;CFG (*.cfg)"));
+        if (filename.size() == 0)
+            return;
+        sprite->to_file(filename);
     });
 
     display->addAction("&Load Custom Map16", qApp, [&]() {
