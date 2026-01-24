@@ -14,8 +14,6 @@ CFGEditor::CFGEditor(const QStringList& argv, QWidget *parent)
 {
 	setWindowIcon(QIcon{":/VioletEgg.ico"});
     ui->setupUi(this);
-    setFixedSize(size());
-    setSizePolicy(QSizePolicy());
     statusBar()->setSizeGripEnabled(false);
     setUpImages();
     view8x8Container = new EightByEightViewContainer(new EightByEightView(new QGraphicsScene), this->ui->paletteComboBox);
@@ -289,7 +287,6 @@ void CFGEditor::setDisplayModel() {
     displayModel = new QStandardItemModel;
     QStringList labelList{"ExtraBit", "X", "Y"};
     displayModel->setHorizontalHeaderLabels(labelList);
-    ui->tableViewDisplays->setFixedSize(ui->tableViewDisplays->size());
     ui->tableViewDisplays->setModel(displayModel);
     ui->tableViewDisplays->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
     ui->tableViewDisplays->horizontalHeader()->setSectionResizeMode(0, QHeaderView::ResizeToContents);
@@ -324,7 +321,6 @@ void CFGEditor::setGFXInfoModel() {
     gfxinfoModel = new QStandardItemModel;
     QStringList labelList{"Sp0", "Sep.", "Sp1", "Sep.", "Sp2", "Sep.", "Sp3", "Sep."};
     gfxinfoModel->setHorizontalHeaderLabels(labelList);
-    ui->tableViewGfxInfo->setFixedSize(ui->tableViewGfxInfo->size());
     ui->tableViewGfxInfo->setModel(gfxinfoModel);
     ui->tableViewGfxInfo->setItemDelegate(new CustomItemDelegate(gfxinfoModel, ui->tableViewGfxInfo, hexValidator));
     ui->tableViewGfxInfo->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
@@ -353,7 +349,6 @@ void CFGEditor::setCollectionModel() {
         labelList.append(QString::asprintf("Ex%d", i));
     }
     collectionModel->setHorizontalHeaderLabels(labelList);
-    ui->tableView->setFixedSize(ui->tableView->size());
     ui->tableView->setModel(collectionModel);
     ui->tableView->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
     ui->tableView->horizontalHeader()->setSectionResizeMode(0, QHeaderView::Stretch);
