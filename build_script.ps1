@@ -40,7 +40,7 @@ function FindQt6 {
         Write-Error "No Qt6 installation found"
         return
     }
-    $qtPath = "C:\Qt\$($versions[0])\msvc2019_64"
+    $qtPath = "C:\Qt\$($versions[0])\msvc2022_64"
     if (Test-Path $qtPath) {
         return $qtPath
     }
