@@ -67,6 +67,9 @@ jobs:
     - name: Setup MSBuild
       uses: microsoft/setup-msbuild@v2
 
+    - name: Restore NuGet packages
+      run: dotnet restore packaging/windows/CFGEditorInstaller.csproj
+
     - name: Build installer
       run: msbuild packaging/windows/CFGEditorInstaller.csproj /p:Configuration=Release /p:Platform=AnyCPU
 
