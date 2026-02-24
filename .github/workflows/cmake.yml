@@ -46,7 +46,7 @@ jobs:
     - name: Install Qt (dynamic)
       uses: jurplel/install-qt-action@v4
       with:
-        version: '6.11.0'
+        version: '6.9.3'
         arch: 'win64_msvc2022_64'
         cache: true
 
@@ -103,7 +103,7 @@ jobs:
     - name: Install Qt (dynamic)
       uses: jurplel/install-qt-action@v4
       with:
-        version: '6.11.0'
+        version: '6.9.3'
         arch: 'linux_gcc_64'
         cache: true
 
