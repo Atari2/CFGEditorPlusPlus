@@ -64,6 +64,9 @@ jobs:
         New-Item -ItemType Directory -Force -Path packaging/windows/Properties
         Copy-Item CFGEditor.zip -Destination packaging/windows/Properties/CFGEditor.zip
 
+    - name: Setup MSBuild
+      uses: microsoft/setup-msbuild@v2
+
     - name: Build installer
       run: msbuild packaging/windows/CFGEditorInstaller.csproj /p:Configuration=Release /p:Platform=AnyCPU
 
