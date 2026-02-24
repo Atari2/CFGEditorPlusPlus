@@ -70,7 +70,15 @@ Thumbs.db
 *.exe
 
 build/
+build-*/
 CMakeLists.txt.user
 CFGEditor.zip
 .vs
 CMakeSettings.json
+*.AppImage
+.venv
+AppDir
+*.log
+6.*
+packaging/windows/bin/
+packaging/windows/obj/
