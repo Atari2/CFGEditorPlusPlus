@@ -2,7 +2,7 @@
 
 SnesGFXConverter::SnesGFXConverter(const QString& name) {
     QFile file{name};
-    file.open(QFile::OpenModeFlag::ReadOnly);
+    [[maybe_unused]] bool res = file.open(QFile::OpenModeFlag::ReadOnly);
     imageData = file.readAll();
     file.close();
 }
@@ -11,41 +11,43 @@ void SnesGFXConverter::setCustomExanimation(const QString& other) {
     GFXExAnimations = other;
 }
 
-void SnesGFXConverter::populateFullMap16Data(const QVector<QString>& names) {
+bool SnesGFXConverter::populateFullMap16Data(const QVector<QString>& names) {
     qDebug() << "Populating map16 data with " << names;
     fullmap16data.clear();
     for (auto& name : names) {
         if (QDir(name).isAbsolute()) {
             QFile file{name};
-            file.open(QFile::OpenModeFlag::ReadOnly);
+            if (!file.open(QFile::OpenModeFlag::ReadOnly)) return false;
             fullmap16data.append(file.readAll());
         }
         else {
             QFile file{":/Resources/Graphics/" + name + ".bin"};
-            file.open(QFile::OpenModeFlag::ReadOnly);
+            if (!file.open(QFile::OpenModeFlag::ReadOnly)) return false;
             fullmap16data.append(file.readAll());
        }
     }
     QFile file{GFXExAnimations};
-    file.open(QFile::OpenModeFlag::ReadOnly);
+    if (!file.open(QFile::OpenModeFlag::ReadOnly)) return false;
     fullmap16data.append(file.readAll());
+    return true;
 }
 
-void SnesGFXConverter::populateExternalMap16Data(const QVector<QString>& names) {
+bool SnesGFXConverter::populateExternalMap16Data(const QVector<QString>& names) {
     auto ret = std::find_if_not(names.cbegin(), names.cend(), [](const auto& name) {
             return assert_filesize<LessThanOrEqual>(name, kb(32));
         });
     if (ret != names.cend())
-        return;
+        return false;
     exgfxmap16data.clear();
     for (auto& name : names) {
         QFile file{name};
-        file.open(QFile::OpenModeFlag::ReadOnly);
+        if (!file.open(QFile::OpenModeFlag::ReadOnly)) return false;
         auto data = file.readAll();
         if (data.length() < kb(32))
             data = data.leftJustified(kb(32), 0);
         exgfxmap16data.append(data);
     }
+    return true;
 }
 
 void SnesGFXConverter::clearnExternalMap16Data() {

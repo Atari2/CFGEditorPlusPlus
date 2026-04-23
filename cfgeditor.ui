@@ -42,7 +42,7 @@
              <item>
               <spacer name="verticalSpacer_7">
                <property name="orientation">
-                <enum>Qt::Vertical</enum>
+                <enum>Qt::Orientation::Vertical</enum>
                </property>
                <property name="sizeHint" stdset="0">
                 <size>
@@ -62,7 +62,7 @@
              <item>
               <spacer name="verticalSpacer_6">
                <property name="orientation">
-                <enum>Qt::Vertical</enum>
+                <enum>Qt::Orientation::Vertical</enum>
                </property>
                <property name="sizeHint" stdset="0">
                 <size>
@@ -99,7 +99,7 @@
              <item>
               <spacer name="verticalSpacer">
                <property name="orientation">
-                <enum>Qt::Vertical</enum>
+                <enum>Qt::Orientation::Vertical</enum>
                </property>
                <property name="sizeHint" stdset="0">
                 <size>
@@ -136,7 +136,7 @@
              <item>
               <spacer name="verticalSpacer_2">
                <property name="orientation">
-                <enum>Qt::Vertical</enum>
+                <enum>Qt::Orientation::Vertical</enum>
                </property>
                <property name="sizeHint" stdset="0">
                 <size>
@@ -173,7 +173,7 @@
              <item>
               <spacer name="verticalSpacer_3">
                <property name="orientation">
-                <enum>Qt::Vertical</enum>
+                <enum>Qt::Orientation::Vertical</enum>
                </property>
                <property name="sizeHint" stdset="0">
                 <size>
@@ -210,7 +210,7 @@
              <item>
               <spacer name="verticalSpacer_4">
                <property name="orientation">
-                <enum>Qt::Vertical</enum>
+                <enum>Qt::Orientation::Vertical</enum>
                </property>
                <property name="sizeHint" stdset="0">
                 <size>
@@ -247,7 +247,7 @@
              <item>
               <spacer name="verticalSpacer_5">
                <property name="orientation">
-                <enum>Qt::Vertical</enum>
+                <enum>Qt::Orientation::Vertical</enum>
                </property>
                <property name="sizeHint" stdset="0">
                 <size>
@@ -284,7 +284,7 @@
              <item>
               <spacer name="verticalSpacer_8">
                <property name="orientation">
-                <enum>Qt::Vertical</enum>
+                <enum>Qt::Orientation::Vertical</enum>
                </property>
                <property name="sizeHint" stdset="0">
                 <size>
@@ -812,7 +812,7 @@
              <item>
               <layout class="QHBoxLayout" name="horizontalLayout">
                <property name="sizeConstraint">
-                <enum>QLayout::SetDefaultConstraint</enum>
+                <enum>QLayout::SizeConstraint::SetDefaultConstraint</enum>
                </property>
                <item>
                 <widget class="QLabel" name="objClippingLabel">
@@ -829,13 +829,13 @@
                   </size>
                  </property>
                  <property name="frameShape">
-                  <enum>QFrame::NoFrame</enum>
+                  <enum>QFrame::Shape::NoFrame</enum>
                  </property>
                  <property name="text">
                   <string/>
                  </property>
                  <property name="alignment">
-                  <set>Qt::AlignCenter</set>
+                  <set>Qt::AlignmentFlag::AlignCenter</set>
                  </property>
                 </widget>
                </item>
@@ -844,7 +844,7 @@
              <item>
               <layout class="QHBoxLayout" name="horizontalLayout_2">
                <property name="sizeConstraint">
-                <enum>QLayout::SetDefaultConstraint</enum>
+                <enum>QLayout::SizeConstraint::SetDefaultConstraint</enum>
                </property>
                <item>
                 <widget class="QLabel" name="sprClippingLabel">
@@ -861,13 +861,13 @@
                   </size>
                  </property>
                  <property name="frameShape">
-                  <enum>QFrame::NoFrame</enum>
+                  <enum>QFrame::Shape::NoFrame</enum>
                  </property>
                  <property name="text">
                   <string/>
                  </property>
                  <property name="alignment">
-                  <set>Qt::AlignCenter</set>
+                  <set>Qt::AlignmentFlag::AlignCenter</set>
                  </property>
                 </widget>
                </item>
@@ -1168,10 +1168,10 @@
                 </size>
                </property>
                <property name="frameShape">
-                <enum>QFrame::Box</enum>
+                <enum>QFrame::Shape::Box</enum>
                </property>
                <property name="frameShadow">
-                <enum>QFrame::Plain</enum>
+                <enum>QFrame::Shadow::Plain</enum>
                </property>
                <property name="lineWidth">
                 <number>1</number>
@@ -1180,7 +1180,7 @@
                 <number>0</number>
                </property>
                <property name="alignment">
-                <set>Qt::AlignCenter</set>
+                <set>Qt::AlignmentFlag::AlignCenter</set>
                </property>
                <property name="margin">
                 <number>1</number>
@@ -1271,7 +1271,7 @@
               <number>2</number>
              </property>
              <property name="alignment">
-              <set>Qt::AlignCenter</set>
+              <set>Qt::AlignmentFlag::AlignCenter</set>
              </property>
             </widget>
            </item>
@@ -1296,7 +1296,7 @@
            <string/>
           </property>
           <property name="alignment">
-           <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+           <set>Qt::AlignmentFlag::AlignLeading|Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignVCenter</set>
           </property>
           <layout class="QHBoxLayout" name="horizontalLayout_37">
            <item>
@@ -1433,7 +1433,7 @@
               <number>2</number>
              </property>
              <property name="alignment">
-              <set>Qt::AlignCenter</set>
+              <set>Qt::AlignmentFlag::AlignCenter</set>
              </property>
             </widget>
            </item>
@@ -1453,7 +1453,7 @@
               <number>2</number>
              </property>
              <property name="alignment">
-              <set>Qt::AlignCenter</set>
+              <set>Qt::AlignmentFlag::AlignCenter</set>
              </property>
             </widget>
            </item>
@@ -1497,10 +1497,10 @@
            <string>Lunar Magic Display</string>
           </property>
           <layout class="QVBoxLayout" name="verticalLayout_18">
-           <item alignment="Qt::AlignHCenter|Qt::AlignVCenter">
+           <item alignment="Qt::AlignmentFlag::AlignHCenter|Qt::AlignmentFlag::AlignVCenter">
             <widget class="Map16Provider" name="labelDisplayTilesGrid">
              <property name="frameShape">
-              <enum>QFrame::NoFrame</enum>
+              <enum>QFrame::Shape::NoFrame</enum>
              </property>
              <property name="text">
               <string/>
@@ -2192,6 +2192,9 @@
                  <height>354</height>
                 </size>
                </property>
+               <property name="alignment">
+                <set>Qt::AlignmentFlag::AlignLeading|Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignTop</set>
+               </property>
               </widget>
              </item>
             </layout>
@@ -2263,7 +2266,7 @@
              <item>
               <layout class="QHBoxLayout" name="horizontalLayout_10">
                <property name="sizeConstraint">
-                <enum>QLayout::SetDefaultConstraint</enum>
+                <enum>QLayout::SizeConstraint::SetDefaultConstraint</enum>
                </property>
                <item>
                 <widget class="QLabel" name="label_10">
@@ -2748,7 +2751,7 @@
      <x>0</x>
      <y>0</y>
      <width>1036</width>
-     <height>21</height>
+     <height>17</height>
     </rect>
    </property>
    <property name="defaultUp">
@@ -2772,6 +2775,115 @@
    <header>map16graphicsview.h</header>
   </customwidget>
  </customwidgets>
+ <tabstops>
+  <tabstop>tabChoice</tabstop>
+  <tabstop>lineEdit1656</tabstop>
+  <tabstop>lineEdit1662</tabstop>
+  <tabstop>lineEdit166E</tabstop>
+  <tabstop>lineEdit167a</tabstop>
+  <tabstop>lineEdit1686</tabstop>
+  <tabstop>lineEdit190f</tabstop>
+  <tabstop>objClipCmbBox</tabstop>
+  <tabstop>checkBox1656JumpedOn</tabstop>
+  <tabstop>checkBox1656DiesJumped</tabstop>
+  <tabstop>checkBox1656Hopin</tabstop>
+  <tabstop>checkBox1656Smoke</tabstop>
+  <tabstop>sprClipCmbBox</tabstop>
+  <tabstop>checkBox1662deathframe</tabstop>
+  <tabstop>checkBox1662strdown</tabstop>
+  <tabstop>checkBox190fbelow</tabstop>
+  <tabstop>checkBox190fgoalpass</tabstop>
+  <tabstop>checkBox190fsliding</tabstop>
+  <tabstop>checkBox190ffivefire</tabstop>
+  <tabstop>checkBox190fupysp</tabstop>
+  <tabstop>checkBox190fdeathframe</tabstop>
+  <tabstop>checkBox190fnosilver</tabstop>
+  <tabstop>checkBox190fwallstuck</tabstop>
+  <tabstop>checkBox167astar</tabstop>
+  <tabstop>checkBox167ablk</tabstop>
+  <tabstop>checkBox167aoffscr</tabstop>
+  <tabstop>checkBox167astunned</tabstop>
+  <tabstop>checkBox167akick</tabstop>
+  <tabstop>checkBox167aeveryframe</tabstop>
+  <tabstop>checkBox167apowerup</tabstop>
+  <tabstop>checkBox167adefaultint</tabstop>
+  <tabstop>checkBox1686Inedible</tabstop>
+  <tabstop>checkBox1686mouth</tabstop>
+  <tabstop>checkBox1686ground</tabstop>
+  <tabstop>checkBox1686sprint</tabstop>
+  <tabstop>checkBox1686dir</tabstop>
+  <tabstop>checkBox1686goalcoin</tabstop>
+  <tabstop>checkBox1686spawnSpr</tabstop>
+  <tabstop>checkBox1686noObjInt</tabstop>
+  <tabstop>paletteComboBox</tabstop>
+  <tabstop>checkBox166esecondpage</tabstop>
+  <tabstop>checkBox166efireball</tabstop>
+  <tabstop>checkBox166ecape</tabstop>
+  <tabstop>checkBox166esplash</tabstop>
+  <tabstop>checkBox166elay2</tabstop>
+  <tabstop>lineEditActLike</tabstop>
+  <tabstop>comboBoxType</tabstop>
+  <tabstop>spinBoxextraBitClear</tabstop>
+  <tabstop>spinBoxextraBitSet</tabstop>
+  <tabstop>lineEditAsmFile</tabstop>
+  <tabstop>lineEditExtraProp1</tabstop>
+  <tabstop>lineEditExtraProp2</tabstop>
+  <tabstop>extraPropByte2Bit6CheckBox</tabstop>
+  <tabstop>extraPropByte2Bit7CheckBox</tabstop>
+  <tabstop>textEditDisplayText</tabstop>
+  <tabstop>checkBoxUseText</tabstop>
+  <tabstop>comboBoxSizeType</tabstop>
+  <tabstop>spinBoxXPos</tabstop>
+  <tabstop>spinBoxYPos</tabstop>
+  <tabstop>checkBoxDisplayExtraBit</tabstop>
+  <tabstop>checkBoxDisplayExtraByte</tabstop>
+  <tabstop>textEditLMDescription</tabstop>
+  <tabstop>toolButton8x8Edit</tabstop>
+  <tabstop>toolButton8x8Mode</tabstop>
+  <tabstop>toolButtonGrid</tabstop>
+  <tabstop>toolButtonBorders</tabstop>
+  <tabstop>toolButtonPalette</tabstop>
+  <tabstop>pushButtonFlipX</tabstop>
+  <tabstop>pushButtonFlipY</tabstop>
+  <tabstop>comboBoxTilePalette</tabstop>
+  <tabstop>lineEditTileTL</tabstop>
+  <tabstop>lineEditTileTR</tabstop>
+  <tabstop>lineEditTileBL</tabstop>
+  <tabstop>lineEditTileBR</tabstop>
+  <tabstop>comboBoxGFXSet</tabstop>
+  <tabstop>lineEditGFXSp0</tabstop>
+  <tabstop>toolButtonGFXSp0</tabstop>
+  <tabstop>lineEditGFXSp3</tabstop>
+  <tabstop>toolButtonGFXSp3</tabstop>
+  <tabstop>lineEditGFXSp1</tabstop>
+  <tabstop>toolButtonGFXSp1</tabstop>
+  <tabstop>lineEditGFXSp2</tabstop>
+  <tabstop>toolButtonGFXSp2</tabstop>
+  <tabstop>pushButtonNewDisplay</tabstop>
+  <tabstop>pushButtonCloneDisplay</tabstop>
+  <tabstop>pushButtonDeleteDisplay</tabstop>
+  <tabstop>map16GraphicsView</tabstop>
+  <tabstop>tableViewDisplays</tabstop>
+  <tabstop>tableViewGfxInfo</tabstop>
+  <tabstop>lineEditCollName</tabstop>
+  <tabstop>checkBoxCollExtrabit</tabstop>
+  <tabstop>lineEditCollExByte1</tabstop>
+  <tabstop>lineEditCollExByte2</tabstop>
+  <tabstop>lineEditCollExByte3</tabstop>
+  <tabstop>lineEditCollExByte4</tabstop>
+  <tabstop>lineEditCollExByte5</tabstop>
+  <tabstop>lineEditCollExByte6</tabstop>
+  <tabstop>lineEditCollExByte7</tabstop>
+  <tabstop>lineEditCollExByte8</tabstop>
+  <tabstop>lineEditCollExByte9</tabstop>
+  <tabstop>lineEditCollExByte10</tabstop>
+  <tabstop>lineEditCollExByte11</tabstop>
+  <tabstop>lineEditCollExByte12</tabstop>
+  <tabstop>newCollButton</tabstop>
+  <tabstop>cloneCollButton</tabstop>
+  <tabstop>deleteCollButton</tabstop>
+  <tabstop>tableView</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>

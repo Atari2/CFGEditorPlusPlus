@@ -122,7 +122,10 @@ QImage TileInfo::get8x8Tile(int offset) {
         ig = SnesGFXConverter::get8x8TileFromVect(tilenum, SpritePaletteCreator::getPalette(pal + 8));
     else
         ig = SnesGFXConverter::get8x8TileFromExternal(tilenum, SpritePaletteCreator::getPalette(pal + 8), offset);
-    ig.mirror(hflip, vflip);
+    Qt::Orientations flipOr{};
+    if (vflip) flipOr |= Qt::Vertical;
+    if (hflip) flipOr |= Qt::Horizontal;
+    ig.flip(flipOr);
     return ig;
 }
 

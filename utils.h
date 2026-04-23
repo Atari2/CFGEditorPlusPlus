@@ -5,6 +5,8 @@
 #include <QFile>
 #include <QMessageBox>
 
+#define TRY_OPEN(f) if (!(f)) return false;
+
 class DefaultAlertImpl : QMessageBox {
     Q_OBJECT
 private:

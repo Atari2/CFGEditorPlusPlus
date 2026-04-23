@@ -400,17 +400,17 @@ void CFGEditor::setCollectionModel() {
 
 }
 
-void CFGEditor::addLunarMagicIcons() {
+bool CFGEditor::addLunarMagicIcons() {
     QFile first{":/Resources/ButtonIcons/8x8t.png"};
-    first.open(QFile::OpenModeFlag::ReadOnly);
+    TRY_OPEN(first.open(QFile::OpenModeFlag::ReadOnly));
     QFile second{":/Resources/ButtonIcons/8x8.png"};
-    second.open(QFile::OpenModeFlag::ReadOnly);
+    TRY_OPEN(second.open(QFile::OpenModeFlag::ReadOnly));
     QFile third{":/Resources/ButtonIcons/grid.png"};
-    third.open(QFile::OpenModeFlag::ReadOnly);
+    TRY_OPEN(third.open(QFile::OpenModeFlag::ReadOnly));
     QFile fourth{":/Resources/ButtonIcons/page.png"};
-    fourth.open(QFile::OpenModeFlag::ReadOnly);
+    TRY_OPEN(fourth.open(QFile::OpenModeFlag::ReadOnly));
     QFile fifth{":/Resources/ButtonIcons/palette.png"};
-    fifth.open(QFile::OpenModeFlag::ReadOnly);
+    TRY_OPEN(fifth.open(QFile::OpenModeFlag::ReadOnly));
     ui->toolButton8x8Edit->setIcon(QIcon(QPixmap::fromImage(QImage::fromData(first.readAll()))));
     ui->toolButton8x8Edit->setIconSize(QSize(32, 32));
     ui->toolButton8x8Mode->setIcon(QIcon(QPixmap::fromImage(QImage::fromData(second.readAll()))));
@@ -426,6 +426,7 @@ void CFGEditor::addLunarMagicIcons() {
     ui->toolButtonGrid->setToolTip("Show grid");
     ui->toolButtonBorders->setToolTip("Show page borders");
     ui->toolButtonPalette->setToolTip("Open Palette Viewer");
+    return true;
 }
 
 void CFGEditor::bindGFXSelector() {
@@ -691,9 +692,10 @@ void CFGEditor::bindDisplayButtons() {
     QPalette readOnlyPalette = palette();
     readOnlyPalette.setColor(QPalette::Base, readOnlyPalette.color(QPalette::Window));
     ui->textEditDisplayText->setPalette(readOnlyPalette);
-    QObject::connect(ui->checkBoxUseText, &QCheckBox::stateChanged, this, [&]() {
-        ui->textEditDisplayText->setReadOnly(!ui->checkBoxUseText->isChecked());
-        ui->labelDisplayTilesGrid->setUseText(ui->checkBoxUseText->isChecked());
+    QObject::connect(ui->checkBoxUseText, &QCheckBox::checkStateChanged, this, [&](Qt::CheckState state) {
+        bool isChecked = state == Qt::Checked;
+        ui->textEditDisplayText->setReadOnly(!isChecked);
+        ui->labelDisplayTilesGrid->setUseText(isChecked);
         QPalette readOnlyPalette = palette();
         if (ui->textEditDisplayText->isReadOnly()) {
             ui->textEditDisplayText->setText("");
@@ -704,14 +706,14 @@ void CFGEditor::bindDisplayButtons() {
         ui->textEditDisplayText->setPalette(readOnlyPalette);
         if (currentDisplayIndex == -1)
             return;
-        displays[currentDisplayIndex].setUseText(ui->checkBoxUseText->isChecked());
-        if (!ui->checkBoxUseText->isChecked())
+        displays[currentDisplayIndex].setUseText(isChecked);
+        if (!isChecked)
             displays[currentDisplayIndex].setDisplayText("");
     });
 
     // checkbox or spinner get updated
-    QObject::connect(ui->checkBoxDisplayExtraByte, &QCheckBox::stateChanged, this, [&]() {
-        if (ui->checkBoxDisplayExtraByte->checkState() == Qt::CheckState::Checked) {
+    QObject::connect(ui->checkBoxDisplayExtraByte, &QCheckBox::checkStateChanged, this, [&](Qt::CheckState state) {
+        if (state == Qt::CheckState::Checked) {
             QStringList labelList{"ExtraBit", "Index", "Value"};
             displayModel->setHorizontalHeaderLabels(labelList);
             sprite->dispType = DisplayType::ExtraByte;
@@ -729,7 +731,7 @@ void CFGEditor::bindDisplayButtons() {
             ui->spinBoxYPos->setMaximum(15);
         }
     });
-    QObject::connect(ui->checkBoxDisplayExtraBit, &QCheckBox::stateChanged, this, [&]() {
+    QObject::connect(ui->checkBoxDisplayExtraBit, &QCheckBox::checkStateChanged, this, [&]() {
         if (!ui->tableViewDisplays->currentIndex().isValid()) {
             return;
         }
@@ -896,7 +898,7 @@ void CFGEditor::bindCollectionButtons() {
     });
 }
 
-void CFGEditor::setUpImages() {
+bool CFGEditor::setUpImages() {
     SpritePaletteCreator::ReadPaletteFile(0, 16);
     paletteImages.reserve(SpritePaletteCreator::nSpritePalettes());
     for (int i = 0; i < SpritePaletteCreator::nSpritePalettes(); i++) {
@@ -904,7 +906,7 @@ void CFGEditor::setUpImages() {
     }
     for (int i = 0; i <= 0x0F; i++) {
         QFile img{QString::asprintf(":/Resources/ObjClipping/%02X.png", i)};
-        img.open(QFile::ReadOnly);
+        TRY_OPEN(img.open(QFile::ReadOnly));
         QPixmap clip{};
         clip.loadFromData(img.readAll(), "png");
         if (clip.size().height() > clip.size().width())
@@ -914,7 +916,7 @@ void CFGEditor::setUpImages() {
     }
     for (int i = 0; i <= 0x3F; i++) {
         QFile img{QString::asprintf(":/Resources/SprClipping/%02X.png", i)};
-        img.open(QFile::ReadOnly);
+        TRY_OPEN(img.open(QFile::ReadOnly));
         QPixmap clip{};
         clip.loadFromData(img.readAll(), "png");
         if (clip.size().height() > clip.size().width())
@@ -922,6 +924,7 @@ void CFGEditor::setUpImages() {
         else
             sprClipImages.append(clip.scaledToWidth(100));
     }
+    return true;
 }
 
 void CFGEditor::resetTweaks() {
@@ -1115,7 +1118,7 @@ void CFGEditor::bindSpriteProp() {
     // 190F
     bindTweak190F();
 
-    QObject::connect(ui->extraPropByte2Bit6CheckBox, &QCheckBox::stateChanged, this, [&](int state) {
+    QObject::connect(ui->extraPropByte2Bit6CheckBox, &QCheckBox::checkStateChanged, this, [&](Qt::CheckState state) {
         if (state == Qt::Checked) {
             sprite->extraProp2 |= 0x40;
         } else {
@@ -1124,7 +1127,7 @@ void CFGEditor::bindSpriteProp() {
         ui->lineEditExtraProp2->setText(QString::asprintf("%02X", sprite->extraProp2));
     });
 
-    QObject::connect(ui->extraPropByte2Bit7CheckBox, &QCheckBox::stateChanged, this, [&](int state) {
+    QObject::connect(ui->extraPropByte2Bit7CheckBox, &QCheckBox::checkStateChanged, this, [&](Qt::CheckState state) {
         if (state == Qt::Checked) {
             sprite->extraProp2 |= 0x80;
         } else {

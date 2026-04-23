@@ -1,4 +1,5 @@
 #include "jsonsprite.h"
+#include "utils.h"
 
 JSONDisplay::JSONDisplay(const QJsonObject& d, DisplayType type) {
     description = d["Description"].toString();
@@ -159,13 +160,13 @@ QJsonObject Collection::toJson() const {
     return obj;
 }
 
-void JsonSprite::from_file(const QString& name) {
+bool JsonSprite::from_file(const QString& name) {
     if (name.length() == 0)
-        return;
+        return false;
     qDebug() << "Reading from " << name;
     m_name = name;
     QFile file{m_name};
-    file.open(QFile::OpenModeFlag::ReadOnly);
+    TRY_OPEN(file.open(QFile::OpenModeFlag::ReadOnly));
     if (name.endsWith(".json")) {
         auto doc = QJsonDocument::fromJson(file.readAll());
         obj = doc.object();
@@ -176,8 +177,9 @@ void JsonSprite::from_file(const QString& name) {
     }
     else {
         QMessageBox::warning(nullptr, "Error", "Unrecognized file extension, valid extensions are: .cfg, .json", QMessageBox::Ok );
-        return;
+        return false;
     }
+    return true;
 
 }
 
@@ -339,22 +341,23 @@ QString& JsonSprite::name() {
     return m_name;
 }
 
-void JsonSprite::to_file(QString name) {
+bool JsonSprite::to_file(QString name) {
     if (name.length() == 0) {
         if (m_name.length() == 0)
             name = QFileDialog::getSaveFileName(nullptr, "Save file", "", "JSON (*.json);;CFG (*.cfg)");
         else
             name = m_name;
         if (name.length() == 0)
-            return;
+            return false;
         QFile outFile{name};
-        outFile.open(QFile::OpenModeFlag::Truncate | QFile::OpenModeFlag::Text | QFile::OpenModeFlag::WriteOnly);
+        TRY_OPEN(outFile.open(QFile::OpenModeFlag::Truncate | QFile::OpenModeFlag::Text | QFile::OpenModeFlag::WriteOnly));
         outFile.write(to_text(name));
     } else {
         QFile outFile{name};
-        outFile.open(QFile::OpenModeFlag::Truncate | QFile::OpenModeFlag::Text | QFile::OpenModeFlag::WriteOnly);
+        TRY_OPEN(outFile.open(QFile::OpenModeFlag::Truncate | QFile::OpenModeFlag::Text | QFile::OpenModeFlag::WriteOnly));
         outFile.write(to_text(name));
     }
+    return true;
 }
 
 void JsonSprite::addCollections(QTableView* view) {

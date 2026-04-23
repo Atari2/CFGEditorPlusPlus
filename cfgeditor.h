@@ -33,7 +33,7 @@ public:
     void deleteInstaller();
     void setUpMenuBar(QMenuBar*);
     void bindSpriteProp();
-    void setUpImages();
+    bool setUpImages();
     void bindTweak1656();
     void bindTweak1662();
     void bindTweak166E();
@@ -51,7 +51,7 @@ public:
     void bindGFXSelector();
     void initCompleter();
     void loadFullbitmap(int index = -1, bool justPalette = false);
-    void addLunarMagicIcons();
+    bool addLunarMagicIcons();
     void closeEvent(QCloseEvent *event);
     void advanceDisplayIndex();
     void addBlankRow();
@@ -74,9 +74,9 @@ public:
 
     template <typename J>
     void connectCheckBox(QLineEdit* edit, QCheckBox* box, J* tweak, bool& tochange) {
-        QObject::connect(box, &QCheckBox::stateChanged, this, [=, &tochange]() mutable {
+        QObject::connect(box, &QCheckBox::checkStateChanged, this, [=, &tochange](Qt::CheckState state) mutable {
             qDebug() << "Checkbox " << box->objectName() << " changed";
-            tochange = box->checkState() == Qt::CheckState::Checked;
+            tochange = state == Qt::CheckState::Checked;
             edit->setText(QString::asprintf("%02X", tweak->to_byte()));
         });
     }

@@ -65,7 +65,7 @@ public:
     void mouseMoveEvent(QMouseEvent *event);
     void keyPressEvent(QKeyEvent *event);
     void focusOutEvent(QFocusEvent *event);
-    void readInternalMap16File();
+    bool readInternalMap16File();
     void readExternalMap16File(const QString& name);
     void drawInternalMap16File();
     int mouseCoordinatesToTile(QPoint position);
@@ -91,7 +91,7 @@ public:
     QString getMap16();
     const ClipboardTile& getCopiedTile();
     void switchCurrSelectionType();
-    void loadExternalGraphics();
+    bool loadExternalGraphics();
 signals:
     void signalTileUpdatedForDisplay(const FullTile& tile, int tileno);
 };

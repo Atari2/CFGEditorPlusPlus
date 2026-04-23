@@ -28,7 +28,7 @@ void Map16GraphicsView::setControllingLabel(QLabel *tileNoLabel) {
     tileNumLabel = tileNoLabel;
 }
 
-void Map16GraphicsView::readInternalMap16File() {
+bool Map16GraphicsView::readInternalMap16File() {
     struct {
         quint32 offset;
         quint32 size;
@@ -40,7 +40,7 @@ void Map16GraphicsView::readInternalMap16File() {
         quint32 sizeY;
     } tableInformation;
     QFile file{mapName};
-    file.open(QFile::OpenModeFlag::ReadOnly);
+    TRY_OPEN(file.open(QFile::OpenModeFlag::ReadOnly));
     QDataStream byteStream{file.readAll()};
     byteStream.setByteOrder(QDataStream::LittleEndian);
     if (mapName.endsWith(".map16")) {
@@ -103,6 +103,7 @@ void Map16GraphicsView::readInternalMap16File() {
     imageHeight = ((int)tableInformation.sizeY + (tableInformation.sizeY == 16 * 4 ? 0 : 16)) * 16;
     // we don't really care about the rest of the file, now we can draw
     drawInternalMap16File();
+    return true;
 }
 
 int Map16GraphicsView::getExternalOffset(int tileIndex) {
@@ -635,7 +636,7 @@ QString Map16GraphicsView::getMap16() {
     return QString{data.toBase64()};
 }
 
-void Map16GraphicsView::loadExternalGraphics() {
+bool Map16GraphicsView::loadExternalGraphics() {
     static const auto commaReg{R"([,-])"};
     QFileInfo name{QFileDialog::getOpenFileName(this, "Select ROM", QDir::current().path(), "ROM Files (*.smc);;ROM Files (*.sfc)")};
     QDir romdir{name.dir()};
@@ -654,7 +655,7 @@ void Map16GraphicsView::loadExternalGraphics() {
     }
     qDebug() << sscName;
     QFile ssc{sscName};
-    ssc.open(QFile::ReadOnly);
+    TRY_OPEN(ssc.open(QFile::ReadOnly));
     while (!ssc.atEnd()) {
         QString line{ssc.readLine().trimmed()};
         if (line.startsWith("10000")) {
@@ -674,6 +675,7 @@ void Map16GraphicsView::loadExternalGraphics() {
     imageWidth = tiles.first().length() * 16;
     imageHeight = tiles.length() * 16;
     drawInternalMap16File();
+    return true;
 }
 
 Map16GraphicsView::~Map16GraphicsView() {

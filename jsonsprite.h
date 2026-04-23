@@ -69,7 +69,7 @@ class JsonSprite {
 public:
     JsonSprite();
     void reset();
-    void from_file(const QString& name);
+    bool from_file(const QString& name);
     void deserialize();
     void deserialize_cfg(QFile& file);
     void serialize();
@@ -78,7 +78,7 @@ public:
     void addDisplay(const JSONDisplay& display);
     void setMap16(const QString& mapdata);
     QByteArray to_text(const QString& filename);
-    void to_file(QString name = "");
+    bool to_file(QString name = "");
     QString& name();
     J1656 t1656;
     J1662 t1662;

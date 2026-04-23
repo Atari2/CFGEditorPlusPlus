@@ -4,14 +4,15 @@ const QVector<QColor>& SpritePaletteCreator::getPalette(int index) {
     return paletteData[index];
 }
 
-void SpritePaletteCreator::ReadPaletteFile(int offset, int rows, int columns, const QString& filename) {
+bool SpritePaletteCreator::ReadPaletteFile(int offset, int rows, int columns, const QString& filename) {
     if (paletteData.length() != 0) {
         for (int i = 0; i < paletteData.length(); i++)
             paletteData[i].clear();
         paletteData.clear();
     }
     QFile pal{filename};
-    pal.open(QFile::OpenModeFlag::ReadOnly);
+    bool success = pal.open(QFile::OpenModeFlag::ReadOnly);
+    if (!success) return false;
     auto bytes = pal.readAll();
     for (int row = 0; row < rows; row++) {
         paletteData.append(QVector<QColor>());
@@ -26,6 +27,7 @@ void SpritePaletteCreator::ReadPaletteFile(int offset, int rows, int columns, co
                                    );
         }
     }
+    return true;
 }
 QPixmap SpritePaletteCreator::MakePalette(int index) {
     QPixmap b(16*8, 16);
@@ -51,7 +53,7 @@ QPixmap SpritePaletteCreator::MakeFullPalette() {
     return b;
 }
 
-void SpritePaletteCreator::PaletteToFile(const QImage& image, const QString& name) {
+bool SpritePaletteCreator::PaletteToFile(const QImage& image, const QString& name) {
     QVector<QColor> colors;
     QString palmaskName = name.endsWith(".pal") ? name.chopped(3) + "palmask" : name + ".palmask";
     for (int i = 0; i < image.height(); i += 16)
@@ -59,8 +61,9 @@ void SpritePaletteCreator::PaletteToFile(const QImage& image, const QString& nam
             colors.append(image.pixel(j, i));
     QFile file{name};
     QFile palmask{palmaskName};
-    file.open(QFile::OpenModeFlag::WriteOnly | QFile::OpenModeFlag::Truncate);
-    palmask.open(QFile::OpenModeFlag::WriteOnly | QFile::OpenModeFlag::Truncate);
+    bool s1 = file.open(QFile::OpenModeFlag::WriteOnly | QFile::OpenModeFlag::Truncate);
+    bool s2 = palmask.open(QFile::OpenModeFlag::WriteOnly | QFile::OpenModeFlag::Truncate);
+    if (!s1 || !s2) return false;
     qDebug() << colors.length();
     QByteArray blankPalmask(colors.length(), 0);
     QByteArray coloredPalmask(colors.length(), 1);
@@ -78,6 +81,7 @@ void SpritePaletteCreator::PaletteToFile(const QImage& image, const QString& nam
         arr.append((uint8_t)b);
         file.write(arr);
     }
+    return true;
 }
 
 void SpritePaletteCreator::changePaletteColor(const QColor& color, const QPoint& index) {
