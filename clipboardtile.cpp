@@ -130,7 +130,7 @@ QImage TileInfo::get8x8Tile(int offset) {
 }
 
 QImage TileInfo::get8x8Scaled(int width, int offset) {
-    return get8x8Tile(offset).scaledToWidth(width, Qt::SmoothTransformation);
+    return get8x8Tile(offset).scaledToWidth(width, Qt::FastTransformation);
 }
 
 
@@ -190,7 +190,7 @@ QImage FullTile::getFullTile() {
 }
 
 QImage FullTile::getScaled(int width) {
-    return getFullTile().scaledToWidth(width, Qt::SmoothTransformation);
+    return getFullTile().scaledToWidth(width, Qt::FastTransformation);
 }
 
 bool FullTile::isEmpty() {

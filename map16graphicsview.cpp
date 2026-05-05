@@ -131,7 +131,9 @@ void Map16GraphicsView::drawInternalMap16File() {
         }
     }
     p.end();
-    TileMap = TileMap.scaledToWidth(352, Qt::SmoothTransformation);
+    int scaleFactor = qMax(1, (352 + imageWidth - 1) / imageWidth);
+    qDebug() << "Image width " << imageWidth << " scale factor: " << scaleFactor;
+    TileMap = TileMap.scaledToWidth(imageWidth * scaleFactor, Qt::FastTransformation);
     imageWidth = TileMap.width();
     imageHeight = TileMap.height();
     // and now we draw the grid and the page separator
@@ -157,7 +159,8 @@ void Map16GraphicsView::drawInternalMap16File() {
         pageSepPainter.drawRect(QRect{0, i, imageWidth, CellSize() * 16});
     }
     currentMap16 = scene()->addPixmap(QPixmap::fromImage(TileMap));
-    setFixedWidth(currentMap16->pixmap().width() + 18);
+    setMinimumWidth(currentMap16->pixmap().width() + 18);
+    setFixedHeight(currentMap16->pixmap().height() / 4);
     setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     currentWithNoHighlight = currentMap16->pixmap();
     currentWithNoSelection = currentMap16->pixmap();
@@ -265,8 +268,8 @@ FullTile& Map16GraphicsView::tileNumToTile(int tilenum) {
         int c = (tilenum % 32) / 2;
         realClickedTile = r * 16 + c;
     }
-    int row = realClickedTile / (imageWidth / 22);
-    int col = realClickedTile % (imageWidth / 22);
+    int row = realClickedTile / (int)tiles[0].length();
+    int col = realClickedTile % (int)tiles[0].length();
     return tiles[row][col];
 }
 
