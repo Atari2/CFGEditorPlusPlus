@@ -13,6 +13,7 @@ struct J1656 {
     void from_byte(uint8_t byte);
     uint8_t to_byte() const;
     QJsonObject to_json() const;
+    constexpr bool operator==(const J1656&) const = default;
 };
 
 struct J1662 {
@@ -24,6 +25,7 @@ struct J1662 {
     void from_byte(uint8_t byte);
     uint8_t to_byte() const;
     QJsonObject to_json() const;
+    constexpr bool operator==(const J1662&) const = default;
 };
 
 struct J166E {
@@ -38,6 +40,7 @@ struct J166E {
     void from_byte(uint8_t byte);
     uint8_t to_byte() const;
     QJsonObject to_json() const;
+    constexpr bool operator==(const J166E&) const = default;
 };
 
 struct J167A {
@@ -54,6 +57,7 @@ struct J167A {
     void from_byte(uint8_t byte);
     uint8_t to_byte() const;
     QJsonObject to_json() const;
+    constexpr bool operator==(const J167A&) const = default;
 };
 
 struct J1686 {
@@ -70,6 +74,7 @@ struct J1686 {
     void from_byte(uint8_t byte);
     uint8_t to_byte() const;
     QJsonObject to_json() const;
+    constexpr bool operator==(const J1686&) const = default;
 };
 
 struct J190F {
@@ -86,6 +91,7 @@ struct J190F {
     void from_byte(uint8_t byte);
     uint8_t to_byte() const;
     QJsonObject to_json() const;
+    constexpr bool operator==(const J190F&) const = default;
 };
 
 #endif // TWEAK_BYTES_H

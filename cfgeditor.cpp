@@ -7,6 +7,7 @@ CFGEditor::CFGEditor(const QStringList& argv, QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::CFGEditor)
     , sprite(new JsonSprite)
+    , original(new JsonSprite)
     , hexValidator(new QRegularExpressionValidator{QRegularExpression(R"([A-Fa-f0-9]+)")})
     , hexNumberList(new QStringList(0x100))
     , copiedTile()
@@ -100,42 +101,49 @@ void CFGEditor::loadFullbitmap(int index, bool justPalette) {
     }
 }
 
+bool CFGEditor::hasModification() {
+    JsonSprite tmp{*sprite};
+    QVector<DisplayData> tmpdisplays{displays};
+    ui->labelDisplayTilesGrid->serializeDisplays(tmpdisplays);
+    for (auto& disp : tmpdisplays)
+        tmp.addDisplay(createDisplay(disp));
+    tmp.setMap16(ui->map16GraphicsView->getMap16());
+    tmp.addCollections(ui->tableView);
+    return tmp.is_different(*original);
+}
+
 void CFGEditor::setUpMenuBar(QMenuBar* mb) {
     QMenu* file = new QMenu("&File");
     QMenu* display = new QMenu("&Display");
     file->addAction("&New", Qt::CTRL | Qt::Key_N, qApp, [&]() {
-        if (sprite->name().length() != 0) {
+        if (hasModification()) {
             auto res = QMessageBox::question(this,
-                                             "One file is already open",
-                                             "Do you want to save it before opening a new one?",
+                                             "Unsaved changes",
+                                             "The currently open file has unsaved changes, do you want to save before opening a new one?",
                                              QMessageBox::Yes | QMessageBox::No | QMessageBox::Abort );
             if (res == QMessageBox::Yes) {
-                auto filename = QFileDialog::getSaveFileName(this, tr("Save file"), sprite->name(), tr("JSON (*.json)"));
-                if (filename.size() == 0)
-                    return;
-                sprite->to_file(filename);
+                saveSprite();
+                sprite->to_file();
             } else if (res == QMessageBox::Abort) {
                 return;
             }
         }
         resetAll();
         resetTweaks();
+        *original = *sprite;
     });
 
     file->addSeparator();
 
     file->addAction("&Open File", Qt::CTRL | Qt::Key_O, qApp, [&]() {
-        if (sprite->name().length() != 0) {
+        if (hasModification()) {
             auto res = QMessageBox::question(this,
-                                  "One file is already open",
-                                  "Do you want to save it before opening the other one?",
-                                  QMessageBox::Yes | QMessageBox::No | QMessageBox::Abort );
+                                             "Unsaved changes",
+                                             "The currently open file has unsaved changes, do you want to save before opening another file?",
+                                             QMessageBox::Yes | QMessageBox::No | QMessageBox::Abort );
             if (res == QMessageBox::Yes) {
                 saveSprite();
-                auto filename = QFileDialog::getSaveFileName(this, tr("Save file"), sprite->name(), tr("JSON (*.json)"));
-                if (filename.size() == 0)
-                    return;
-                sprite->to_file(filename);
+                sprite->to_file();
             } else if (res == QMessageBox::Abort) {
                 return;
             }
@@ -151,11 +159,13 @@ void CFGEditor::setUpMenuBar(QMenuBar* mb) {
         ui->map16GraphicsView->setMap16(sprite->map16);
         ui->labelDisplayTilesGrid->deserializeDisplays(sprite->displays, ui->map16GraphicsView);
         populateDisplays();
+        *original = *sprite;
     });
 
     file->addAction("&Save", Qt::CTRL | Qt::Key_S, qApp, [&]() {
         saveSprite();
         sprite->to_file();
+        *original = *sprite;
     });
 
     file->addAction("&Save As", Qt::CTRL | Qt::ALT | Qt::Key_S, qApp, [&]() {
@@ -164,6 +174,7 @@ void CFGEditor::setUpMenuBar(QMenuBar* mb) {
         if (filename.size() == 0)
             return;
         sprite->to_file(filename);
+        *original = *sprite;
     });
 
     display->addAction("&Load Custom Map16", qApp, [&]() {
@@ -204,6 +215,7 @@ void CFGEditor::resetAll() {
     sprite->reset();
     ui->tableView->model()->removeRows(0, ui->tableView->model()->rowCount());
     ui->tableViewDisplays->model()->removeRows(0, ui->tableViewDisplays->model()->rowCount());
+    ui->tableViewGfxInfo->model()->removeRows(0, ui->tableViewGfxInfo->model()->rowCount());
     displays.clear();
     currentDisplayIndex = -1;
     ui->labelDisplayTilesGrid->reset();
@@ -222,7 +234,8 @@ void CFGEditor::saveSprite() {
 
 void CFGEditor::populateDisplays() {
     currentDisplayIndex = -1;
-    QSignalBlocker block{ui->tableViewDisplays};
+    QSignalBlocker blockTableView{ui->tableViewDisplays};
+    QSignalBlocker blockGfxView{ui->tableViewGfxInfo};
     for (auto& d : sprite->displays) {
         DisplayData display{d};
         displayModel->appendRow(display.itemsFromDisplay());

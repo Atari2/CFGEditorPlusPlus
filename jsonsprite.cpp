@@ -341,6 +341,32 @@ QString& JsonSprite::name() {
     return m_name;
 }
 
+
+bool JsonSprite::is_different(const JsonSprite& other) const {
+    const bool dt1656 = other.t1656 != t1656;
+    const bool dt1662 = other.t1662 != t1662;
+    const bool dt166e = other.t166e != t166e;
+    const bool dt167a = other.t167a != t167a;
+    const bool dt1686 = other.t1686 != t1686;
+    const bool dt190f = other.t190f != t190f;
+    const bool dfile = other.asmfile != asmfile;
+    const bool dal = other.actlike != actlike;
+    const bool dt = other.type != type;
+    const bool dep1 = other.extraProp1 != extraProp1;
+    const bool dep2 = other.extraProp2 != extraProp2;
+    const bool dcc = addbcountclear != other.addbcountclear;
+    const bool dcs = addbcountset != other.addbcountset;
+
+    if (dt1656 || dt1662 || dt166e || dt167a || dt1686 || dt190f) return true;
+    if (dfile || dal || dt || dep1 || dep2 || dcc || dcs) return true;
+
+    if (map16 != other.map16 || m_name != other.m_name || dispType != other.dispType) return true;
+
+    if (displays != other.displays || collections != other.collections) return true;
+
+    return false;
+}
+
 bool JsonSprite::to_file(QString name) {
     if (name.length() == 0) {
         if (m_name.length() == 0)

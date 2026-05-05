@@ -62,6 +62,7 @@ public:
     JSONDisplay createDisplay(const DisplayData& data);
     void populateDisplays();
     void populateGFXFiles();
+    bool hasModification();
 
     void changeAllCheckBoxState(bool state);
     void setupForNormal();
@@ -83,6 +84,7 @@ public:
 private:
     Ui::CFGEditor *ui;
     JsonSprite* sprite;
+    JsonSprite* original;
     QRegularExpressionValidator* hexValidator;
     QStringList* hexNumberList;
     QCompleter* hexCompleter;

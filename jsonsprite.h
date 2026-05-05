@@ -21,6 +21,7 @@ struct SingleGFXFile {
     SingleGFXFile(bool separate, int value);
     SingleGFXFile(const QJsonObject& g);
     QJsonObject toJson() const;
+    constexpr bool operator==(const SingleGFXFile& ) const = default;
 };
 
 struct GFXInfo {
@@ -32,6 +33,7 @@ struct GFXInfo {
     GFXInfo(SingleGFXFile s0, SingleGFXFile s1, SingleGFXFile s2, SingleGFXFile s3);
     GFXInfo(const QJsonObject& g);
     QJsonObject toJson() const;
+    constexpr bool operator==(const GFXInfo& ) const = default;
 };
 
 struct Tile {
@@ -41,6 +43,7 @@ struct Tile {
     Tile(int x, int y, int tileno);
     Tile(const QJsonObject& d);
     QJsonObject toJson() const;
+    constexpr bool operator==(const Tile& ) const = default;
 };
 
 struct JSONDisplay {
@@ -55,6 +58,7 @@ struct JSONDisplay {
     JSONDisplay(const QJsonObject& t, DisplayType type);
     JSONDisplay(const QString& d, const QVector<Tile>& ts, bool bit, int xx, int yy, bool text, const QString& disp, const GFXInfo& info);
     QJsonObject toJson(DisplayType type) const;
+    bool operator==(const JSONDisplay& ) const = default;
 };
 
 struct Collection {
@@ -63,11 +67,14 @@ struct Collection {
     uint8_t prop[12];
     Collection(const QJsonObject& c);
     QJsonObject toJson() const;
+    bool operator==(const Collection& ) const = default;
 };
 
 class JsonSprite {
 public:
     JsonSprite();
+    JsonSprite(const JsonSprite&) = default;
+    JsonSprite& operator=(const JsonSprite&) = default;
     void reset();
     bool from_file(const QString& name);
     void deserialize();
@@ -80,6 +87,7 @@ public:
     QByteArray to_text(const QString& filename);
     bool to_file(QString name = "");
     QString& name();
+    bool is_different(const JsonSprite& other) const;
     J1656 t1656;
     J1662 t1662;
     J166E t166e;
