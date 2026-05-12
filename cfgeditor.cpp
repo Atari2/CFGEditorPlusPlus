@@ -549,12 +549,6 @@ void CFGEditor::addBlankRow() {
     advanceDisplayIndex();
     displayModel->appendRow(display.itemsFromDisplay());
     qDebug() << displays.length();
-    ui->checkBoxDisplayExtraBit->setChecked(false);
-    ui->checkBoxUseText->setChecked(false);
-    ui->spinBoxXPos->setValue(0);
-    ui->spinBoxYPos->setValue(0);
-    ui->textEditLMDescription->setText("");
-    ui->textEditDisplayText->setText("");
 
     gfxinfoModel->appendRow(display.GFXInfo().itemsFromGFXInfo());
 }

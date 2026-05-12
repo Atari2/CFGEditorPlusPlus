@@ -345,7 +345,6 @@ void Map16GraphicsView::mousePressEvent(QMouseEvent *event) {
         drawCurrentSelectedTile(currentWithNoHighlight);
         currentMap16->setPixmap(currentWithNoHighlight);
         emit signalTileUpdatedForDisplay(newTile, currentTile);
-        return;
     }
     grabKeyboard();
     if (currentTile == -1)
@@ -555,6 +554,9 @@ void Map16GraphicsView::tileChanged(QObject* toBlock, TileChangeAction action, T
     og.end();
     drawCurrentSelectedTile(currentWithNoHighlight);
     currentMap16->setPixmap(currentWithNoHighlight);
+    if (copiedTile->TileNum() == currentClickedTile) {
+        copiedTile->update(tile);
+    }
     emit signalTileUpdatedForDisplay(tile, currentClickedTile);
 }
 
