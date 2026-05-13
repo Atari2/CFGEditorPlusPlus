@@ -13,10 +13,10 @@ on:
 
 jobs:
   build-windows:
-    runs-on: windows-latest
+    runs-on: windows-2025-vs2026
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
 
     - name: Setup zlib via vcpkg
       shell: pwsh
@@ -24,7 +24,7 @@ jobs:
 
     - name: Cache Qt static build
       id: cache-qt-static
-      uses: actions/cache@v4
+      uses: actions/cache@v5
       with:
         path: Qt6Static
         key: ${{ runner.os }}-Qt6Static-6.11.0
@@ -74,22 +74,22 @@ jobs:
       run: msbuild packaging/windows/CFGEditorInstaller.csproj /p:Configuration=Release /p:Platform=AnyCPU
 
     - name: Upload static exe
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: CFGEditorPlusPlus-windows-static
         path: ${{ github.workspace }}/build-static/Release/CFGEditorPlusPlus.exe
 
     - name: Upload installer
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: ICFGEditor-windows
         path: packaging/windows/bin/Release/net48/ICFGEditor.exe
 
   build-linux:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
 
     - name: Install system dependencies
       run: |
@@ -140,7 +140,7 @@ jobs:
           --output appimage
 
     - name: Upload AppImage
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: CFGEditorPlusPlus-AppImage
         path: CFGEditorPlusPlus-x86_64.AppImage
