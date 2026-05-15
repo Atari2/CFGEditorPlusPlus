@@ -274,8 +274,15 @@ FullTile& Map16GraphicsView::tileNumToTile(int tilenum) {
 }
 
 void Map16GraphicsView::mouseMoveEvent(QMouseEvent *event) {
-    currentTile = mouseCoordinatesToTile(event->position().toPoint());
-    auto origin = translateToRect(event->position().toPoint());
+    auto p = event->position().toPoint();
+    {
+        // check if we're outside of bounds
+        int tilePerRow = currType == SelectorType::Sixteen ? 16 : 32;
+        int cellsize = CellSize();
+        if ((p.x() / cellsize) >= tilePerRow) return;
+    }
+    currentTile = mouseCoordinatesToTile(p);
+    auto origin = translateToRect(p);
     if (currentTile == previousTile)
         return;
     previousTile = currentTile;
