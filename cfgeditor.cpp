@@ -42,6 +42,7 @@ CFGEditor::CFGEditor(const QStringList& argv, QWidget *parent)
         std::for_each(sprite->collections.cbegin(), sprite->collections.cend(), [&](auto& coll) {
             collectionModel->appendRow(CollectionDataModel::fromCollection(coll));
         });
+        ui->checkBoxDisplayExtraByte->setChecked(sprite->dispType == DisplayType::ExtraByte);
         ui->map16GraphicsView->setMap16(sprite->map16);
         ui->labelDisplayTilesGrid->deserializeDisplays(sprite->displays, ui->map16GraphicsView);
         populateDisplays();
@@ -681,6 +682,8 @@ void CFGEditor::bindDisplayButtons() {
     });
 
     // checkbox or spinner get updated
+    ui->spinBoxXPos->setDisplayIntegerBase(16);
+    ui->spinBoxYPos->setDisplayIntegerBase(16);
     QObject::connect(ui->checkBoxDisplayExtraByte, &QCheckBox::checkStateChanged, this, [&](Qt::CheckState state) {
         if (state == Qt::CheckState::Checked) {
             QStringList labelList{"ExtraBit", "Index", "Value"};
@@ -712,14 +715,14 @@ void CFGEditor::bindDisplayButtons() {
         if (!ui->tableViewDisplays->currentIndex().isValid())
             return;
         auto realIndex = displayModel->index(ui->tableViewDisplays->currentIndex().row(), 1);
-        displayModel->setData(realIndex, QString::number(value));
+        displayModel->setData(realIndex, QString::asprintf("%02X", value));
         displays[currentDisplayIndex].setXOrIndex(value);
     });
     QObject::connect(ui->spinBoxYPos, QOverload<int>::of(&QSpinBox::valueChanged), this, [&](int value) {
         if (!ui->tableViewDisplays->currentIndex().isValid())
             return;
         auto realIndex = displayModel->index(ui->tableViewDisplays->currentIndex().row(), 2);
-        displayModel->setData(realIndex, QString::number(value));
+        displayModel->setData(realIndex, QString::asprintf("%02X", value));
         displays[currentDisplayIndex].setYOrValue(value);
     });
 

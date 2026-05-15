@@ -139,7 +139,7 @@ public:
 
     static DisplayData blankData();
     static DisplayData cloneData(QStandardItemModel* model, QStandardItemModel* gfxModel, const QString& description, int row, const QString& display_text);
-    QVector<QStandardItem*> itemsFromDisplay();
+    QVector<QStandardItem*> itemsFromDisplay() const;
 signals:
 
 

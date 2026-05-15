@@ -406,16 +406,16 @@ DisplayData DisplayData::cloneData(QStandardItemModel* model, QStandardItemModel
     return data;
 }
 
-QVector<QStandardItem*> DisplayData::itemsFromDisplay() {
+QVector<QStandardItem*> DisplayData::itemsFromDisplay() const {
     QVector<QStandardItem*> vec;
     QStandardItem* item = new QStandardItem();
     item->setCheckable(true);
     item->setCheckState(m_extra_bit ? Qt::Checked : Qt::Unchecked);
     item->setFlags(Qt::ItemIsEnabled);
     vec.append(item);
-    auto* idx = new QStandardItem(QString::asprintf("%d", m_x_or_index));
+    auto* idx = new QStandardItem(QString::asprintf("%02X", m_x_or_index));
     idx->setFlags(idx->flags() & (~Qt::ItemIsEditable));
-    auto* val = new QStandardItem(QString::asprintf("%d", m_y_or_value));
+    auto* val = new QStandardItem(QString::asprintf("%02X", m_y_or_value));
     val->setFlags(val->flags() & (~Qt::ItemIsEditable));
     vec.append(idx);
     vec.append(val);
