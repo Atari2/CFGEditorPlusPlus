@@ -32,8 +32,9 @@ private:
     int m_x_offset;
     int m_y_offset;
     int m_tile_number;
+    bool m_translucent;
 public:
-    TileData(int x_off, int y_off, int tile_num);
+    TileData(int x_off, int y_off, int tile_num, bool translucent);
     TileData(const TileData& other);
     void setXOffset(int x);
     void setYOffset(int y);
@@ -44,6 +45,7 @@ public:
     int YOffset() const;
     QPoint Offset() const;
     int TileNumber() const;
+    bool Translucent() const;
     TileData& operator=(const TileData& other);
 signals:
 };

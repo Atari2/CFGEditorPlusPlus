@@ -22,14 +22,22 @@ Map16Provider::Map16Provider(QWidget* parent) : QLabel(parent)  {
 void Map16Provider::attachMap16View(Map16GraphicsView* view) {
     this->view = view;
     QObject::connect(this->view, QOverload<const FullTile&, int>::of(&Map16GraphicsView::signalTileUpdatedForDisplay), this, [&](const FullTile& t, int tileno) {
-        if (currentIndex == -1)
-            return;
-        for (auto& tile : m_tiles[currentIndex]) {
-            if (tile.map16tileno == tileno) {
-                tile.tile = t;
+        bool anyChanged = false;
+        for (int i = 0; i < m_tiles.size(); i++) {
+            bool changed = false;
+            for (auto& tile : m_tiles[i]) {
+                if (tile.map16tileno == tileno) {
+                    tile.tile = t;
+                    changed = true;
+                }
+            }
+            if (changed) {
+                redrawAt(i);
+                anyChanged = true;
             }
         }
-        redrawNoSort();
+        if (anyChanged && currentIndex != -1)
+            setPixmap(drawSelectedTile());
     });
 }
 
@@ -46,18 +54,34 @@ TiledPosition& Map16Provider::findIndex(size_t index) {
     return *ret;
 }
 
+void Map16Provider::setCurrentlySelected(size_t tid) {
+    m_currentSelected = tid;
+    if (tid == SIZE_MAX || currentIndex == -1) {
+        emit currentlySelectedTileChanged(tid, false);
+    } else {
+        auto it = std::find_if(m_tiles[currentIndex].begin(), m_tiles[currentIndex].end(), [tid](const auto& t) {
+            return t.tid == tid;
+        });
+        if (it == m_tiles[currentIndex].end()) {
+            emit currentlySelectedTileChanged(tid, false);
+        } else {
+            emit currentlySelectedTileChanged(tid, it->translucent);
+        }
+    }
+}
+
 QPoint Map16Provider::alignToGrid(QPoint position, int size) {
     return QPoint(position.x() - (position.x() % size), position.y() - (position.y() % size));
 }
 
 QPixmap Map16Provider::drawSelectedTile() {
     QPixmap curr = overlay();
-    if (currentSelected == SIZE_MAX)
+    if (m_currentSelected == SIZE_MAX)
         return curr;
     QPainter p{&curr};
     QPen pen{Qt::white, 1, Qt::DotLine, Qt::SquareCap, Qt::BevelJoin};
     p.setPen(pen);
-    auto& t = findIndex(currentSelected);
+    auto& t = findIndex(m_currentSelected);
     auto size = 16;
     p.drawRect(QRect{t.pos.x(), t.pos.y(), size, size});
     p.end();
@@ -77,12 +101,13 @@ void Map16Provider::mousePressEvent(QMouseEvent *event) {
         grabKeyboard();
         qDebug() << "Left mouse button pressed";
         auto ret = std::find_if(m_tiles[currentIndex].rbegin(), m_tiles[currentIndex].rend(), [&](TiledPosition& pos) {
-                int size = pos.tile.isFullTile() ? 16 : 8;
-                return QRect{pos.pos.x(), pos.pos.y(), size, size}.contains(event->position().toPoint(), true);
-            });
+            int size = pos.tile.isFullTile() ? 16 : 8;
+            return QRect{pos.pos.x(), pos.pos.y(), size, size}.contains(event->position().toPoint(), true);
+        });
         if (ret == m_tiles[currentIndex].rend())
             return;
-        currentSelected = (*ret).tid;
+        setCurrentlySelected((*ret).tid);
+        pressOffset = event->position().toPoint() - (*ret).pos;
         setPixmap(drawSelectedTile());
         currentlyPressed = true;
         return;
@@ -94,35 +119,44 @@ void Map16Provider::mousePressEvent(QMouseEvent *event) {
             return;
         int size = 16;
         QPoint aligned = alignToGrid(event->position().toPoint(), size);
-        m_tiles[currentIndex].append({copiedTile->getTile(), aligned, 0, TiledPosition::unique_index++, copiedTile->TileNum()});
+        FullTile fullTile = copiedTile->getTile();
+        TiledPosition tile{fullTile, aligned, 0, TiledPosition::unique_index++, copiedTile->TileNum(), fullTile.translucent};
+        setCurrentlySelected(tile.tid);
+        m_tiles[currentIndex].append(std::move(tile));
         p.setCompositionMode(QPainter::CompositionMode_SourceOver);
         p.drawImage(QRect{aligned.x(), aligned.y(), copiedTile->size(), copiedTile->size()}, copiedTile->draw());
     }
-    setPixmap(overlay());
+    setPixmap(drawSelectedTile());
     event->accept();
 }
 
 void Map16Provider::mouseReleaseEvent(QMouseEvent *event) {
-    qDebug() << "Mouse released";
+    if (currentlyPressed && m_currentSelected != SIZE_MAX) {
+        auto& tile = findIndex(m_currentSelected);
+        int size = static_cast<int>(selectorSize);
+        QPoint p = tile.pos;
+        tile.pos = QPoint(((p.x() + size / 2) / size) * size,
+                          ((p.y() + size / 2) / size) * size);
+        redrawNoSort();
+    }
     currentlyPressed = false;
     event->accept();
 }
 
 void Map16Provider::mouseMoveEvent(QMouseEvent *event) {
-    if (currentlyPressed) {
-        auto& tile = findIndex(currentSelected);
-        QPoint aligned = alignToGrid(event->position().toPoint(), static_cast<int>(selectorSize));
-        tile.pos = aligned;
+    if (currentlyPressed && m_currentSelected != SIZE_MAX) {
+        auto& tile = findIndex(m_currentSelected);
+        tile.pos = event->position().toPoint() - pressOffset;
         redrawNoSort();
     }
     event->accept();
 }
 
 void Map16Provider::wheelEvent(QWheelEvent *event) {
-    if (currentSelected == SIZE_MAX) {
+    if (m_currentSelected == SIZE_MAX) {
         event->accept();
     } else {
-        auto& t = findIndex(currentSelected);
+        auto& t = findIndex(m_currentSelected);
         if (event->angleDelta().y() < 0 && t.zpos > INT_MIN) {
             t.zpos--;
             redraw();
@@ -138,7 +172,7 @@ void Map16Provider::redrawNoSort() {
     QPainter p{&m_displays[currentIndex]};
     for (auto& t : m_tiles[currentIndex]) {
         int size = t.tile.isFullTile() ? 16 : 8;
-        p.drawImage(QRect{t.pos.x(), t.pos.y(), size, size}, t.tile.getFullTile());
+        p.drawImage(QRect{t.pos.x(), t.pos.y(), size, size}, t.tile.getFullTile(t.translucent));
     }
     p.end();
     setPixmap(drawSelectedTile());
@@ -156,7 +190,7 @@ void Map16Provider::redrawFirstIndex() {
     });
     for (auto& t : m_tiles.first()) {
         int size = t.tile.isFullTile() ? 16 : 8;
-        p.drawImage(QRect{t.pos.x(), t.pos.y(), size, size}, t.tile.getFullTile());
+        p.drawImage(QRect{t.pos.x(), t.pos.y(), size, size}, t.tile.getFullTile(t.translucent));
     }
     setPixmap(drawSelectedTile());
 }
@@ -173,9 +207,37 @@ void Map16Provider::redraw() {
     });
     for (auto& t : m_tiles[currentIndex]) {
         int size = t.tile.isFullTile() ? 16 : 8;
-        p.drawImage(QRect{t.pos.x(), t.pos.y(), size, size}, t.tile.getFullTile());
+        p.drawImage(QRect{t.pos.x(), t.pos.y(), size, size}, t.tile.getFullTile(t.translucent));
     }
     setPixmap(drawSelectedTile());
+}
+
+void Map16Provider::redrawAt(int index) {
+    if (index < 0 || index >= m_displays.size())
+        return;
+    m_displays[index].fill(Qt::transparent);
+    QPainter p{&m_displays[index]};
+    for (auto& t : m_tiles[index]) {
+        int size = t.tile.isFullTile() ? 16 : 8;
+        p.drawImage(QRect{t.pos.x(), t.pos.y(), size, size}, t.tile.getFullTile(t.translucent));
+    }
+}
+
+void Map16Provider::setTranslucencyForSelectedTile(bool translucent) {
+    if (m_currentSelected == SIZE_MAX) return;
+    auto it = std::find_if(m_tiles[currentIndex].begin(), m_tiles[currentIndex].end(), [this](const auto& tile) {
+        return tile.tid == m_currentSelected;
+    });
+    if (it == m_tiles[currentIndex].end()) return;
+    else it->translucent = translucent;
+    redraw();
+}
+
+void Map16Provider::redrawAll() {
+    for (int i = 0; i < m_displays.size(); i++)
+        redrawAt(i);
+    if (currentIndex != -1)
+        setPixmap(drawSelectedTile());
 }
 
 void Map16Provider::setCopiedTile(ClipboardTile& tile) {
@@ -200,21 +262,21 @@ QPixmap Map16Provider::createGrid() {
     p.setPen(pen);
     img.fill(qRgba(0, 0, 0, 0));
     int size = static_cast<int>(selectorSize);
-	if (size != 8 && size != 16) {
+    if (size != 8 && size != 16) {
         return QPixmap::fromImage(img);
-	}
-	int centerBox = ((208 / size) / 2) * size;
+    }
     for (int i = size; i < 208; i += size) {
-		p.drawLine(0, i, 208, i);
-		p.drawLine(i, 0, i, 208);
+        p.drawLine(0, i, 208, i);
+        p.drawLine(i, 0, i, 208);
     }
 
-	if (size == 16) {
-		pen.setColor(Qt::blue);
-		p.setPen(pen);
-		QRect box_rect{centerBox, centerBox, size, size};
-		p.drawRect(box_rect);
-	}
+    if (size == 16 || size == 8) {
+        pen.setColor(Qt::blue);
+        p.setPen(pen);
+        constexpr int center = (208 / 2) - (16 / 2);
+        QRect box_rect{center, center, 16, 16};
+        p.drawRect(box_rect);
+    }
     return QPixmap::fromImage(img);
 }
 
@@ -223,21 +285,12 @@ QPixmap Map16Provider::overlay() {
     QPainter p{&pix};
     p.fillRect(pix.rect(), QBrush(QGradient(QGradient::AmourAmour)));
     p.drawImage(pix.rect(), tileGrid.toImage());
-    if (currentIndex == -1 && m_tiles.empty()) {
+    if (currentIndex < 0 || currentIndex >= m_displays.size()) {
         p.drawImage(pix.rect(), base.toImage());
-    } else if (currentIndex == -1) {
-        currentIndex = 0;
-        if (usesText[currentIndex]) {
-            drawLetters(p);
-        } else {
-            p.drawImage(pix.rect(), m_displays[currentIndex].toImage());
-        }
+    } else if (usesText[currentIndex]) {
+        drawLetters(p);
     } else {
-        if (usesText[currentIndex]) {
-            drawLetters(p);
-        } else {
-            p.drawImage(pix.rect(), m_displays[currentIndex].toImage());
-        }
+        p.drawImage(pix.rect(), m_displays[currentIndex].toImage());
     }
     p.end();
     return pix;
@@ -274,7 +327,7 @@ void Map16Provider::drawLetters(QPainter& p) {
     int vmargin = (208 - (lines * 8)) / 2;
     for (int row = 0; row < lines; row++) {
         auto str = slines[row].toStdString();
-		int hmargin = static_cast<int>((208 - (str.length() * 8)) / 2);
+        int hmargin = static_cast<int>((208 - (str.length() * 8)) / 2);
         for (int col = 0; col < (int)str.length(); col++) {
             char c = str[col];
             if (table.find(c) == table.cend()) {
@@ -310,35 +363,45 @@ void Map16Provider::addDisplay(int index) {
     setPixmap(overlay());
 }
 void Map16Provider::removeDisplay(int index) {
-    if (index == -1)
+    if (index < 0)
         index = currentIndex;
+    if (index < 0 || index >= m_displays.size())
+        return;
     m_displays.removeAt(index);
     m_tiles.removeAt(index);
     usesText.removeAt(index);
     m_descriptions.removeAt(index);
-    if (m_displays.length() == 0) {
-        currentIndex = -1;
-        setPixmap(overlay());
-    }
-    if (m_tiles.length() == 1)
-        currentIndex = 0;
-    else if (m_tiles.length() == 0)
+    setCurrentlySelected(SIZE_MAX);
+    if (m_displays.isEmpty())
         currentIndex = -1;
     else
-        currentIndex++;
+        currentIndex = std::min(index, static_cast<int>(m_displays.size()) - 1);
+    setPixmap(overlay());
 }
 void Map16Provider::changeDisplay(int index) {
     currentIndex = index;
+    setCurrentlySelected(SIZE_MAX);
     setPixmap(overlay());
 }
 
 void Map16Provider::cloneDisplay(int index) {
-    if (index == -1)
-        index = currentIndex;
-    m_displays.insert(index, m_displays[currentIndex]);
-    m_tiles.insert(index, m_tiles[currentIndex]);
-    usesText.insert(index, usesText[currentIndex]);
-    m_descriptions.insert(index, m_descriptions[currentIndex]);
+    if (currentIndex < 0 || currentIndex >= m_displays.size())
+        return;
+    if (index < 0)
+        index = currentIndex + 1;
+    QPixmap pix = m_displays[currentIndex];
+    DisplayTiles tiles = m_tiles[currentIndex];
+    bool ut = usesText[currentIndex];
+    QString desc = m_descriptions[currentIndex];
+    for (auto& t : tiles)
+        t.tid = TiledPosition::unique_index++;
+    m_displays.insert(index, pix);
+    m_tiles.insert(index, tiles);
+    usesText.insert(index, ut);
+    m_descriptions.insert(index, desc);
+    currentIndex = index;
+    setCurrentlySelected(SIZE_MAX);
+    setPixmap(overlay());
 }
 SizeSelector Map16Provider::getSelectorSize() {
     return selectorSize;
@@ -356,7 +419,7 @@ void Map16Provider::serializeDisplays(QVector<DisplayData>& data) {
         if (usesText[i]) {
             data[i].setUseText(true);
             data[i].setDisplayText(m_descriptions[i]);
-            data[i].addTile({0, 0, 0});
+            data[i].addTile({0, 0, 0, false});
         }
         else {
             data[i].setUseText(false);
@@ -364,7 +427,7 @@ void Map16Provider::serializeDisplays(QVector<DisplayData>& data) {
             data[i].clearTiles();
             for (auto& t : m_tiles[i]) {
                 QPoint newpos = t.pos - QPoint(96, 96);
-                data[i].addTile({newpos.x(), newpos.y(), t.map16tileno});
+                data[i].addTile({newpos.x(), newpos.y(), t.map16tileno, t.tile.translucent || t.translucent});
             }
         }
     }
@@ -377,20 +440,20 @@ void Map16Provider::focusOutEvent(QFocusEvent *event) {
 }
 
 void Map16Provider::keyPressEvent(QKeyEvent *event) {
-    if (currentSelected == SIZE_MAX)
+    if (m_currentSelected == SIZE_MAX)
         return;
     qDebug() << "Key press event received";
     if (event->key() == Qt::Key_Backspace || event->key() == Qt::Key_Delete) {
         if (event->keyCombination().keyboardModifiers().testFlag(Qt::KeyboardModifier::ControlModifier)) {
-           m_tiles[currentIndex].clear();
+            m_tiles[currentIndex].clear();
         } else {
-            auto index = m_tiles[currentIndex].indexOf(currentSelected);
+            auto index = m_tiles[currentIndex].indexOf(m_currentSelected);
             m_tiles[currentIndex].removeAt(index);
         }
-        currentSelected = SIZE_MAX;
+        setCurrentlySelected(SIZE_MAX);
         redrawNoSort();
     } else if (event->key() == Qt::Key_Escape) {
-        currentSelected = SIZE_MAX;
+        setCurrentlySelected(SIZE_MAX);
         redrawNoSort();
     }
     releaseKeyboard();
@@ -406,7 +469,7 @@ void Map16Provider::deserializeDisplays(const QVector<JSONDisplay>& displays, Ma
     m_descriptions.clear();
 
     // insert new displays
-    currentSelected = SIZE_MAX;
+    setCurrentlySelected(SIZE_MAX);
     currentIndex = 0;
     auto len = displays.length();
     m_displays.reserve(len);
@@ -423,7 +486,8 @@ void Map16Provider::deserializeDisplays(const QVector<JSONDisplay>& displays, Ma
             QPoint align = QPoint(t.xoff, t.yoff) + QPoint(96, 96);
             int i = t.tilenumber / 16;
             int j = t.tilenumber % 16;
-            tiles.append({view->tiles[i][j], align, 0, TiledPosition::unique_index++, t.tilenumber});
+            qDebug() << "Drawing tile " << i << j << t.translucent;
+            tiles.append({view->tiles[i][j], align, 0, TiledPosition::unique_index++, t.tilenumber, t.translucent});
         }
         m_tiles.append(tiles);
         m_displays.append(createBase());
@@ -435,7 +499,7 @@ void Map16Provider::deserializeDisplays(const QVector<JSONDisplay>& displays, Ma
 
 void Map16Provider::reset() {
     currentIndex = -1;
-    currentSelected = SIZE_MAX;
+    setCurrentlySelected(SIZE_MAX);
     usesText.clear();
     m_descriptions.clear();
     m_tiles.clear();

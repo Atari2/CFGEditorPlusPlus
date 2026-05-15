@@ -86,11 +86,15 @@ QPoint TileData::Offset() const {
 int TileData::TileNumber() const {
     return m_tile_number;
 }
+bool TileData::Translucent() const {
+    return m_translucent;
+}
 
 TileData& TileData::operator=(const TileData& other) {
     m_tile_number = other.m_tile_number;
     m_x_offset = other.m_x_offset;
     m_y_offset = other.m_y_offset;
+    m_translucent = other.m_translucent;
     return *this;
 }
 
@@ -98,7 +102,7 @@ TileData::TileData(const TileData& other) {
     this->operator=(other);
 }
 
-TileData::TileData(int x_off, int y_off, int tile_num) : m_x_offset(x_off), m_y_offset(y_off), m_tile_number(tile_num) {
+TileData::TileData(int x_off, int y_off, int tile_num, bool translucent) : m_x_offset(x_off), m_y_offset(y_off), m_tile_number(tile_num), m_translucent(translucent) {
 
 }
 
@@ -349,7 +353,7 @@ DisplayData::DisplayData(const JSONDisplay& other) {
     m_y_or_value = other.y_or_value;
     m_tiles.reserve(other.tiles.length());
     std::for_each(other.tiles.cbegin(), other.tiles.cend(), [&](const Tile& tile) {
-        m_tiles.append({tile.xoff, tile.yoff, tile.tilenumber});
+        m_tiles.append({tile.xoff, tile.yoff, tile.tilenumber, tile.translucent});
     });
     m_description = other.description;
     m_use_text = other.useText;
@@ -362,6 +366,7 @@ DisplayData& DisplayData::operator=(const DisplayData& other) {
     m_extra_bit = other.m_extra_bit;
     m_x_or_index = other.m_x_or_index;
     m_y_or_value = other.m_y_or_value;
+    m_tiles.clear();
     m_tiles.reserve(other.m_tiles.size());
     std::for_each(other.m_tiles.cbegin(), other.m_tiles.cend(), [&](const TileData& tile) {
         m_tiles.append(tile);

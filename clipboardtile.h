@@ -35,20 +35,22 @@ struct TileInfo {
 };
 
 struct FullTile {
-    FullTile(quint16 tl, quint16 bl, quint16 tr, quint16 br, TileChangeType type = TileChangeType::All);
-    FullTile(TileInfo tl, TileInfo bl, TileInfo tr, TileInfo br, TileChangeType type = TileChangeType::All);
+    FullTile(quint16 tl, quint16 bl, quint16 tr, quint16 br, bool translucent, TileChangeType type = TileChangeType::All);
+    FullTile(TileInfo tl, TileInfo bl, TileInfo tr, TileInfo br, bool translucent, TileChangeType type = TileChangeType::All);
     FullTile() = default;
     int offset = -1;
     TileInfo topleft;
     TileInfo bottomleft;
     TileInfo topright;
     TileInfo bottomright;
-    QImage getFullTile();
-    QImage getScaled(int width);
+    bool translucent;
+    QImage getFullTile(bool translucent);
+    QImage getScaled(int width, bool translucent);
     void SetPalette(int pal);
     void SetOffset(int off);
     void FlipX();
     void FlipY();
+    void SetTranslucent(bool value);
     bool isEmpty();
     bool isFullTile();
 

@@ -78,7 +78,7 @@ bool Map16GraphicsView::readInternalMap16File() {
             byteStream >> tr;
             byteStream >> br;
             int tileIndex = i * tableInformation.sizeX + j;
-            subVector.append({tl, bl, tr, br});
+            subVector.append({tl, bl, tr, br, false});
             subVector.last().offset = getExternalOffset(tileIndex);
         }
         if (tiles.length() <= i)
@@ -93,7 +93,7 @@ bool Map16GraphicsView::readInternalMap16File() {
             QVector<FullTile> subVector{};
             subVector.reserve(16);
             for (quint32 j = 0; j < 16; j++) {
-                subVector.append({0x00, 0x00, 0x00, 0x00});
+                subVector.append({0x00, 0x00, 0x00, 0x00, false});
             }
             tiles.append(subVector);
         }
@@ -127,7 +127,7 @@ void Map16GraphicsView::drawInternalMap16File() {
     p.fillRect(TileMap.rect(), QBrush(QGradient(QGradient::EternalConstance)));
     for (int i = 0; i < tiles.length(); i++) {
         for (int j = 0; j < tiles[i].length(); j++) {
-            p.drawImage(QRect{j * 16, i * 16, 16, 16}, tiles[i][j].getFullTile());
+            p.drawImage(QRect{j * 16, i * 16, 16, 16}, tiles[i][j].getFullTile(false));
         }
     }
     p.end();
@@ -331,7 +331,7 @@ void Map16GraphicsView::mousePressEvent(QMouseEvent *event) {
         auto size = CellSize();
         QImage img;
         if (currentType == TileChangeType::All)
-            img = newTile.getScaled(size);
+            img = newTile.getScaled(size, tile.translucent);
         else {
             img = newTile.getPartialTile(currentType);
         }
@@ -372,7 +372,7 @@ void Map16GraphicsView::keyPressEvent(QKeyEvent *event) {
                 tiles[i][j].offset = -1;
         for (int i = 16  * 3; i < tiles.length(); i++)
             for (int j = 0; j < tiles[i].length(); j++)
-                tiles[i][j] = FullTile{0, 0, 0, 0};
+                tiles[i][j] = FullTile{0, 0, 0, 0, false};
         readInternalMap16File();
     } else if (event->key() == Qt::Key::Key_Delete || event->key() == Qt::Key::Key_Backspace) {
         qDebug() << "Delete or backspace pressed";
@@ -386,8 +386,8 @@ void Map16GraphicsView::keyPressEvent(QKeyEvent *event) {
         sel.setCompositionMode(QPainter::CompositionMode_Source);
         auto size = CellSize();
         auto& tile = tileNumToTile(currentClickedTile);
-        tile = FullTile{0, 0, 0, 0};
-        auto img = tile.getFullTile();
+        tile = FullTile{0, 0, 0, 0, false};
+        auto img = tile.getFullTile(tile.translucent);
         high.drawImage(QRect{(currentTile % 16) * size, (currentTile / 16) * size, size, size}, img);
         sel.drawImage(QRect{(currentTile % 16) * size, (currentTile / 16) * size, size, size}, img);
         og.drawImage(QRect{(currentTile % 16) * size, (currentTile / 16) * size, size, size}, img);
@@ -511,6 +511,9 @@ void Map16GraphicsView::tileChanged(QObject* toBlock, TileChangeAction action, T
         case TileChangeAction::FlipY:
             partial->hflip = !partial->hflip;
             break;
+        case TileChangeAction::Translucent:
+            Q_ASSERT(false);
+            break;
         }
     } else {
         switch (action) {
@@ -522,6 +525,9 @@ void Map16GraphicsView::tileChanged(QObject* toBlock, TileChangeAction action, T
             break;
         case TileChangeAction::FlipY:
             tile.FlipY();
+            break;
+        case TileChangeAction::Translucent:
+            tile.SetTranslucent(value != 0);
             break;
         default:
             Q_ASSERT(false);
@@ -536,7 +542,7 @@ void Map16GraphicsView::tileChanged(QObject* toBlock, TileChangeAction action, T
     sel.setCompositionMode(QPainter::CompositionMode_Source);
     auto size = CellSize();
     if (currType == SelectorType::Sixteen || partial == nullptr) {
-        auto img = tile.getFullTile();
+        auto img = tile.getFullTile(false);
         QRect rect{(currentClickedTile % 16) * size, (currentClickedTile / 16) * size, size, size};
         high.drawImage(rect, img);
         sel.drawImage(rect, img);
@@ -592,8 +598,8 @@ void Map16GraphicsView::setMap16(const QString& data) {
         str >> bl;
         str >> tr;
         str >> br;
-        tiles[i][j] = FullTile(tl, bl, tr, br);
-        auto img = tiles[i][j].getScaled(size);
+        tiles[i][j] = FullTile(tl, bl, tr, br, false);
+        auto img = tiles[i][j].getScaled(size, tiles[i][j].translucent);
         high.drawImage(QRect{j * size, i * size, size, size}, img);
         sel.drawImage(QRect{j * size, i * size, size, size}, img);
         og.drawImage(QRect{j * size, i * size, size, size}, img);

@@ -26,7 +26,8 @@ enum class TileChangeAction {
     Number,
     FlipX,
     FlipY,
-    Palette
+    Palette,
+    Translucent
 };
 
 class Map16GraphicsView : public QGraphicsView

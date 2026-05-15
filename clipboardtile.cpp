@@ -10,11 +10,12 @@ TileInfo::TileInfo(quint16 info) {
     tilenum = (info & 0x3FF);
 }
 
-FullTile::FullTile(quint16 tl, quint16 bl, quint16 tr, quint16 br, TileChangeType type) :
+FullTile::FullTile(quint16 tl, quint16 bl, quint16 tr, quint16 br, bool translucent, TileChangeType type) :
     topleft(tl),
     bottomleft(bl),
     topright(tr),
-    bottomright(br)
+    bottomright(br),
+    translucent(translucent)
 {
     switch (type) {
     case TileChangeType::BottomLeft:
@@ -42,11 +43,12 @@ FullTile::FullTile(quint16 tl, quint16 bl, quint16 tr, quint16 br, TileChangeTyp
     }
 }
 
-FullTile::FullTile(TileInfo tl, TileInfo bl, TileInfo tr, TileInfo br, TileChangeType type) :
+FullTile::FullTile(TileInfo tl, TileInfo bl, TileInfo tr, TileInfo br, bool translucent, TileChangeType type) :
     topleft(tl),
     bottomleft(bl),
     topright(tr),
-    bottomright(br)
+    bottomright(br),
+    translucent(translucent)
 {
     switch (type) {
     case TileChangeType::BottomLeft:
@@ -111,6 +113,10 @@ void FullTile::FlipY() {
     bottomright.vflip = !bottomright.vflip;
 }
 
+void FullTile::SetTranslucent(bool translucent) {
+    this->translucent = translucent;
+}
+
 QImage TileInfo::get8x8Tile(int offset) {
     if (!isThisTile()) {
         QImage tile(8, 8, QImage::Format::Format_ARGB32);
@@ -158,11 +164,14 @@ quint16 TileInfo::TileValue() {
     return val;
 }
 
-QImage FullTile::getFullTile() {
+QImage FullTile::getFullTile(bool translucent) {
     if (isFullTile()) {
         QImage img{16, 16, QImage::Format::Format_ARGB32};
         img.fill(Qt::transparent);
         QPainter p{&img};
+        if (this->translucent || translucent) {
+            p.setOpacity(0.5);
+        }
         p.setCompositionMode(QPainter::CompositionMode_SourceOver);
         p.drawImage(QRect{0, 0, 8, 8}, topleft.get8x8Tile(offset));
         p.drawImage(QRect{0, 8, 8, 8}, bottomleft.get8x8Tile(offset));
@@ -174,6 +183,9 @@ QImage FullTile::getFullTile() {
         QImage img{8, 8, QImage::Format::Format_ARGB32};
         img.fill(Qt::transparent);
         QPainter p{&img};
+        if (this->translucent || translucent) {
+            p.setOpacity(0.5);
+        }
         QRect area{0, 0, 8, 8};
         if (topleft.isThisTile()) {
             p.drawImage(area, topleft.get8x8Tile(offset));
@@ -189,8 +201,8 @@ QImage FullTile::getFullTile() {
     }
 }
 
-QImage FullTile::getScaled(int width) {
-    return getFullTile().scaledToWidth(width, Qt::FastTransformation);
+QImage FullTile::getScaled(int width, bool translucent) {
+    return getFullTile(translucent).scaledToWidth(width, Qt::FastTransformation);
 }
 
 bool FullTile::isEmpty() {
@@ -203,7 +215,7 @@ bool FullTile::isFullTile() {
 
 ClipboardTile::ClipboardTile() :
     valid(false)
-  , tile(0, 0, 0, 0)
+  , tile(0, 0, 0, 0, false)
 {
 
 }
@@ -220,7 +232,7 @@ void ClipboardTile::update(const ClipboardTile& other) {
 }
 
 QImage ClipboardTile::draw() {
-    return tile.getFullTile();
+    return tile.getFullTile(false);
 }
 
 int ClipboardTile::size() {

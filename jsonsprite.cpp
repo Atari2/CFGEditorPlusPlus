@@ -123,9 +123,17 @@ Tile::Tile(const QJsonObject& t) {
     xoff = t["X offset"].toInt();
     yoff = t["Y offset"].toInt();
     tilenumber = t["map16 tile"].toInt();
+    if (t.contains("Translucent")) {
+        translucent = t["Translucent"].toBool();
+    } else if ((tilenumber & 0x8000) == 0x8000) {
+        tilenumber -= 0x8000;
+        translucent = true;
+    } else {
+        translucent = false;
+    }
 }
 
-Tile::Tile(int x, int y, int tileno) : xoff(x), yoff(y), tilenumber(tileno) {
+Tile::Tile(int x, int y, int tileno, bool translucent) : xoff(x), yoff(y), tilenumber(tileno), translucent(translucent) {
 
 }
 
@@ -134,6 +142,7 @@ QJsonObject Tile::toJson() const {
     obj["X offset"] = xoff;
     obj["Y offset"] = yoff;
     obj["map16 tile"] = tilenumber;
+    obj["Translucent"] = translucent;
     return obj;
 }
 

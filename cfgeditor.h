@@ -53,10 +53,10 @@ public:
     void loadFullbitmap(int index = -1, bool justPalette = false);
     bool addLunarMagicIcons();
     void closeEvent(QCloseEvent *event);
-    void advanceDisplayIndex();
     void addBlankRow();
     void addCloneRow();
     void removeExistingRow();
+    void refreshDisplayPanels();
     void changeTilePropGroupState(bool, TileChangeType type = TileChangeType::All);
     void setTilePropGroupState(FullTile tileInfo);
     JSONDisplay createDisplay(const DisplayData& data);
@@ -101,6 +101,7 @@ private:
     QVector<DisplayData> displays;
     QAtomicInteger<int> currentDisplayIndex = -1;
     int currentGFXFileIndex = -1;
+    bool syncingSelection = false;
 };
 
 

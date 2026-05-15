@@ -40,7 +40,8 @@ struct Tile {
     int xoff;
     int yoff;
     int tilenumber;
-    Tile(int x, int y, int tileno);
+    bool translucent;
+    Tile(int x, int y, int tileno, bool translucent);
     Tile(const QJsonObject& d);
     QJsonObject toJson() const;
     constexpr bool operator==(const Tile& ) const = default;
