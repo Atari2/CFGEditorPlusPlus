@@ -59,6 +59,23 @@ void CFGEditor::deleteInstaller() {
 }
 
 void CFGEditor::closeEvent(QCloseEvent *event) {
+    if (hasModification()) {
+        auto reply = QMessageBox::warning(this, "Save Changes",
+                                     "You have unsaved changes. Do you want to save?",
+                                     QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel);
+
+        if (reply == QMessageBox::Save) {
+            saveSprite();
+            sprite->to_file("", ui->compatForTranslucencyCheckBox->isChecked());
+            event->accept();
+        } else if (reply == QMessageBox::Cancel) {
+            event->ignore();
+        } else {
+            event->accept();
+        }
+    } else {
+        event->accept();
+    }
     view8x8Container->close();
     paletteContainer->close();
     QMainWindow::closeEvent(event);
@@ -124,11 +141,11 @@ void CFGEditor::setUpMenuBar(QMenuBar* mb) {
             auto res = QMessageBox::question(this,
                                              "Unsaved changes",
                                              "The currently open file has unsaved changes, do you want to save before opening a new one?",
-                                             QMessageBox::Yes | QMessageBox::No | QMessageBox::Abort );
-            if (res == QMessageBox::Yes) {
+                                             QMessageBox::Save | QMessageBox::No | QMessageBox::Cancel );
+            if (res == QMessageBox::Save) {
                 saveSprite();
-                sprite->to_file();
-            } else if (res == QMessageBox::Abort) {
+                sprite->to_file("", ui->compatForTranslucencyCheckBox->isChecked());
+            } else if (res == QMessageBox::Cancel) {
                 return;
             }
         }
@@ -144,11 +161,11 @@ void CFGEditor::setUpMenuBar(QMenuBar* mb) {
             auto res = QMessageBox::question(this,
                                              "Unsaved changes",
                                              "The currently open file has unsaved changes, do you want to save before opening another file?",
-                                             QMessageBox::Yes | QMessageBox::No | QMessageBox::Abort );
-            if (res == QMessageBox::Yes) {
+                                             QMessageBox::Save | QMessageBox::No | QMessageBox::Cancel );
+            if (res == QMessageBox::Save) {
                 saveSprite();
-                sprite->to_file();
-            } else if (res == QMessageBox::Abort) {
+                sprite->to_file("", ui->compatForTranslucencyCheckBox->isChecked());
+            } else if (res == QMessageBox::Cancel) {
                 return;
             }
         }
@@ -168,7 +185,7 @@ void CFGEditor::setUpMenuBar(QMenuBar* mb) {
 
     file->addAction("&Save", Qt::CTRL | Qt::Key_S, qApp, [&]() {
         saveSprite();
-        sprite->to_file();
+        sprite->to_file("", ui->compatForTranslucencyCheckBox->isChecked());
         *original = *sprite;
     });
 
@@ -177,7 +194,7 @@ void CFGEditor::setUpMenuBar(QMenuBar* mb) {
         auto filename = QFileDialog::getSaveFileName(this, tr("Save file"), sprite->name(), tr("JSON (*.json);;CFG (*.cfg)"));
         if (filename.size() == 0)
             return;
-        sprite->to_file(filename);
+        sprite->to_file(filename, ui->compatForTranslucencyCheckBox->isChecked());
         *original = *sprite;
     });
 

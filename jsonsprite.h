@@ -43,7 +43,7 @@ struct Tile {
     bool translucent;
     Tile(int x, int y, int tileno, bool translucent);
     Tile(const QJsonObject& d);
-    QJsonObject toJson() const;
+    QJsonObject toJson(bool translucencyCompatibility) const;
     constexpr bool operator==(const Tile& ) const = default;
 };
 
@@ -58,7 +58,7 @@ struct JSONDisplay {
     GFXInfo gfxinfo{};
     JSONDisplay(const QJsonObject& t, DisplayType type);
     JSONDisplay(const QString& d, const QVector<Tile>& ts, bool bit, int xx, int yy, bool text, const QString& disp, const GFXInfo& info);
-    QJsonObject toJson(DisplayType type) const;
+    QJsonObject toJson(DisplayType type, bool translucencyCompatibility) const;
     bool operator==(const JSONDisplay& ) const = default;
 };
 
@@ -80,13 +80,13 @@ public:
     bool from_file(const QString& name);
     void deserialize();
     void deserialize_cfg(QFile& file);
-    void serialize();
+    void serialize(bool translucencyCompatibility);
     QByteArray serialize_cfg();
     void addCollections(QTableView* view);
     void addDisplay(const JSONDisplay& display);
     void setMap16(const QString& mapdata);
-    QByteArray to_text(const QString& filename);
-    bool to_file(QString name = "");
+    QByteArray to_text(const QString& filename, bool translucencyCompatibility);
+    bool to_file(QString name, bool translucencyCompatibility);
     QString& name();
     bool is_different(const JsonSprite& other) const;
     J1656 t1656;

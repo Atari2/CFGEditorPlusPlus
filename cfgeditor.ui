@@ -1522,6 +1522,16 @@
              </item>
             </layout>
            </item>
+           <item>
+            <widget class="QCheckBox" name="compatForTranslucencyCheckBox">
+             <property name="toolTip">
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Pixi 1.43 and older do not have native JSON support for translucent tiles, as such, a workaround is necessary to make them work. Tick this checkbox to enable the workaround to make sure that your JSON file works with Pixi 1.43 and older.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             </property>
+             <property name="text">
+              <string>Compatibility mode for translucent tiles</string>
+             </property>
+            </widget>
+           </item>
            <item alignment="Qt::AlignmentFlag::AlignHCenter|Qt::AlignmentFlag::AlignVCenter">
             <widget class="Map16Provider" name="labelDisplayTilesGrid">
              <property name="frameShape">

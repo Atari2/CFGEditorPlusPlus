@@ -40,7 +40,7 @@ JSONDisplay::JSONDisplay(const QString& d, const QVector<Tile>& ts, bool bit, in
    tiles.append(ts);
 }
 
-QJsonObject JSONDisplay::toJson(DisplayType type) const {
+QJsonObject JSONDisplay::toJson(DisplayType type, bool translucencyCompatibility) const {
     QJsonObject obj{};
     obj["Description"] = description;
     obj["ExtraBit"] = extrabit;
@@ -55,11 +55,11 @@ QJsonObject JSONDisplay::toJson(DisplayType type) const {
     QJsonArray tilesArr{};
     if (useText) {
         obj["DisplayText"] = displaytext;
-        tilesArr.append(tiles[0].toJson());
+        tilesArr.append(tiles[0].toJson(translucencyCompatibility));
     } else {
         obj["DisplayText"] = "";
         std::for_each(tiles.cbegin(), tiles.cend(), [&](auto& t) {
-            tilesArr.append(t.toJson());
+            tilesArr.append(t.toJson(translucencyCompatibility));
         });
     }
     obj["Tiles"] = tilesArr;
@@ -125,11 +125,16 @@ Tile::Tile(const QJsonObject& t) {
     tilenumber = t["map16 tile"].toInt();
     if (t.contains("Translucent")) {
         translucent = t["Translucent"].toBool();
-    } else if ((tilenumber & 0x8000) == 0x8000) {
-        tilenumber -= 0x8000;
-        translucent = true;
     } else {
         translucent = false;
+    }
+    if ((tilenumber & 0x8000) == 0x8000) {
+        tilenumber -= 0x8000;
+        translucent = true;
+    }
+    if ((tilenumber & 0x7F00) == 0x7F00) {
+        tilenumber -= 0x7F00;
+        translucent = true;
     }
 }
 
@@ -137,12 +142,16 @@ Tile::Tile(int x, int y, int tileno, bool translucent) : xoff(x), yoff(y), tilen
 
 }
 
-QJsonObject Tile::toJson() const {
+QJsonObject Tile::toJson(bool translucencyCompatibility) const {
     QJsonObject obj{};
     obj["X offset"] = xoff;
     obj["Y offset"] = yoff;
-    obj["map16 tile"] = tilenumber;
-    obj["Translucent"] = translucent;
+    if (translucencyCompatibility) {
+        obj["map16 tile"] = tilenumber + (translucent ? 0x8000 : 0) - (translucent && tilenumber < 0x300 ? 0x100 : 0);
+    } else {
+        obj["map16 tile"] = tilenumber;
+        obj["Translucent"] = translucent;
+    }
     return obj;
 }
 
@@ -308,7 +317,7 @@ void JsonSprite::deserialize() {
     });
 }
 
-void JsonSprite::serialize() {
+void JsonSprite::serialize(bool translucencyCompatibility) {
     obj["AsmFile"] = asmfile.trimmed();
     obj["ActLike"] = actlike;
     obj["Type"] = type;
@@ -321,7 +330,7 @@ void JsonSprite::serialize() {
     QJsonArray collArr{};
     obj["DisplayType"] = dispType == DisplayType::XY ? "XY" : "ExByte";
     std::for_each(displays.cbegin(), displays.cend(), [&](auto& d) {
-        dispArr.append(d.toJson(dispType));
+        dispArr.append(d.toJson(dispType, translucencyCompatibility));
     });
     std::for_each(collections.cbegin(), collections.cend(), [&](auto& c) {
         collArr.append(c.toJson());
@@ -336,11 +345,11 @@ void JsonSprite::serialize() {
     obj["$190F"] = t190f.to_json();
 }
 
-QByteArray JsonSprite::to_text(const QString& filename) {
+QByteArray JsonSprite::to_text(const QString& filename, bool translucencyCompatibility) {
     if (filename.endsWith(".cfg")) {
         return serialize_cfg();
     } else {
-        serialize();
+        serialize(translucencyCompatibility);
         QJsonDocument doc{obj};
         return doc.toJson();
     }
@@ -376,7 +385,7 @@ bool JsonSprite::is_different(const JsonSprite& other) const {
     return false;
 }
 
-bool JsonSprite::to_file(QString name) {
+bool JsonSprite::to_file(QString name, bool translucencyCompatibility) {
     if (name.length() == 0) {
         if (m_name.length() == 0)
             name = QFileDialog::getSaveFileName(nullptr, "Save file", "", "JSON (*.json);;CFG (*.cfg)");
@@ -386,11 +395,11 @@ bool JsonSprite::to_file(QString name) {
             return false;
         QFile outFile{name};
         TRY_OPEN(outFile.open(QFile::OpenModeFlag::Truncate | QFile::OpenModeFlag::Text | QFile::OpenModeFlag::WriteOnly));
-        outFile.write(to_text(name));
+        outFile.write(to_text(name, translucencyCompatibility));
     } else {
         QFile outFile{name};
         TRY_OPEN(outFile.open(QFile::OpenModeFlag::Truncate | QFile::OpenModeFlag::Text | QFile::OpenModeFlag::WriteOnly));
-        outFile.write(to_text(name));
+        outFile.write(to_text(name, translucencyCompatibility));
     }
     return true;
 }
