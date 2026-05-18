@@ -46,6 +46,7 @@ CFGEditor::CFGEditor(const QStringList& argv, QWidget *parent)
         ui->map16GraphicsView->setMap16(sprite->map16);
         ui->labelDisplayTilesGrid->deserializeDisplays(sprite->displays, ui->map16GraphicsView);
         populateDisplays();
+        *original = *sprite;
     }
 }
 
@@ -104,6 +105,8 @@ void CFGEditor::loadFullbitmap(int index, bool justPalette) {
 
 bool CFGEditor::hasModification() {
     JsonSprite tmp{*sprite};
+    tmp.displays.clear();
+    tmp.collections.clear();
     QVector<DisplayData> tmpdisplays{displays};
     ui->labelDisplayTilesGrid->serializeDisplays(tmpdisplays);
     for (auto& disp : tmpdisplays)
