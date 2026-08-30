@@ -23,12 +23,19 @@ QT_BEGIN_NAMESPACE
 namespace Ui { class CFGEditor; }
 QT_END_NAMESPACE
 
+struct CFGEditorCommandLineOptions
+{
+    QString cfgFile;
+    QString palette;
+    QString sp1, sp2, sp3, sp4;
+};
+
 class CFGEditor : public QMainWindow
 {
     Q_OBJECT
 
 public:
-    CFGEditor(const QStringList& argv, QWidget *parent = nullptr);
+    CFGEditor(QWidget *parent = nullptr);
     ~CFGEditor();
     void deleteInstaller();
     void setUpMenuBar(QMenuBar*);
@@ -81,6 +88,8 @@ public:
             edit->setText(QString::asprintf("%02X", tweak->to_byte()));
         });
     }
+
+    void applyCommandLineOptions(const CFGEditorCommandLineOptions &options);
 private:
     Ui::CFGEditor *ui;
     JsonSprite* sprite;

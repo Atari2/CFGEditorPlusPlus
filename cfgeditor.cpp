@@ -3,7 +3,7 @@
 #include "eightbyeightview.h"
 #include <QStyledItemDelegate>
 
-CFGEditor::CFGEditor(const QStringList& argv, QWidget *parent)
+CFGEditor::CFGEditor(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::CFGEditor)
     , sprite(new JsonSprite)
@@ -36,18 +36,6 @@ CFGEditor::CFGEditor(const QStringList& argv, QWidget *parent)
     mb->show();
     setMenuBar(mb);
     deleteInstaller();
-    if (argv.size() > 0) {
-        sprite->from_file(argv[0]);
-        resetTweaks();
-        std::for_each(sprite->collections.cbegin(), sprite->collections.cend(), [&](auto& coll) {
-            collectionModel->appendRow(CollectionDataModel::fromCollection(coll));
-        });
-        ui->checkBoxDisplayExtraByte->setChecked(sprite->dispType == DisplayType::ExtraByte);
-        ui->map16GraphicsView->setMap16(sprite->map16);
-        ui->labelDisplayTilesGrid->deserializeDisplays(sprite->displays, ui->map16GraphicsView);
-        populateDisplays();
-        *original = *sprite;
-    }
 }
 
 void CFGEditor::deleteInstaller() {
@@ -1290,6 +1278,62 @@ void CFGEditor::bindTweak190F() {
     connectCheckBox(ui->lineEdit190f, ui->checkBox190fdeathframe, &sprite->t190f, sprite->t190f.deathframe);
     connectCheckBox(ui->lineEdit190f, ui->checkBox190fnosilver, &sprite->t190f, sprite->t190f.nosilver);
     connectCheckBox(ui->lineEdit190f, ui->checkBox190fwallstuck, &sprite->t190f, sprite->t190f.nostuck);
+}
+
+void CFGEditor::applyCommandLineOptions(const CFGEditorCommandLineOptions &options) {
+    bool needBitmapUpdate = false;
+
+    if (!options.cfgFile.isEmpty()) {
+        if (sprite->from_file(options.cfgFile)) {
+            resetTweaks();
+            std::for_each(sprite->collections.cbegin(), sprite->collections.cend(), [&](auto& coll) {
+                collectionModel->appendRow(CollectionDataModel::fromCollection(coll));
+            });
+            ui->checkBoxDisplayExtraByte->setChecked(sprite->dispType == DisplayType::ExtraByte);
+            ui->map16GraphicsView->setMap16(sprite->map16);
+            ui->labelDisplayTilesGrid->deserializeDisplays(sprite->displays, ui->map16GraphicsView);
+            populateDisplays();
+            *original = *sprite;
+            needBitmapUpdate = true;
+        }
+    }
+
+    if (!options.palette.isEmpty()) {
+        if (SpritePaletteCreator::ReadPaletteFile(0, 16, 16, options.palette)) {
+            needBitmapUpdate = true;
+            for (int i = 0; i < SpritePaletteCreator::nSpritePalettes(); i++) {
+                paletteImages[i] = SpritePaletteCreator::MakePalette(i);
+            }
+            ui->label->setPixmap(paletteImages[ui->paletteComboBox->currentIndex()]);
+        }
+    }
+
+    const QString gfxFiles[] = {
+        options.sp1,
+        options.sp2,
+        options.sp3,
+        options.sp4
+    };
+    QLineEdit* lineEdits[] = {
+        ui->lineEditGFXSp0,
+        ui->lineEditGFXSp1,
+        ui->lineEditGFXSp2,
+        ui->lineEditGFXSp3
+    };
+
+    for (int i = 0; i < 4; ++i) {
+        if (!gfxFiles[i].isEmpty()) {
+            QFile gfxFile{gfxFiles[i]};
+            if (gfxFile.open(QFile::ReadOnly) && assert_filesize(gfxFiles[i], kb(4))) {
+                lineEdits[i]->setText(gfxFiles[i]);
+                needBitmapUpdate = true;
+            }
+        }
+    }
+
+    if (needBitmapUpdate) {
+        loadFullbitmap();
+    }
 }
 
 CFGEditor::~CFGEditor()
