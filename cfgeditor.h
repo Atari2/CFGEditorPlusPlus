@@ -12,6 +12,7 @@
 #include <QStandardItemModel>
 #include <QDir>
 #include <QMap>
+#include <optional>
 #include "utils.h"
 #include "jsonsprite.h"
 #include "snesgfxconverter.h"
@@ -92,7 +93,7 @@ public:
         });
     }
 
-    static CFGEditorCommandLineOptions parseCommandLineOptions(const QCoreApplication &application);
+    static std::optional<CFGEditorCommandLineOptions> parseCommandLineOptions(const QCoreApplication &application);
     void applyCommandLineOptions(const CFGEditorCommandLineOptions &options);
 private:
     Ui::CFGEditor *ui;

@@ -6,9 +6,12 @@ int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
 
-    CFGEditorCommandLineOptions options = CFGEditor::parseCommandLineOptions(a);
+    auto options = CFGEditor::parseCommandLineOptions(a);
+    if (!options.has_value()) {
+        return EXIT_FAILURE;
+    }
     CFGEditor w{};
     w.show();
-    w.applyCommandLineOptions(options);
+    w.applyCommandLineOptions(*options);
     return a.exec();
 }

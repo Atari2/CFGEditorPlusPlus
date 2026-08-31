@@ -1281,7 +1281,7 @@ void CFGEditor::bindTweak190F() {
 }
 
 
-CFGEditorCommandLineOptions CFGEditor::parseCommandLineOptions(const QCoreApplication &application) {
+std::optional<CFGEditorCommandLineOptions> CFGEditor::parseCommandLineOptions(const QCoreApplication &application) {
     QCommandLineParser parser;
     parser.setApplicationDescription("CFGEditorPlusPlus");
     parser.addHelpOption();
@@ -1310,15 +1310,15 @@ CFGEditorCommandLineOptions CFGEditor::parseCommandLineOptions(const QCoreApplic
 
         QFile cfgFile{cfgFilePath};
         if (!cfgFile.open(QFile::ReadOnly)) {
-            qCritical().noquote() << "Error: could not open file:" << cfgFilePath;
-            std::exit(1);
+            qCritical() << "Error: could not open file:" << cfgFilePath;
+            return std::nullopt;
         }
 
         const QFileInfo cfgFileInfo(cfgFilePath);
         const auto extension = cfgFileInfo.suffix().toLower();
         if (extension != "json" && extension != "cfg") {
-            qCritical().noquote() << "Error: file must have a .json or .cfg extension:" << cfgFilePath;
-            std::exit(1);
+            qCritical() << "Error: file must have a .json or .cfg extension:" << cfgFilePath;
+            return std::nullopt;
         }
 
         commandLineOptions.cfgFile = cfgFilePath;
@@ -1330,8 +1330,8 @@ CFGEditorCommandLineOptions CFGEditor::parseCommandLineOptions(const QCoreApplic
         if (paletteFile.open(QFile::ReadOnly)) {
             commandLineOptions.palette = paletteFilePath;
         } else {
-            qCritical().noquote() << "Error: could not open palette file:" << paletteFilePath;
-            std::exit(1);
+            qCritical() << "Error: could not open palette file:" << paletteFilePath;
+            return std::nullopt;
         }
     }
 
@@ -1348,13 +1348,13 @@ CFGEditorCommandLineOptions CFGEditor::parseCommandLineOptions(const QCoreApplic
             QFile file{filePath};
 
             if (!file.open(QFile::ReadOnly)) {
-                qCritical().noquote() << "Error: could not open GFX file:" << filePath;
-                std::exit(1);
+                qCritical() << "Error: could not open GFX file:" << filePath;
+                return std::nullopt;
             }
 
             if (file.size() !=  kb(4)) {
-                qCritical().noquote() << "Error: GFX file is not 4KB:" << filePath;
-                std::exit(1);
+                qCritical() << "Error: GFX file is not 4KB:" << filePath;
+                return std::nullopt;
             }
             *gfxCommandLineOptions[i] = filePath;
         }
