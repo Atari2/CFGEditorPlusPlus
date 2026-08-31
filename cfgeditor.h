@@ -18,6 +18,7 @@
 #include "eightbyeightviewcontainer.h"
 #include "palettecontainer.h"
 #include "map16provider.h"
+#include <QCommandLineParser>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class CFGEditor; }
@@ -25,6 +26,8 @@ QT_END_NAMESPACE
 
 struct CFGEditorCommandLineOptions
 {
+    static constexpr int gfxFileCount = 4;
+
     QString cfgFile;
     QString palette;
     QString sp1, sp2, sp3, sp4;
@@ -89,6 +92,7 @@ public:
         });
     }
 
+    static CFGEditorCommandLineOptions parseCommandLineOptions(const QCoreApplication &application);
     void applyCommandLineOptions(const CFGEditorCommandLineOptions &options);
 private:
     Ui::CFGEditor *ui;

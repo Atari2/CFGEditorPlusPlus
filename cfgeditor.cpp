@@ -1280,32 +1280,114 @@ void CFGEditor::bindTweak190F() {
     connectCheckBox(ui->lineEdit190f, ui->checkBox190fwallstuck, &sprite->t190f, sprite->t190f.nostuck);
 }
 
+
+CFGEditorCommandLineOptions CFGEditor::parseCommandLineOptions(const QCoreApplication &application) {
+    QCommandLineParser parser;
+    parser.setApplicationDescription("CFGEditorPlusPlus");
+    parser.addHelpOption();
+    parser.addPositionalArgument("cfg", "CFG or JSON file.", "[cfg-file]");
+
+    QCommandLineOption paletteOption("palette", "Palette file.", "file");
+    parser.addOption(paletteOption);
+
+    QCommandLineOption gfxOptions[CFGEditorCommandLineOptions::gfxFileCount] = {
+        QCommandLineOption("sp1", "SP1 GFX file.", "file"),
+        QCommandLineOption("sp2", "SP2 GFX file.", "file"),
+        QCommandLineOption("sp3", "SP3 GFX file.", "file"),
+        QCommandLineOption("sp4", "SP4 GFX file.", "file"),
+    };
+    for (int i = 0; i < CFGEditorCommandLineOptions::gfxFileCount; ++i) {
+        parser.addOption(gfxOptions[i]);
+    }
+
+    parser.process(application);
+
+    CFGEditorCommandLineOptions commandLineOptions;
+    const auto positional = parser.positionalArguments();
+
+    if (!positional.isEmpty()) {
+        const auto cfgFilePath = QFileInfo(positional.first()).absoluteFilePath();
+
+        QFile cfgFile{cfgFilePath};
+        if (!cfgFile.open(QFile::ReadOnly)) {
+            qCritical().noquote() << "Error: could not open file:" << cfgFilePath;
+            std::exit(1);
+        }
+
+        const QFileInfo cfgFileInfo(cfgFilePath);
+        const auto extension = cfgFileInfo.suffix().toLower();
+        if (extension != "json" && extension != "cfg") {
+            qCritical().noquote() << "Error: file must have a .json or .cfg extension:" << cfgFilePath;
+            std::exit(1);
+        }
+
+        commandLineOptions.cfgFile = cfgFilePath;
+    }
+
+    if (parser.isSet(paletteOption)) {
+        const auto paletteFilePath = QFileInfo(parser.value(paletteOption)).absoluteFilePath();
+        QFile paletteFile{paletteFilePath};
+        if (paletteFile.open(QFile::ReadOnly)) {
+            commandLineOptions.palette = paletteFilePath;
+        } else {
+            qCritical().noquote() << "Error: could not open palette file:" << paletteFilePath;
+            std::exit(1);
+        }
+    }
+
+
+    QString* gfxCommandLineOptions[CFGEditorCommandLineOptions::gfxFileCount] = {
+        &commandLineOptions.sp1,
+        &commandLineOptions.sp2,
+        &commandLineOptions.sp3,
+        &commandLineOptions.sp4,
+    };
+    for (int i = 0; i < CFGEditorCommandLineOptions::gfxFileCount; ++i) {
+        if (parser.isSet(gfxOptions[i])) {
+            const auto filePath = QFileInfo(parser.value(gfxOptions[i])).absoluteFilePath();
+            QFile file{filePath};
+
+            if (!file.open(QFile::ReadOnly)) {
+                qCritical().noquote() << "Error: could not open GFX file:" << filePath;
+                std::exit(1);
+            }
+
+            if (file.size() !=  kb(4)) {
+                qCritical().noquote() << "Error: GFX file is not 4KB:" << filePath;
+                std::exit(1);
+            }
+            *gfxCommandLineOptions[i] = filePath;
+        }
+    }
+
+    return commandLineOptions;
+}
+
+
 void CFGEditor::applyCommandLineOptions(const CFGEditorCommandLineOptions &options) {
     bool needBitmapUpdate = false;
 
     if (!options.cfgFile.isEmpty()) {
-        if (sprite->from_file(options.cfgFile)) {
-            resetTweaks();
-            std::for_each(sprite->collections.cbegin(), sprite->collections.cend(), [&](auto& coll) {
-                collectionModel->appendRow(CollectionDataModel::fromCollection(coll));
-            });
-            ui->checkBoxDisplayExtraByte->setChecked(sprite->dispType == DisplayType::ExtraByte);
-            ui->map16GraphicsView->setMap16(sprite->map16);
-            ui->labelDisplayTilesGrid->deserializeDisplays(sprite->displays, ui->map16GraphicsView);
-            populateDisplays();
-            *original = *sprite;
-            needBitmapUpdate = true;
-        }
+        sprite->from_file(options.cfgFile);
+        resetTweaks();
+        std::for_each(sprite->collections.cbegin(), sprite->collections.cend(), [&](auto& coll) {
+            collectionModel->appendRow(CollectionDataModel::fromCollection(coll));
+        });
+        ui->checkBoxDisplayExtraByte->setChecked(sprite->dispType == DisplayType::ExtraByte);
+        ui->map16GraphicsView->setMap16(sprite->map16);
+        ui->labelDisplayTilesGrid->deserializeDisplays(sprite->displays, ui->map16GraphicsView);
+        populateDisplays();
+        *original = *sprite;
+        needBitmapUpdate = true;
     }
 
     if (!options.palette.isEmpty()) {
-        if (SpritePaletteCreator::ReadPaletteFile(0, 16, 16, options.palette)) {
-            needBitmapUpdate = true;
-            for (int i = 0; i < SpritePaletteCreator::nSpritePalettes(); i++) {
-                paletteImages[i] = SpritePaletteCreator::MakePalette(i);
-            }
-            ui->label->setPixmap(paletteImages[ui->paletteComboBox->currentIndex()]);
+        SpritePaletteCreator::ReadPaletteFile(0, 16, 16, options.palette);
+        needBitmapUpdate = true;
+        for (int i = 0; i < SpritePaletteCreator::nSpritePalettes(); i++) {
+            paletteImages[i] = SpritePaletteCreator::MakePalette(i);
         }
+        ui->label->setPixmap(paletteImages[ui->paletteComboBox->currentIndex()]);
     }
 
     const QString gfxFiles[] = {
@@ -1321,13 +1403,10 @@ void CFGEditor::applyCommandLineOptions(const CFGEditorCommandLineOptions &optio
         ui->lineEditGFXSp3
     };
 
-    for (int i = 0; i < 4; ++i) {
+    for (int i = 0; i < CFGEditorCommandLineOptions::gfxFileCount; ++i) {
         if (!gfxFiles[i].isEmpty()) {
-            QFile gfxFile{gfxFiles[i]};
-            if (gfxFile.open(QFile::ReadOnly) && assert_filesize(gfxFiles[i], kb(4))) {
-                lineEdits[i]->setText(gfxFiles[i]);
-                needBitmapUpdate = true;
-            }
+            lineEdits[i]->setText(gfxFiles[i]);
+            needBitmapUpdate = true;
         }
     }
 
@@ -1349,4 +1428,3 @@ CFGEditor::~CFGEditor()
     delete hexNumberList;
     delete ui;
 }
-
