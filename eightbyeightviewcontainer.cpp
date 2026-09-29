@@ -22,9 +22,14 @@ EightByEightViewContainer::EightByEightViewContainer(EightByEightView* view, QCo
 void EightByEightViewContainer::updateForChange(QImage* image, bool firstTime) {
     m_view->updateForChange(image);
     if (!firstTime) {
-        m_view->open();
-        show();
-        raise();
+        if (m_view->isHidden() || !m_view->isVisible()) {
+            m_view->open();
+            show();
+            raise();
+        } else {
+            m_view->hide();
+            hide();
+        }
     }
 }
 

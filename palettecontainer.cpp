@@ -41,10 +41,15 @@ PaletteContainer::PaletteContainer(PaletteView* view, QWidget *parent) : QWidget
 }
 
 void PaletteContainer::updateContainer(const QPixmap& image) {
-	m_view->updateForChange(image);
-	m_view->open();
-	show();
-	raise();
+    m_view->updateForChange(image);
+    if (m_view->isHidden() || !m_view->isVisible()) {
+        m_view->open();
+        show();
+        raise();
+    } else {
+        m_view->hide();
+        hide();
+    }
 }
 
 void PaletteContainer::closeEvent(QCloseEvent *event) {
