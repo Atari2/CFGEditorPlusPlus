@@ -394,26 +394,15 @@ DisplayData DisplayData::blankData() {
     data.m_gfxinfo = GFXInfoData{};
     return data;
 }
-DisplayData DisplayData::cloneData(QStandardItemModel* model, QStandardItemModel* gfxModel, const QString& description, int row, const QString& display_text) {
-    DisplayData data;
-    data.m_extra_bit = model->item(row, 0)->data().toBool();
-    data.m_x_or_index = model->item(row, 1)->data().toInt();
-    data.m_y_or_value = model->item(row, 2)->data().toInt();
-    data.m_description = description;
-    data.m_use_text = display_text.length() != 0;
-    data.m_display_text = display_text;
-    data.m_gfxinfo = GFXInfoData::fromModel(model, row);
-    return data;
-}
 
-QVector<QStandardItem*> DisplayData::itemsFromDisplay() const {
+QVector<QStandardItem*> DisplayData::itemsFromDisplay(DisplayType dt) const {
     QVector<QStandardItem*> vec;
     QStandardItem* item = new QStandardItem();
     item->setCheckable(true);
     item->setCheckState(m_extra_bit ? Qt::Checked : Qt::Unchecked);
     item->setFlags(Qt::ItemIsEnabled);
     vec.append(item);
-    auto* idx = new QStandardItem(QString::asprintf("%02X", m_x_or_index));
+    auto* idx = new QStandardItem(QString::asprintf("%02X", dt == DisplayType::ExtraByte ? m_x_or_index + 1 : m_x_or_index));
     idx->setFlags(idx->flags() & (~Qt::ItemIsEditable));
     auto* val = new QStandardItem(QString::asprintf("%02X", m_y_or_value));
     val->setFlags(val->flags() & (~Qt::ItemIsEditable));

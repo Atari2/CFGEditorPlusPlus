@@ -245,7 +245,7 @@ void CFGEditor::populateDisplays() {
     for (auto& d : sprite->displays) {
         DisplayData display{d};
         displays.append(display);
-        displayModel->appendRow(display.itemsFromDisplay());
+        displayModel->appendRow(display.itemsFromDisplay(sprite->dispType));
         gfxinfoModel->appendRow(display.GFXInfo().itemsFromGFXInfo());
     }
     if (!displays.isEmpty())
@@ -527,7 +527,7 @@ void CFGEditor::addCloneRow() {
     int target = currentDisplayIndex + 1;
     DisplayData display(displays[currentDisplayIndex]);
     displays.insert(target, display);
-    displayModel->insertRow(target, display.itemsFromDisplay());
+    displayModel->insertRow(target, display.itemsFromDisplay(sprite->dispType));
     gfxinfoModel->insertRow(target, display.GFXInfo().itemsFromGFXInfo());
     ui->tableViewDisplays->setCurrentIndex(displayModel->index(target, 0));
 }
@@ -536,7 +536,7 @@ void CFGEditor::addBlankRow() {
     int target = currentDisplayIndex + 1;
     DisplayData display = DisplayData::blankData();
     displays.insert(target, display);
-    displayModel->insertRow(target, display.itemsFromDisplay());
+    displayModel->insertRow(target, display.itemsFromDisplay(sprite->dispType));
     gfxinfoModel->insertRow(target, display.GFXInfo().itemsFromGFXInfo());
     ui->tableViewDisplays->setCurrentIndex(displayModel->index(target, 0));
 }
@@ -581,7 +581,7 @@ void CFGEditor::refreshDisplayPanels() {
     }
     const DisplayData& d = displays[currentDisplayIndex];
     ui->checkBoxDisplayExtraBit->setChecked(d.ExtraBit());
-    ui->spinBoxXPos->setValue(d.XOrIndex());
+    ui->spinBoxXPos->setValue(sprite->dispType == DisplayType::ExtraByte ? d.XOrIndex() + 1 : d.XOrIndex());
     ui->spinBoxYPos->setValue(d.YOrValue());
     ui->textEditLMDescription->setText(d.Description());
     ui->checkBoxUseText->setChecked(d.UseText());
@@ -688,7 +688,10 @@ void CFGEditor::bindDisplayButtons() {
             sprite->dispType = DisplayType::ExtraByte;
             ui->labelDisplayX->setText("ExByte Index:");
             ui->labelDisplayY->setText("Value:");
+            ui->spinBoxXPos->setValue(ui->spinBoxXPos->value() + 1);
+            ui->spinBoxXPos->setMinimum(1);
             ui->spinBoxXPos->setMaximum(12);
+            ui->spinBoxYPos->setMinimum(0);
             ui->spinBoxYPos->setMaximum(0xFF);
         } else {
             QStringList labelList{"ExtraBit", "X", "Y"};
@@ -696,6 +699,15 @@ void CFGEditor::bindDisplayButtons() {
             sprite->dispType = DisplayType::XY;
             ui->labelDisplayX->setText("X");
             ui->labelDisplayY->setText("Y");
+            ui->spinBoxXPos->setMinimum(0);
+
+            for (size_t i = 0; i < displayModel->rowCount(); ++i) {
+                auto realIndex = displayModel->index(i, 1);
+                auto value = displayModel->data(realIndex);
+                displayModel->setData(realIndex, QString::asprintf("%02X", value.toString().toInt(nullptr, 16) - 1));
+            }
+
+            ui->spinBoxXPos->setValue(ui->spinBoxXPos->value() - 1);
             ui->spinBoxXPos->setMaximum(15);
             ui->spinBoxYPos->setMaximum(15);
         }
@@ -711,9 +723,19 @@ void CFGEditor::bindDisplayButtons() {
     QObject::connect(ui->spinBoxXPos, QOverload<int>::of(&QSpinBox::valueChanged), this, [&](int value) {
         if (!ui->tableViewDisplays->currentIndex().isValid())
             return;
-        auto realIndex = displayModel->index(ui->tableViewDisplays->currentIndex().row(), 1);
-        displayModel->setData(realIndex, QString::asprintf("%02X", value));
-        displays[currentDisplayIndex].setXOrIndex(value);
+        if (ui->checkBoxDisplayExtraByte->isChecked()) {
+            for (size_t i = 0; i < displayModel->rowCount(); ++i) {
+                auto realIndex = displayModel->index(i, 1);
+                displayModel->setData(realIndex, QString::asprintf("%02X", value));
+            }
+            for (auto& display : displays) {
+                display.setXOrIndex(value - 1);
+            }
+        } else {
+            auto realIndex = displayModel->index(ui->tableViewDisplays->currentIndex().row(), 1);
+            displayModel->setData(realIndex, QString::asprintf("%02X", value));
+            displays[currentDisplayIndex].setXOrIndex(value);
+        }
     });
     QObject::connect(ui->spinBoxYPos, QOverload<int>::of(&QSpinBox::valueChanged), this, [&](int value) {
         if (!ui->tableViewDisplays->currentIndex().isValid())
