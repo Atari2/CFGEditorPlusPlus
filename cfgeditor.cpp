@@ -133,11 +133,14 @@ void CFGEditor::setUpMenuBar(QMenuBar* mb) {
         ui->map16GraphicsView->readInternalMap16File();
         ui->map16GraphicsView->drawInternalMap16File();
         *original = *sprite;
+        setWindowTitle("CFGEditor");
     });
 
     file->addSeparator();
 
     file->addAction("&Open File", Qt::CTRL | Qt::Key_O, qApp, [&]() {
+        auto file = QFileDialog::getOpenFileName(this, tr("Open file"), "", tr("JSON (*.json);;CFG (*.cfg)"));
+        if (file.isEmpty()) return;
         if (hasModification()) {
             auto res = QMessageBox::question(this,
                                              "Unsaved changes",
@@ -151,8 +154,8 @@ void CFGEditor::setUpMenuBar(QMenuBar* mb) {
             }
         }
         resetAll();
-        auto file = QFileDialog::getOpenFileName(this, tr("Open file"), "", tr("JSON (*.json);;CFG (*.cfg)"));
         sprite->from_file(file);
+        setWindowTitle("CFGEditor - " + QFileInfo{file}.fileName());
         resetTweaks();
         std::for_each(sprite->collections.cbegin(), sprite->collections.cend(), [&](auto& coll) {
             collectionModel->appendRow(CollectionDataModel::fromCollection(coll));
@@ -1344,6 +1347,7 @@ void CFGEditor::applyCommandLineOptions(const CFGEditorCommandLineOptions &optio
 
     if (!options.cfgFile.isEmpty()) {
         sprite->from_file(options.cfgFile);
+        setWindowTitle("CFGEditor - " + QFileInfo{options.cfgFile}.fileName());
         resetTweaks();
         std::for_each(sprite->collections.cbegin(), sprite->collections.cend(), [&](auto& coll) {
             collectionModel->appendRow(CollectionDataModel::fromCollection(coll));
