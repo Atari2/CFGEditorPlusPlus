@@ -9,7 +9,6 @@ CFGEditor::CFGEditor(QWidget *parent)
     , sprite(new JsonSprite)
     , original(new JsonSprite)
     , hexValidator(new QRegularExpressionValidator{QRegularExpression(R"([A-Fa-f0-9]+)")})
-    , hexNumberList(new QStringList(0x100))
     , copiedTile()
     , displays()
 {
@@ -23,7 +22,6 @@ CFGEditor::CFGEditor(QWidget *parent)
     loadFullbitmap();
     ui->map16GraphicsView->setControllingLabel(ui->labelTileNo);
     QMenuBar* mb = menuBar();
-    initCompleter();
     setUpMenuBar(mb);
     bindSpriteProp();
     setCollectionModel();
@@ -69,14 +67,6 @@ void CFGEditor::closeEvent(QCloseEvent *event) {
     QMainWindow::closeEvent(event);
 }
 
-
-void CFGEditor::initCompleter() {
-    for (int i = 0; i <= 0xFF; i++) {
-        hexNumberList->append(QString::asprintf("%02X", i));
-    }
-    hexCompleter = new QCompleter(*hexNumberList, this);
-    hexCompleter->setCaseSensitivity(Qt::CaseSensitivity::CaseInsensitive);
-}
 
 void CFGEditor::loadFullbitmap(int index, bool justPalette) {
     if (index == -1)
@@ -386,40 +376,28 @@ void CFGEditor::setCollectionModel() {
 
     ui->lineEditCollExByte1->setMaxLength(2);
     ui->lineEditCollExByte1->setValidator(hexValidator);
-    ui->lineEditCollExByte1->setCompleter(hexCompleter);
     ui->lineEditCollExByte2->setMaxLength(2);
     ui->lineEditCollExByte2->setValidator(hexValidator);
-    ui->lineEditCollExByte2->setCompleter(hexCompleter);
     ui->lineEditCollExByte3->setMaxLength(2);
     ui->lineEditCollExByte3->setValidator(hexValidator);
-    ui->lineEditCollExByte3->setCompleter(hexCompleter);
     ui->lineEditCollExByte4->setMaxLength(2);
     ui->lineEditCollExByte4->setValidator(hexValidator);
-    ui->lineEditCollExByte4->setCompleter(hexCompleter);
     ui->lineEditCollExByte5->setMaxLength(2);
     ui->lineEditCollExByte5->setValidator(hexValidator);
-    ui->lineEditCollExByte5->setCompleter(hexCompleter);
     ui->lineEditCollExByte6->setMaxLength(2);
     ui->lineEditCollExByte6->setValidator(hexValidator);
-    ui->lineEditCollExByte6->setCompleter(hexCompleter);
     ui->lineEditCollExByte7->setMaxLength(2);
     ui->lineEditCollExByte7->setValidator(hexValidator);
-    ui->lineEditCollExByte7->setCompleter(hexCompleter);
     ui->lineEditCollExByte8->setMaxLength(2);
     ui->lineEditCollExByte8->setValidator(hexValidator);
-    ui->lineEditCollExByte8->setCompleter(hexCompleter);
     ui->lineEditCollExByte9->setMaxLength(2);
     ui->lineEditCollExByte9->setValidator(hexValidator);
-    ui->lineEditCollExByte9->setCompleter(hexCompleter);
     ui->lineEditCollExByte10->setMaxLength(2);
     ui->lineEditCollExByte10->setValidator(hexValidator);
-    ui->lineEditCollExByte10->setCompleter(hexCompleter);
     ui->lineEditCollExByte11->setMaxLength(2);
     ui->lineEditCollExByte11->setValidator(hexValidator);
-    ui->lineEditCollExByte11->setCompleter(hexCompleter);
     ui->lineEditCollExByte12->setMaxLength(2);
     ui->lineEditCollExByte12->setValidator(hexValidator);
-    ui->lineEditCollExByte12->setCompleter(hexCompleter);
 
 }
 
@@ -1039,10 +1017,8 @@ void CFGEditor::bindSpriteProp() {
     // Extra Prop Bytes
     ui->lineEditExtraProp1->setMaxLength(2);
     ui->lineEditExtraProp1->setValidator(hexValidator);
-    ui->lineEditExtraProp1->setCompleter(hexCompleter);
     ui->lineEditExtraProp2->setMaxLength(2);
     ui->lineEditExtraProp2->setValidator(hexValidator);
-    ui->lineEditExtraProp2->setCompleter(hexCompleter);
     QObject::connect(ui->lineEditExtraProp1, &QLineEdit::editingFinished, this, [&]() {
         sprite->extraProp1 = (uint8_t)ui->lineEditExtraProp1->text().toUInt(nullptr, 16);
     });
@@ -1077,7 +1053,6 @@ void CFGEditor::bindSpriteProp() {
     // ActLike
     ui->lineEditActLike->setMaxLength(2);
     ui->lineEditActLike->setValidator(hexValidator);
-    ui->lineEditActLike->setCompleter(hexCompleter);
     QObject::connect(ui->lineEditActLike, &QLineEdit::editingFinished, this, [&]() {
         sprite->actlike = ui->lineEditActLike->text().toUInt(nullptr, 16);
     });
@@ -1130,7 +1105,6 @@ void CFGEditor::bindSpriteProp() {
 void CFGEditor::bindTweak1656() {
     ui->lineEdit1656->setMaxLength(2);
     ui->lineEdit1656->setValidator(hexValidator);
-    ui->lineEdit1656->setCompleter(hexCompleter);
     ui->objClippingLabel->setPixmap(objClipImages[0]);
     QObject::connect(ui->lineEdit1656, &QLineEdit::editingFinished, this, [&]() {
         qDebug() << "Value changed";
@@ -1157,7 +1131,6 @@ void CFGEditor::bindTweak1656() {
 void CFGEditor::bindTweak1662() {
     ui->lineEdit1662->setMaxLength(2);
     ui->lineEdit1662->setValidator(hexValidator);
-    ui->lineEdit1662->setCompleter(hexCompleter);
     ui->sprClippingLabel->setPixmap(sprClipImages[0]);
     QObject::connect(ui->lineEdit1662, &QLineEdit::editingFinished, this, [&]() {
         qDebug() << "Value changed";
@@ -1179,7 +1152,6 @@ void CFGEditor::bindTweak1662() {
 void CFGEditor::bindTweak166E() {
     ui->lineEdit166E->setMaxLength(2);
     ui->lineEdit166E->setValidator(hexValidator);
-    ui->lineEdit166E->setCompleter(hexCompleter);
     ui->label->setPixmap(paletteImages[0].scaled(ui->label->size(), Qt::AspectRatioMode::KeepAspectRatio));
     QObject::connect(ui->lineEdit166E, &QLineEdit::editingFinished, this, [&]() {
         qDebug() << "Value changed";
@@ -1207,7 +1179,6 @@ void CFGEditor::bindTweak166E() {
 void CFGEditor::bindTweak167A() {
     ui->lineEdit167a->setMaxLength(2);
     ui->lineEdit167a->setValidator(hexValidator);
-    ui->lineEdit167a->setCompleter(hexCompleter);
     QObject::connect(ui->lineEdit167a, &QLineEdit::editingFinished, this, [&]() {
         qDebug() << "Value changed";
         sprite->t167a.from_byte((uint8_t)ui->lineEdit167a->text().toUInt(nullptr, 16));
@@ -1232,7 +1203,6 @@ void CFGEditor::bindTweak167A() {
 void CFGEditor::bindTweak1686() {
     ui->lineEdit1686->setMaxLength(2);
     ui->lineEdit1686->setValidator(hexValidator);
-    ui->lineEdit1686->setCompleter(hexCompleter);
     QObject::connect(ui->lineEdit1686, &QLineEdit::editingFinished, this, [&]() {
         qDebug() << "Value changed";
         sprite->t1686.from_byte((uint8_t)ui->lineEdit1686->text().toUInt(nullptr, 16));
@@ -1257,7 +1227,6 @@ void CFGEditor::bindTweak1686() {
 void CFGEditor::bindTweak190F() {
     ui->lineEdit190f->setMaxLength(2);
     ui->lineEdit190f->setValidator(hexValidator);
-    ui->lineEdit190f->setCompleter(hexCompleter);
     QObject::connect(ui->lineEdit190f, &QLineEdit::editingFinished, this, [&]() {
         qDebug() << "Value changed";
         sprite->t190f.from_byte((uint8_t)ui->lineEdit190f->text().toUInt(nullptr, 16));
@@ -1424,7 +1393,5 @@ CFGEditor::~CFGEditor()
     delete view8x8Container;
     delete paletteContainer;
     delete hexValidator;
-    delete hexCompleter;
-    delete hexNumberList;
     delete ui;
 }

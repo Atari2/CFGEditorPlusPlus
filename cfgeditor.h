@@ -60,7 +60,6 @@ public:
     void bindCollectionButtons();
     void bindDisplayButtons();
     void bindGFXSelector();
-    void initCompleter();
     void loadFullbitmap(int index = -1, bool justPalette = false);
     bool addLunarMagicIcons();
     void closeEvent(QCloseEvent *event);
@@ -100,8 +99,6 @@ private:
     JsonSprite* sprite;
     JsonSprite* original;
     QRegularExpressionValidator* hexValidator;
-    QStringList* hexNumberList;
-    QCompleter* hexCompleter;
     QVector<QPixmap> paletteImages;
     QVector<QPixmap> objClipImages;
     QVector<QPixmap> sprClipImages;
