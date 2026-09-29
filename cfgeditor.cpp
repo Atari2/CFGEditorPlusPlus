@@ -304,6 +304,7 @@ void CFGEditor::setDisplayModel() {
     QStringList labelList{"ExtraBit", "X", "Y"};
     displayModel->setHorizontalHeaderLabels(labelList);
     ui->tableViewDisplays->setModel(displayModel);
+    ui->tableViewDisplays->setSelectionMode(QAbstractItemView::SelectionMode::SingleSelection);
     ui->tableViewDisplays->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
     ui->tableViewDisplays->horizontalHeader()->setSectionResizeMode(0, QHeaderView::ResizeToContents);
     ui->tableViewDisplays->setHorizontalScrollBarPolicy(Qt::ScrollBarPolicy::ScrollBarAlwaysOff);
@@ -338,6 +339,7 @@ void CFGEditor::setGFXInfoModel() {
     QStringList labelList{"Sp0", "Sep.", "Sp1", "Sep.", "Sp2", "Sep.", "Sp3", "Sep."};
     gfxinfoModel->setHorizontalHeaderLabels(labelList);
     ui->tableViewGfxInfo->setModel(gfxinfoModel);
+    ui->tableViewGfxInfo->setSelectionMode(QAbstractItemView::SelectionMode::SingleSelection);
     ui->tableViewGfxInfo->setItemDelegate(new CustomItemDelegate(gfxinfoModel, ui->tableViewGfxInfo, hexValidator));
     ui->tableViewGfxInfo->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
     ui->tableViewGfxInfo->horizontalHeader()->setSectionResizeMode(0, QHeaderView::ResizeToContents);
@@ -851,27 +853,54 @@ void CFGEditor::setTilePropGroupState(FullTile tileInfo) {
     ui->map16GraphicsView->noSignals = false;
 }
 
+static QList<int> getSelectedRows(QTableView* view) {
+    auto selectedRows = view->selectionModel()->selectedIndexes();
+    QSet<int> affectedRows{};
+    for (const auto& index : std::as_const(selectedRows)) {
+        affectedRows.insert(index.row());
+    }
+    QList<int> selectedRowsDeduped{affectedRows.begin(), affectedRows.end()};
+    std::sort(selectedRowsDeduped.begin(), selectedRowsDeduped.end());
+    return selectedRowsDeduped;
+}
+
 void CFGEditor::bindCollectionButtons() {
     QObject::connect(ui->newCollButton, &QPushButton::clicked, this, [&]() {
         qDebug() << "New collection button clicked";
         collectionModel->appendRow(CollectionDataModel().getRow(ui));
     });
     QObject::connect(ui->cloneCollButton, &QPushButton::clicked, this, [&]() {
-        if (!ui->tableView->currentIndex().isValid()) {
+        auto* sel = ui->tableView->selectionModel();
+        if (!sel || !sel->hasSelection()) {
             DefaultAlertImpl(this, "Select a row before cloning")();
             return;
         }
         qDebug() << "Clone collection button clicked";
-        CollectionDataModel model = CollectionDataModel::fromIndex(ui->tableView->currentIndex().row(), ui->tableView);
-        collectionModel->appendRow(model.getRow());
+        auto selectedRows = getSelectedRows(ui->tableView);
+        qDebug() << "Cloning " << selectedRows.size() << " rows";
+        for (auto row : std::as_const(selectedRows)) {
+            qDebug() << "Cloning row " << row;
+            CollectionDataModel model = CollectionDataModel::fromIndex(row, ui->tableView);
+            collectionModel->appendRow(model.getRow());
+        }
     });
     QObject::connect(ui->deleteCollButton, &QPushButton::clicked, this, [&]() {
-        if (!ui->tableView->currentIndex().isValid()) {
-            DefaultAlertImpl(this, "Select a row before deleting")();
+        auto* sel = ui->tableView->selectionModel();
+        if (!sel || !sel->hasSelection()) {
+            DefaultAlertImpl(this, "Select a row before cloning")();
             return;
         }
         qDebug() << "Delete collection button clicked";
-        ui->tableView->model()->removeRow(ui->tableView->currentIndex().row());
+        QList<QPersistentModelIndex> doomed;
+        const auto indexes = ui->tableView->selectionModel()->selectedIndexes();
+        doomed.reserve(indexes.size());
+        for (const QModelIndex& idx : indexes)
+            doomed.append(idx);
+
+        for (const QPersistentModelIndex& idx : doomed) {
+            if (idx.isValid())
+                ui->tableView->model()->removeRow(idx.row(), idx.parent());
+        }
     });
 }
 
