@@ -97,4 +97,37 @@ signals:
     void signalTileUpdatedForDisplay(const FullTile& tile, int tileno);
 };
 
+class Map16ScrollBar : public QScrollBar {
+    Q_OBJECT
+    Map16GraphicsView* view;
+    static constexpr int32_t scrollwheel_singlestep = 15; // https://doc.qt.io/qt-6/qwheelevent.html#angleDelta
+public:
+    explicit Map16ScrollBar(Map16GraphicsView* view, QWidget* parent = nullptr) : QScrollBar{parent}, view{view} {
+
+    }
+
+protected:
+    void wheelEvent(QWheelEvent* event) override {
+        QPoint numPixels = event->pixelDelta();
+        QPoint numDegrees = event->angleDelta() / 8;
+
+        if (!numPixels.isNull()) {
+            QScrollBar::wheelEvent(event);
+        } else if (!numDegrees.isNull()) {
+            int cellSize = view->CellSize();
+            int numSteps = std::ceil(float(numDegrees.y()) / 15.0);
+            // round to nearest CellSize() multiple
+            int newValue = value() - numSteps * cellSize;
+            int half = cellSize / 2;
+            int rem = newValue % cellSize;
+            if (rem > half) {
+                setValue(newValue + (cellSize - rem));
+            } else {
+                setValue(newValue - rem);
+            }
+        }
+        event->accept();
+    }
+};
+
 #endif // MAP16GRAPHICSVIEW_H

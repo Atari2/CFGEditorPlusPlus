@@ -9,11 +9,7 @@ Map16GraphicsView::Map16GraphicsView(QWidget* parent) : QGraphicsView(parent)
     verticalScrollBar()->setFixedWidth(16);
     setScene(currScene);
     setFocusPolicy(Qt::FocusPolicy::ClickFocus);
-	QObject::connect(verticalScrollBar(), QOverload<int>::of(&QScrollBar::valueChanged), this, [&](int value) {
-        int offset = value % CellSize();
-        if (offset != 0)
-            verticalScrollBar()->setValue(value - offset);
-    });
+    setVerticalScrollBar(new Map16ScrollBar(this, parent));
 }
 
 int Map16GraphicsView::CellSize() {
