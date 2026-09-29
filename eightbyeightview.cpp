@@ -45,7 +45,8 @@ EightByEightView::EightByEightView(QGraphicsScene* ogscene) : QGraphicsView(ogsc
             verticalScrollBar()->setValue(value - offset);
     });
     verticalScrollBar()->installEventFilter(new PgUpDownEventFilter(this));
-	setFixedSize(275, 256);
+    setAlignment(Qt::AlignLeft);
+    setFixedSize(256 + 16, 256);
 }
 
 int EightByEightView::convertPointToTile(const QPointF& point) {
@@ -88,7 +89,8 @@ void EightByEightView::updateForChange(QImage* image) {
     currentItem = new QGraphicsPixmapItem(QPixmap::fromImage(*image).scaled(image->size() * 2));
     currentItem->setAcceptHoverEvents(true);
     scene()->addItem(currentItem);
-    setFixedSize(256 + 18, 256);
+    setAlignment(Qt::AlignLeft);
+    setFixedSize(256 + 16, 256);
     setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 }
 void EightByEightView::closeEvent(QCloseEvent* event) {
