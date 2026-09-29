@@ -117,18 +117,21 @@ void Map16GraphicsView::readExternalMap16File(const QString &name) {
 }
 
 void Map16GraphicsView::drawInternalMap16File() {
+    if (imageWidth != 256) imageWidth = 256;
+    if (imageHeight != 1024) imageHeight = 1024;
     TileMap = QImage{imageWidth, imageHeight, QImage::Format::Format_ARGB32};
     QPainter p{&TileMap};
-    p.setCompositionMode(QPainter::CompositionMode_SourceOver);
-    p.fillRect(TileMap.rect(), QBrush(QGradient(QGradient::EternalConstance)));
+    p.setCompositionMode(QPainter::CompositionMode_Source);
     for (int i = 0; i < tiles.length(); i++) {
         for (int j = 0; j < tiles[i].length(); j++) {
             p.drawImage(QRect{j * 16, i * 16, 16, 16}, tiles[i][j].getFullTile(false));
         }
     }
+    p.setCompositionMode(QPainter::CompositionMode_DestinationOver);
+    p.fillRect(TileMap.rect(), QBrush(QGradient(QGradient::EternalConstance)));
     p.end();
     int scaleFactor = qMax(1, (352 + imageWidth - 1) / imageWidth);
-    qDebug() << "Image width " << imageWidth << " scale factor: " << scaleFactor;
+    qDebug() << "Image (" << imageWidth << "x" << imageHeight << ") scale factor: " << scaleFactor;
     TileMap = TileMap.scaledToWidth(imageWidth * scaleFactor, Qt::FastTransformation);
     imageWidth = TileMap.width();
     imageHeight = TileMap.height();
@@ -154,6 +157,7 @@ void Map16GraphicsView::drawInternalMap16File() {
         qDebug() << imageHeight << " " << i;
         pageSepPainter.drawRect(QRect{0, i, imageWidth, CellSize() * 16});
     }
+    scene()->clear();
     currentMap16 = scene()->addPixmap(QPixmap::fromImage(TileMap));
     setMinimumWidth(currentMap16->pixmap().width() + 18);
     setFixedHeight(currentMap16->pixmap().height() / 4);
@@ -594,6 +598,9 @@ void Map16GraphicsView::setMap16(const QString& data) {
     QPainter og{&TileMap};
     QPainter high{&currentWithNoHighlight};
     QPainter sel{&currentWithNoSelection};
+    og.setCompositionMode(QPainter::CompositionMode_Source);
+    high.setCompositionMode(QPainter::CompositionMode_Source);
+    sel.setCompositionMode(QPainter::CompositionMode_Source);
     auto size = CellSize();
     while (!str.atEnd()) {
         quint16 tl, tr, bl, br;

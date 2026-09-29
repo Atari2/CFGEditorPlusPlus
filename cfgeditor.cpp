@@ -129,6 +129,9 @@ void CFGEditor::setUpMenuBar(QMenuBar* mb) {
         }
         resetAll();
         resetTweaks();
+        ui->map16GraphicsView->tiles.clear();
+        ui->map16GraphicsView->readInternalMap16File();
+        ui->map16GraphicsView->drawInternalMap16File();
         *original = *sprite;
     });
 
@@ -155,6 +158,9 @@ void CFGEditor::setUpMenuBar(QMenuBar* mb) {
             collectionModel->appendRow(CollectionDataModel::fromCollection(coll));
         });
         ui->checkBoxDisplayExtraByte->setChecked(sprite->dispType == DisplayType::ExtraByte);
+        ui->map16GraphicsView->tiles.clear();
+        ui->map16GraphicsView->readInternalMap16File();
+        ui->map16GraphicsView->drawInternalMap16File();
         ui->map16GraphicsView->setMap16(sprite->map16);
         ui->labelDisplayTilesGrid->deserializeDisplays(sprite->displays, ui->map16GraphicsView);
         populateDisplays();
