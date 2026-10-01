@@ -1175,10 +1175,10 @@ void CFGEditor::bindTweak1656() {
         ui->checkBox1656Smoke->setChecked(sprite->t1656.disapp);
         ui->objClipCmbBox->setCurrentIndex(sprite->t1656.objclip);
     });
-    connectCheckBox(ui->lineEdit1656, ui->checkBox1656DiesJumped, &sprite->t1656, sprite->t1656.diesjumped);
-    connectCheckBox(ui->lineEdit1656, ui->checkBox1656JumpedOn, &sprite->t1656, sprite->t1656.canbejumped);
-    connectCheckBox(ui->lineEdit1656, ui->checkBox1656Hopin, &sprite->t1656, sprite->t1656.hopin);
-    connectCheckBox(ui->lineEdit1656, ui->checkBox1656Smoke, &sprite->t1656, sprite->t1656.disapp);
+    connectCheckBox(ui->lineEdit1656, ui->checkBox1656DiesJumped, &sprite->t1656, &J1656::set_diesjumped);
+    connectCheckBox(ui->lineEdit1656, ui->checkBox1656JumpedOn, &sprite->t1656, &J1656::set_canbejumped);
+    connectCheckBox(ui->lineEdit1656, ui->checkBox1656Hopin, &sprite->t1656, &J1656::set_hopin);
+    connectCheckBox(ui->lineEdit1656, ui->checkBox1656Smoke, &sprite->t1656, &J1656::set_disapp);
     QObject::connect(ui->objClipCmbBox, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [&](int index) {
         qDebug() << "Index changed";
         ui->objClippingLabel->setPixmap(objClipImages[index]);
@@ -1199,8 +1199,8 @@ void CFGEditor::bindTweak1662() {
         ui->checkBox1662strdown->setChecked(sprite->t1662.strdown);
         ui->sprClipCmbBox->setCurrentIndex(sprite->t1662.sprclip);
     });
-    connectCheckBox(ui->lineEdit1662, ui->checkBox1662deathframe, &sprite->t1662, sprite->t1662.deathframe);
-    connectCheckBox(ui->lineEdit1662, ui->checkBox1662strdown, &sprite->t1662, sprite->t1662.strdown);
+    connectCheckBox(ui->lineEdit1662, ui->checkBox1662deathframe, &sprite->t1662, &J1662::set_deathframe);
+    connectCheckBox(ui->lineEdit1662, ui->checkBox1662strdown, &sprite->t1662, &J1662::set_strdown);
     QObject::connect(ui->sprClipCmbBox, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [&](int index) {
         qDebug() << "Index changed";
         sprite->t1662.sprclip = index;
@@ -1223,11 +1223,11 @@ void CFGEditor::bindTweak166E() {
         ui->checkBox166elay2->setChecked(sprite->t166e.lay2);
         ui->paletteComboBox->setCurrentIndex(sprite->t166e.palette);
     });
-    connectCheckBox(ui->lineEdit166E, ui->checkBox166ecape, &sprite->t166e, sprite->t166e.cape);
-    connectCheckBox(ui->lineEdit166E, ui->checkBox166efireball, &sprite->t166e, sprite->t166e.fireball);
-    connectCheckBox(ui->lineEdit166E, ui->checkBox166esplash, &sprite->t166e, sprite->t166e.splash);
-    connectCheckBox(ui->lineEdit166E, ui->checkBox166esecondpage, &sprite->t166e, sprite->t166e.secondpage);
-    connectCheckBox(ui->lineEdit166E, ui->checkBox166elay2, &sprite->t166e, sprite->t166e.lay2);
+    connectCheckBox(ui->lineEdit166E, ui->checkBox166ecape, &sprite->t166e, &J166E::set_cape);
+    connectCheckBox(ui->lineEdit166E, ui->checkBox166efireball, &sprite->t166e, &J166E::set_fireball);
+    connectCheckBox(ui->lineEdit166E, ui->checkBox166esplash, &sprite->t166e, &J166E::set_splash);
+    connectCheckBox(ui->lineEdit166E, ui->checkBox166esecondpage, &sprite->t166e, &J166E::set_secondpage);
+    connectCheckBox(ui->lineEdit166E, ui->checkBox166elay2, &sprite->t166e, &J166E::set_lay2);
     QObject::connect(ui->paletteComboBox, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [&](int index) {
         qDebug() << "Index changed";
         ui->label->setPixmap(paletteImages[index].scaled(ui->label->size(), Qt::AspectRatioMode::KeepAspectRatio));
@@ -1251,14 +1251,14 @@ void CFGEditor::bindTweak167A() {
         ui->checkBox167apowerup->setChecked(sprite->t167a.powerup);
         ui->checkBox167adefaultint->setChecked(sprite->t167a.defaultint);
     });
-    connectCheckBox(ui->lineEdit167a, ui->checkBox167astar, &sprite->t167a, sprite->t167a.star);
-    connectCheckBox(ui->lineEdit167a, ui->checkBox167ablk, &sprite->t167a, sprite->t167a.blk);
-    connectCheckBox(ui->lineEdit167a, ui->checkBox167aoffscr, &sprite->t167a, sprite->t167a.offscr);
-    connectCheckBox(ui->lineEdit167a, ui->checkBox167astunned, &sprite->t167a, sprite->t167a.stunn);
-    connectCheckBox(ui->lineEdit167a, ui->checkBox167akick, &sprite->t167a, sprite->t167a.kick);
-    connectCheckBox(ui->lineEdit167a, ui->checkBox167aeveryframe, &sprite->t167a, sprite->t167a.everyframe);
-    connectCheckBox(ui->lineEdit167a, ui->checkBox167apowerup, &sprite->t167a, sprite->t167a.powerup);
-    connectCheckBox(ui->lineEdit167a, ui->checkBox167adefaultint, &sprite->t167a, sprite->t167a.defaultint);
+    connectCheckBox(ui->lineEdit167a, ui->checkBox167astar, &sprite->t167a, &J167A::set_star);
+    connectCheckBox(ui->lineEdit167a, ui->checkBox167ablk, &sprite->t167a, &J167A::set_blk);
+    connectCheckBox(ui->lineEdit167a, ui->checkBox167aoffscr, &sprite->t167a, &J167A::set_offscr);
+    connectCheckBox(ui->lineEdit167a, ui->checkBox167astunned, &sprite->t167a, &J167A::set_stunn);
+    connectCheckBox(ui->lineEdit167a, ui->checkBox167akick, &sprite->t167a, &J167A::set_kick);
+    connectCheckBox(ui->lineEdit167a, ui->checkBox167aeveryframe, &sprite->t167a, &J167A::set_everyframe);
+    connectCheckBox(ui->lineEdit167a, ui->checkBox167apowerup, &sprite->t167a, &J167A::set_powerup);
+    connectCheckBox(ui->lineEdit167a, ui->checkBox167adefaultint, &sprite->t167a, &J167A::set_defaultint);
 }
 void CFGEditor::bindTweak1686() {
     ui->lineEdit1686->setMaxLength(2);
@@ -1275,14 +1275,14 @@ void CFGEditor::bindTweak1686() {
         ui->checkBox1686spawnSpr->setChecked(sprite->t1686.newspr);
         ui->checkBox1686noObjInt->setChecked(sprite->t1686.noobjint);
     });
-    connectCheckBox(ui->lineEdit1686, ui->checkBox1686Inedible, &sprite->t1686, sprite->t1686.inedible);
-    connectCheckBox(ui->lineEdit1686, ui->checkBox1686mouth, &sprite->t1686, sprite->t1686.mouth);
-    connectCheckBox(ui->lineEdit1686, ui->checkBox1686ground, &sprite->t1686, sprite->t1686.ground);
-    connectCheckBox(ui->lineEdit1686, ui->checkBox1686sprint, &sprite->t1686, sprite->t1686.nosprint);
-    connectCheckBox(ui->lineEdit1686, ui->checkBox1686dir, &sprite->t1686, sprite->t1686.direc);
-    connectCheckBox(ui->lineEdit1686, ui->checkBox1686goalcoin, &sprite->t1686, sprite->t1686.goalpass);
-    connectCheckBox(ui->lineEdit1686, ui->checkBox1686spawnSpr, &sprite->t1686, sprite->t1686.newspr);
-    connectCheckBox(ui->lineEdit1686, ui->checkBox1686noObjInt, &sprite->t1686, sprite->t1686.noobjint);
+    connectCheckBox(ui->lineEdit1686, ui->checkBox1686Inedible, &sprite->t1686, &J1686::set_inedible);
+    connectCheckBox(ui->lineEdit1686, ui->checkBox1686mouth, &sprite->t1686, &J1686::set_mouth);
+    connectCheckBox(ui->lineEdit1686, ui->checkBox1686ground, &sprite->t1686, &J1686::set_ground);
+    connectCheckBox(ui->lineEdit1686, ui->checkBox1686sprint, &sprite->t1686, &J1686::set_nosprint);
+    connectCheckBox(ui->lineEdit1686, ui->checkBox1686dir, &sprite->t1686, &J1686::set_direc);
+    connectCheckBox(ui->lineEdit1686, ui->checkBox1686goalcoin, &sprite->t1686, &J1686::set_goalpass);
+    connectCheckBox(ui->lineEdit1686, ui->checkBox1686spawnSpr, &sprite->t1686, &J1686::set_newspr);
+    connectCheckBox(ui->lineEdit1686, ui->checkBox1686noObjInt, &sprite->t1686, &J1686::set_noobjint);
 }
 void CFGEditor::bindTweak190F() {
     ui->lineEdit190f->setMaxLength(2);
@@ -1299,14 +1299,14 @@ void CFGEditor::bindTweak190F() {
         ui->checkBox190fnosilver->setChecked(sprite->t190f.nosilver);
         ui->checkBox190fwallstuck->setChecked(sprite->t190f.nostuck);
     });
-    connectCheckBox(ui->lineEdit190f, ui->checkBox190fbelow, &sprite->t190f, sprite->t190f.below);
-    connectCheckBox(ui->lineEdit190f, ui->checkBox190fgoalpass, &sprite->t190f, sprite->t190f.goal);
-    connectCheckBox(ui->lineEdit190f, ui->checkBox190fsliding, &sprite->t190f, sprite->t190f.slidekill);
-    connectCheckBox(ui->lineEdit190f, ui->checkBox190ffivefire, &sprite->t190f, sprite->t190f.fivefire);
-    connectCheckBox(ui->lineEdit190f, ui->checkBox190fupysp, &sprite->t190f, sprite->t190f.yupsp);
-    connectCheckBox(ui->lineEdit190f, ui->checkBox190fdeathframe, &sprite->t190f, sprite->t190f.deathframe);
-    connectCheckBox(ui->lineEdit190f, ui->checkBox190fnosilver, &sprite->t190f, sprite->t190f.nosilver);
-    connectCheckBox(ui->lineEdit190f, ui->checkBox190fwallstuck, &sprite->t190f, sprite->t190f.nostuck);
+    connectCheckBox(ui->lineEdit190f, ui->checkBox190fbelow, &sprite->t190f, &J190F::set_below);
+    connectCheckBox(ui->lineEdit190f, ui->checkBox190fgoalpass, &sprite->t190f, &J190F::set_goal);
+    connectCheckBox(ui->lineEdit190f, ui->checkBox190fsliding, &sprite->t190f, &J190F::set_slidekill);
+    connectCheckBox(ui->lineEdit190f, ui->checkBox190ffivefire, &sprite->t190f, &J190F::set_fivefire);
+    connectCheckBox(ui->lineEdit190f, ui->checkBox190fupysp, &sprite->t190f, &J190F::set_yupsp);
+    connectCheckBox(ui->lineEdit190f, ui->checkBox190fdeathframe, &sprite->t190f, &J190F::set_deathframe);
+    connectCheckBox(ui->lineEdit190f, ui->checkBox190fnosilver, &sprite->t190f, &J190F::set_nosilver);
+    connectCheckBox(ui->lineEdit190f, ui->checkBox190fwallstuck, &sprite->t190f, &J190F::set_nostuck);
 }
 
 

@@ -83,11 +83,14 @@ public:
         return gfxinfoModel;
     }
 
+    template <typename J, typename Vt>
+    using TweakSetterFn = void (J::*) (Vt);
+
     template <typename J>
-    void connectCheckBox(QLineEdit* edit, QCheckBox* box, J* tweak, bool& tochange) {
-        QObject::connect(box, &QCheckBox::checkStateChanged, this, [=, &tochange](Qt::CheckState state) mutable {
+    void connectCheckBox(QLineEdit* edit, QCheckBox* box, J* tweak, TweakSetterFn<J, bool> fn) {
+        QObject::connect(box, &QCheckBox::checkStateChanged, this, [=](Qt::CheckState state) mutable {
             qDebug() << "Checkbox " << box->objectName() << " changed";
-            tochange = state == Qt::CheckState::Checked;
+            std::invoke(fn, tweak, state == Qt::CheckState::Checked);
             edit->setText(QString::asprintf("%02X", tweak->to_byte()));
         });
     }
